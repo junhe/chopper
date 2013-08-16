@@ -21,15 +21,63 @@
 #       JUST LIKE THE ORIGINAL OUTPUT BUT FORMAT IT A LITTLE BIT
 
 import subprocess
+from time import gmtime, strftime
+import re
+
+def dict2table(mydict):
+    mytable = ""
+    for keyname in mydict:
+        mystr = " ".join( [keyname, mydict[keyname]] )
+        mytable += mystr + "\n"
+    return mytable
+        
 
 class FSMonitor:
-"""
-This monitor probes the ext4 file system and return information I 
-want in a nice format.
-"""
+    """
+    This monitor probes the ext4 file system and return information I 
+    want in a nice format.
+    """
     def __init__(self, dn, mp):
         self.devname = dn 
         self.mountpoint = mp
+        self.monitor_id = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
     
     def e2freefrag(self):
-        
+        cmd = ["e2freefrag", self.devname]
+        proc = subprocess.Popen(cmd,
+                           stdout=subprocess.PIPE)
+        proc.wait()
+
+        part = 0
+        sums_dict = {}
+        hist_table = ""
+        for line in proc.stdout:
+            if part == 0:
+                if "HISTOGRAM" in line:
+                    part = 1
+                    continue
+                mo = re.search( r'(.*): (\d+)', line, re.M)
+                if mo:
+                    keyname = mo.group(1)
+                    keyname = keyname.replace('.', '')
+                    keyname = "_".join(keyname.split())
+                    sums_dict[keyname] = mo.group(2)
+            elif part == 1:
+                # This part is the histogram.
+                if "Extent Size" in line:
+                    hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent\n"
+                    continue
+                fline = re.sub(r'[\-:\n]', "", line)
+                fline = re.sub(r'\.{3}', "", fline)
+                hist_table += fline + "\n"
+                 
+        return (dict2table(sums_dict), hist_table)
+
+fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
+frag = fsmon.e2freefrag()
+
+for e in frag: print e
+
+
+
+
