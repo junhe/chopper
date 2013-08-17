@@ -48,12 +48,13 @@ class FSMonitor:
     This monitor probes the ext4 file system and return information I 
     want in a nice format.
     """
-    def __init__(self, dn, mp, cw=20):
+    def __init__(self, dn, mp, ld="/tmp", cw=20):
         self.devname = dn 
         self.mountpoint = mp # please only provide path without mountpoint
                              # when using this class.
         self.col_width = cw
         self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
+        self.logdir = ld
     
     def e2freefrag(self):
         cmd = ["e2freefrag", self.devname]
@@ -229,7 +230,7 @@ class FSMonitor:
 
         return header + vals
 
-    def display(self, resultpath=""):
+    def display(self, savedata=False):
         "resultpath should be in another file system so they don't intervene"
         extstats = self.getAllExtentStatsSTR()
         frag = self.e2freefrag()
@@ -243,8 +244,10 @@ class FSMonitor:
         print frag0_header, frag[0]
         print frag1_header, frag[1]
 
-        if resultpath != "": 
-            f = open(resultpath, 'w')
+        if savedata: 
+            filename = self.monitor_time + ".result"
+            fullpath = os.path.join(self.logdir, filename)
+            f = open(fullpath, 'w')
             f.write(extstats_header + extstats)
             f.write(frag0_header + frag[0])
             f.write(frag1_header + frag[1])
@@ -255,5 +258,5 @@ class FSMonitor:
         
 
 fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
-fsmon.display(resultpath="/tmp/thanks")
+fsmon.display(savedata=True)
 
