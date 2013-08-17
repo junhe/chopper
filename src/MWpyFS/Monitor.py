@@ -41,12 +41,20 @@ class cd:
 
 
 
-def dict2table(mydict):
+def dict2table(mydict, cw=20):
     mytable = ""
+
+    header = ""
     for keyname in mydict:
-        mystr = " ".join( [keyname, mydict[keyname]] )
-        mytable += mystr + "\n"
-    return mytable
+        header += keyname.rjust(cw) + " "
+    header += "HEADERMARKER\n"
+
+    vals = ""    
+    for keyname in mydict:
+        vals += mydict[keyname].rjust(cw) + " "
+    vals += "DATAMARKER\n"
+
+    return header + vals
         
 
 class FSMonitor:
@@ -54,10 +62,11 @@ class FSMonitor:
     This monitor probes the ext4 file system and return information I 
     want in a nice format.
     """
-    def __init__(self, dn, mp):
+    def __init__(self, dn, mp, cw=20):
         self.devname = dn 
         self.mountpoint = mp # please only provide path without mountpoint
                              # when using this class.
+        self.col_width = cw
         self.monitor_id = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
     
     def e2freefrag(self):
@@ -83,13 +92,13 @@ class FSMonitor:
             elif part == 1:
                 # This part is the histogram.
                 if "Extent Size" in line:
-                    hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent\n"
+                    hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent HEADERMARKER\n"
                     continue
                 fline = re.sub(r'[\-:\n]', "", line)
                 fline = re.sub(r'\.{3}', "", fline)
-                hist_table += fline + "\n"
+                hist_table += fline + " DATAMARKER\n"
                  
-        return (dict2table(sums_dict), hist_table)
+        return (dict2table(sums_dict, self.col_width), hist_table)
 
         
     def dump_extents(self, filepath):
@@ -153,19 +162,6 @@ class FSMonitor:
     
         return dumpdict
 
-#    def ls(self, filepath):
-        #fullpath = os.path.join(self.mountpoint, filepath)  
-        #cmd = ["ls", "-ls", fullpath]
-        #proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        #proc.wait()
-
-        #lines = proc.stdout.readlines()
-        #if len(lines) != 1:
-            #print "I expect only one line"
-            #exit(1)
-        #line = lines[0]
-        #print line.split() 
-            
     def filefrag(self, filepath):
         fullpath = os.path.join(self.mountpoint, filepath)  
         cmd = ["filefrag", "-sv", fullpath]
@@ -209,12 +205,34 @@ class FSMonitor:
             stats.append( self.dump_extents(f) )
         return stats
         
+    def getAllExtentStatsSTR(self, rootdir="."):
+        stats = self.getAllExtentStats(rootdir)
+
+        if len(stats) == 0:
+            return ""
+            
+        header = ""
+        for keyname in stats[0]:
+            header += keyname.rjust(self.col_width) + " "
+        header += "HEADERMARKER\n"
+
+        vals = ""
+        for entry in stats:
+            for keyname in entry:
+                vals += str(entry[keyname]).rjust(self.col_width) + " "
+            vals += "DATAMARKER\n"
+        
+        return header + vals
+        
+
+
 
 
 fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
 
-pprint.pprint( fsmon.getAllExtentStats() )
-
+print fsmon.getAllExtentStatsSTR() 
+print fsmon.e2freefrag()[0]
+print fsmon.e2freefrag()[1]
 
 
 
