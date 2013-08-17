@@ -9,7 +9,7 @@
 #  about the aging of a file system which causes metadata disaster.
 #       I expect the following from the output of this per file:
 #       
-#       filepath create_time meta_ratio n_metablock n_datablock
+#       filepath create_time n_metablock n_datablock metadata_ratio filebytes
 #
 #  Extent fragmentation overview. This can be obtained by e2freefrag. This
 #  should give me a good sense of how fragemented the FS is. The acceleration
@@ -23,6 +23,8 @@
 import subprocess
 from time import gmtime, strftime
 import re
+import shlex
+import os.path
 
 def dict2table(mydict):
     mytable = ""
@@ -39,7 +41,8 @@ class FSMonitor:
     """
     def __init__(self, dn, mp):
         self.devname = dn 
-        self.mountpoint = mp
+        self.mountpoint = mp # please only provide path without mountpoint
+                             # when using this class.
         self.monitor_id = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
     
     def e2freefrag(self):
@@ -73,10 +76,108 @@ class FSMonitor:
                  
         return (dict2table(sums_dict), hist_table)
 
-fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
-frag = fsmon.e2freefrag()
+        
+    def dump_extents(self, filepath):
+        cmd = "debugfs /dev/sdb1 -R 'dump_extents " + filepath + "'"
+        cmd = shlex.split(cmd)
+        print cmd
+        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+        proc.wait()
 
-for e in frag: print e
+        ext_list = [] # Use list here in case I want to extract data in Python
+        header = []
+        n_entries = [0] * 3 # n_entries[k] is the number of entries at level k
+                            # it can be used to calculate number of 
+                            # internal/leaf nodes
+        max_level = 0
+        for line in proc.stdout:
+            print "LLL:", line,
+            if "Level" in line:
+                header = ["Level_index", "Max_level", 
+                         "Entry_index", "N_Entry",
+                         "Logical_start", "Logical_end",
+                         "Physical_start", "Physical_end",
+                         "Length", "Flag"]
+            else:
+                line = re.sub(r'[/\-]', "", line)
+                tokens = line.split()
+                d = {}
+                for i in range(9):
+                    d[ header[i] ] = tokens[i]
+                
+                if len(tokens) == 10:
+                    d["Flag"] = tokens[10]
+                else:
+                    d["Flag"] = "NA"
+
+                n_entries[ int(d["Level_index"]) ] = int( d["N_Entry"] )
+                max_level = int( d["Max_level"] )
+                
+        # calculate number of meatadata blocks
+        # only 1st and 2nd levels takes space. 
+        # How to calculate:
+        #   if there is only 1 level (root and level 1).
+        #   the number of entires in level 0 indicates the
+        #   number of nodes in level 1.
+        #   Basically, the number of entries in level i
+        #   equals the number of ETB of the next level
+        n_metablock = 0
+        if max_level == 0:
+            # the tree has no extent tree block outside of the inode
+            n_metablock = 0
+        else:
+            for n in n_entries[0:max_level]:
+                n_metablock += n
+        
+        dumpdict = {}
+        dumpdict["filepath"] = filepath
+        dumpdict["n_metablock"] = n_metablock
+        others = self.filefrag(filepath)
+        dumpdict["n_datablock"] = others["nblocks"]
+        dumpdict["filebytes"] = others["nbytes"]
+    
+        return dumpdict
+
+#    def ls(self, filepath):
+        #fullpath = os.path.join(self.mountpoint, filepath)  
+        #cmd = ["ls", "-ls", fullpath]
+        #proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        #proc.wait()
+
+        #lines = proc.stdout.readlines()
+        #if len(lines) != 1:
+            #print "I expect only one line"
+            #exit(1)
+        #line = lines[0]
+        #print line.split() 
+            
+    def filefrag(self, filepath):
+        fullpath = os.path.join(self.mountpoint, filepath)  
+        cmd = ["filefrag", "-sv", fullpath]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        proc.wait()
+
+        mydict = {}
+        for line in proc.stdout:
+            if line.startswith("File size of"):
+                print line
+                line = line.split(" is ")[1]
+                print line
+                nums = re.findall(r'\d+', line)
+                if len(nums) != 3:
+                    print "filefrag something wrong"
+                    exit(1)
+                mydict["nbytes"] = nums[0]
+                mydict["nblocks"] = nums[1]
+                mydict["blocksize"] = nums[2]
+        return mydict
+
+fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
+#frag = fsmon.e2freefrag()
+print fsmon.dump_extents("myfirstfile")
+#fsmon.ls("filesss")
+#print fsmon.filefrag("filesss")
+
 
 
 
