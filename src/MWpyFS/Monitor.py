@@ -24,7 +24,22 @@ import subprocess
 from time import gmtime, strftime
 import re
 import shlex
-import os.path
+import os
+import pprint
+
+class cd:
+    """Context manager for changing the current working directory"""
+    def __init__(self, newPath):
+        self.newPath = newPath
+
+    def __enter__(self):
+        self.savedPath = os.getcwd()
+        os.chdir(self.newPath)
+
+    def __exit__(self, etype, value, traceback):
+        os.chdir(self.savedPath)
+
+
 
 def dict2table(mydict):
     mytable = ""
@@ -80,7 +95,7 @@ class FSMonitor:
     def dump_extents(self, filepath):
         cmd = "debugfs /dev/sdb1 -R 'dump_extents " + filepath + "'"
         cmd = shlex.split(cmd)
-        print cmd
+        #print cmd
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
         proc.wait()
 
@@ -91,7 +106,7 @@ class FSMonitor:
                             # internal/leaf nodes
         max_level = 0
         for line in proc.stdout:
-            print "LLL:", line,
+            #print "LLL:", line,
             if "Level" in line:
                 header = ["Level_index", "Max_level", 
                          "Entry_index", "N_Entry",
@@ -160,9 +175,9 @@ class FSMonitor:
         mydict = {}
         for line in proc.stdout:
             if line.startswith("File size of"):
-                print line
+                #print line
                 line = line.split(" is ")[1]
-                print line
+                #print line
                 nums = re.findall(r'\d+', line)
                 if len(nums) != 3:
                     print "filefrag something wrong"
@@ -172,12 +187,33 @@ class FSMonitor:
                 mydict["blocksize"] = nums[2]
         return mydict
 
-fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
-#frag = fsmon.e2freefrag()
-print fsmon.dump_extents("myfirstfile")
-#fsmon.ls("filesss")
-#print fsmon.filefrag("filesss")
+    def getAllInodePaths(self, rootdir="."):
+        "it returns paths of all files and diretories"
+        rootpath = os.path.join(self.mountpoint, rootdir)
 
+        paths = []
+        with cd(rootpath):
+            cmd = ['find', rootdir]
+            proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+            proc.wait()
+
+            for line in proc.stdout:
+                paths.append(line.replace("\n", ""))
+            
+        return paths
+
+    def getAllExtentStats(self, rootdir="."):
+        files = self.getAllInodePaths(rootdir)
+        stats = []
+        for f in files:
+            stats.append( self.dump_extents(f) )
+        return stats
+        
+
+
+fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
+
+pprint.pprint( fsmon.getAllExtentStats() )
 
 
 
