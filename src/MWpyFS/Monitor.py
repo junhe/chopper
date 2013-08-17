@@ -41,20 +41,6 @@ class cd:
 
 
 
-def dict2table(mydict, cw=20):
-    mytable = ""
-
-    header = ""
-    for keyname in mydict:
-        header += keyname.rjust(cw) + " "
-    header += "HEADERMARKER\n"
-
-    vals = ""    
-    for keyname in mydict:
-        vals += mydict[keyname].rjust(cw) + " "
-    vals += "DATAMARKER\n"
-
-    return header + vals
         
 
 class FSMonitor:
@@ -67,7 +53,7 @@ class FSMonitor:
         self.mountpoint = mp # please only provide path without mountpoint
                              # when using this class.
         self.col_width = cw
-        self.monitor_id = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
+        self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
     
     def e2freefrag(self):
         cmd = ["e2freefrag", self.devname]
@@ -92,13 +78,14 @@ class FSMonitor:
             elif part == 1:
                 # This part is the histogram.
                 if "Extent Size" in line:
-                    hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent HEADERMARKER\n"
+                    hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent monitor_time HEADERMARKER_freefrag_hist\n"
                     continue
                 fline = re.sub(r'[\-:\n]', "", line)
                 fline = re.sub(r'\.{3}', "", fline)
-                hist_table += fline + " DATAMARKER\n"
+                hist_table += fline + " " + self.widen(str(self.monitor_time)) \
+                              + " DATAMARKER_freefrag_hist\n"
                  
-        return (dict2table(sums_dict, self.col_width), hist_table)
+        return (self.dict2table(sums_dict), hist_table)
 
         
     def dump_extents(self, filepath):
@@ -213,26 +200,60 @@ class FSMonitor:
             
         header = ""
         for keyname in stats[0]:
-            header += keyname.rjust(self.col_width) + " "
-        header += "HEADERMARKER\n"
+            header += self.widen(keyname) + " "
+        header += self.widen("monitor_time") + " HEADERMARKER_extstats\n"
 
         vals = ""
         for entry in stats:
             for keyname in entry:
-                vals += str(entry[keyname]).rjust(self.col_width) + " "
-            vals += "DATAMARKER\n"
+                vals += self.widen(str(entry[keyname])) + " "
+            vals += self.widen(str(self.monitor_time)) + " DATAMARKER_extstats\n"
         
         return header + vals
         
+    def widen(self, s):
+        return s.rjust(self.col_width)
 
+    def dict2table(self, mydict):
+        mytable = ""
 
+        header = ""
+        for keyname in mydict:
+            header += self.widen(keyname) + " "
+        header += self.widen("monitor_time") + " HEADERMARKER_freefrag_sum\n"
 
+        vals = ""    
+        for keyname in mydict:
+            vals += self.widen(mydict[keyname]) + " "
+        vals += self.widen(str(self.monitor_time)) + " DATAMARKER_freefrag_sum\n"
+
+        return header + vals
+
+    def display(self, resultpath=""):
+        "resultpath should be in another file system so they don't intervene"
+        extstats = self.getAllExtentStatsSTR()
+        frag = self.e2freefrag()
+        
+        # display
+        extstats_header = "-----------  Extent statistics  -------------\n"
+        frag0_header  = "-----------  Extent summary  -------------\n"
+        frag1_header = "----------- Extent Histogram   -------------\n"
+
+        print extstats_header, extstats,
+        print frag0_header, frag[0]
+        print frag1_header, frag[1]
+
+        if resultpath != "": 
+            f = open(resultpath, 'w')
+            f.write(extstats_header + extstats)
+            f.write(frag0_header + frag[0])
+            f.write(frag1_header + frag[1])
+            f.close()
+        
+        return
+
+        
 
 fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
-
-print fsmon.getAllExtentStatsSTR() 
-print fsmon.e2freefrag()[0]
-print fsmon.e2freefrag()[1]
-
-
+fsmon.display(resultpath="/tmp/thanks")
 
