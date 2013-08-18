@@ -43,9 +43,6 @@ def buildNewExt4(devname, mountpoint, confpath):
     devname_part1 = devname+"1"
     
     ret = umountFS(mountpoint)
-    if ret != 0:
-        print "this should not happen"
-        return ret
 
     ret = formatToOnePart(devname, confpath)
     if ret != 0:

@@ -67,15 +67,21 @@ WorkloadDispatcher::run()
 
             if ( !wl_entry.isHEAD() && wl_entry._pid == 0) {
                 // It is rank0's job
-                //wl_player.play(wl_entry);
+                _wl_player.play(wl_entry);
             } else {
                 // It is rank 1~(n-1) 's job
-                MPI_Send(&flag, 1, MPI_INT, wl_entry._pid, 1, MPI_COMM_WORLD);
                 
-                //// compose a serialized entry
-                //string enstr = wl_entry._entry_str;
-                //assert( enstr.size()+1 < _bufsize );
-                //strcpy(comm_buf, enstr.c_str());
+                // compose a serialized entry
+                string enstr = wl_entry._entry_str;
+                assert( enstr.size()+1 < _bufsize );
+                strcpy(comm_buf, enstr.c_str());
+              
+                // tell receiver a job is coming
+                MPI_Send(&flag, 1, MPI_INT, 
+                        wl_entry._pid, 1, MPI_COMM_WORLD);
+                // Send it out
+                MPI_Send(comm_buf, _bufsize, MPI_CHAR, 
+                        wl_entry._pid, 1, MPI_COMM_WORLD);
 
             }
         }
@@ -96,11 +102,17 @@ WorkloadDispatcher::run()
             cout << "rank:" << _rank << " flag:" << flag << endl;
             if ( flag == 1 ) {
                 // have a workload entry to play
-                
+                MPI_Recv( comm_buf, _bufsize, MPI_CHAR,
+                        0, 1, MPI_COMM_WORLD, &stat );
 
+                string bufstr = comm_buf;
+                cout << "bufstr:" << bufstr << endl;
+                WorkloadEntry wl_entry(bufstr);
+
+                _wl_player.play(wl_entry);
             } else {
                 // nothing to do, the end
-                break;
+                break; // don't do return, comm_buf needs to be freed
             }
         }
     }
