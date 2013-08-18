@@ -31,7 +31,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         cout << ret ;
     } else if ( wl_entry._operation == "open" ) {
         // open file
-        int fd = open( wl_entry._path.c_str(), O_CREAT|O_RDWR);
+        int fd = open( wl_entry._path.c_str(), O_CREAT|O_RDWR, 0666);
         if ( fd == -1 ) {
             perror(wl_entry._path.c_str());
             exit(1);
