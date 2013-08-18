@@ -25,10 +25,10 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
     if ( wl_entry._operation == "mkdir" ) {
         // make dir
         cout << "mkdir" << endl;
-        int ret = mkdir(wl_entry._path.c_str(), 0777);
-        if (ret != 0 ) {
-            perror(wl_entry._path.c_str());
-        }
+        string cmd = "mkdir -p ";
+        cmd += wl_entry._path;
+        string ret = Util::exec(cmd.c_str());
+        cout << ret ;
     } else if ( wl_entry._operation == "open" ) {
         // open file
         int fd = open( wl_entry._path.c_str(), O_CREAT|O_RDWR);
