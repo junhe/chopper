@@ -10,6 +10,9 @@ class WorkloadEntry {
         std::vector<std::string> _tokens;
 
         void setEntry(const std::string &line);
+        bool isHEAD();
+        WorkloadEntry(){};
+        WorkloadEntry(const std::string &line);
 };
 
 class WorkloadFetcher

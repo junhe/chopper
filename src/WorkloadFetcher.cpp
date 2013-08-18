@@ -17,6 +17,13 @@ using namespace std;
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 // WorkloadEntry
+//
+
+WorkloadEntry::WorkloadEntry(const std::string &line)
+{
+    setEntry(line);
+}
+
 void
 WorkloadEntry::setEntry(const std::string &line)
 {
@@ -24,8 +31,18 @@ WorkloadEntry::setEntry(const std::string &line)
     vector<string> a = Util::split(_entry_str, ';', _tokens);
 }
 
+bool
+WorkloadEntry::isHEAD()
+{
+    if ( _tokens.size() > 0 && _tokens[0] == "HEAD" )
+        return true;
+    else 
+        return false;
+}
 
-
+///////////////////////////////////////////
+///////////////////////////////////////////
+// WorkloadFetcher
 WorkloadFetcher::WorkloadFetcher(int bsize, const char *workloadpath)
     :_bufSize(bsize)
 { 
