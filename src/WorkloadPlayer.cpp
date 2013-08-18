@@ -11,6 +11,7 @@
 
 #include "WorkloadFetcher.h"
 #include "WorkloadPlayer.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -75,7 +76,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
 
         int ret = pwrite(fd, buf, length, offset);
         free(buf);
-        assert(ret == length);
+        assert(ret == (int)length);
     } else if ( wl_entry._operation == "read" ) {
         cout << "reading..." << endl;
         map<string, int>::const_iterator it;
@@ -100,7 +101,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
 
         int ret = pread(fd, buf, length, offset);
         free(buf);
-        assert(ret == length);
+        assert(ret == (int)length);
     } else if ( wl_entry._operation == "fsync" ) {
         cout << "fsyncing..." << endl;
         map<string, int>::const_iterator it;
@@ -112,11 +113,18 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         // Now it is safe
         int fd = it->second; // for short
         fsync(fd);
+    } else if ( wl_entry._operation == "rm" ) {
+        string cmd = "rm -rf ";
+        cmd += wl_entry._path;
+        string ret = Util::exec(cmd.c_str());
+        cout << ret;
     } else {
         cerr << "Unrecognized Operation in play()" << endl;
     }
 
     return;
 }
+
+
 
 
