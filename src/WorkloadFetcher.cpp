@@ -13,13 +13,13 @@
 
 using namespace std;
 
-WorkloadFetcher::WorkloadFetcher(int bsize, const char *workloadfilename)
+WorkloadFetcher::WorkloadFetcher(int bsize, const char *workloadpath)
     :_bufSize(bsize)
 { 
     assert(_bufSize > 0);
-    _workloadStream.open(workloadfilename);
+    _workloadStream.open(workloadpath);
     if (! _workloadStream.is_open()) {
-        cout << "ERROR, workload file (" << workloadfilename << ") cannot be open." << endl;
+        cout << "ERROR, workload file (" << workloadpath << ") cannot be open." << endl;
         exit(1);
     }
 }

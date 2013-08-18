@@ -1,5 +1,6 @@
 include_directories ( ${Metawalker_SOURCE_DIR}/src )
 link_directories (${Metawalker_SOURCE_DIR}/src)
+link_directories (/usr/lib)
 
 add_library (Util Util.cpp)
 add_library (WorkloadFetcher WorkloadFetcher.cpp)
