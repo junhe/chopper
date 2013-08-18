@@ -58,6 +58,8 @@ WorkloadDispatcher::run()
 
     if ( _rank == 0 ) {
         WorkloadEntry wl_entry;
+        int flag = 1; // 1: one more job to do
+                      // 0: nothing to do
         while (_fetcher->fetchEntry(wl_entry) == 1) {
             cout << wl_entry._entry_str << "---" 
                 << wl_entry._tokens.size() << "==" << wl_entry.isHEAD() << "Pid" << wl_entry._pid
@@ -68,8 +70,6 @@ WorkloadDispatcher::run()
                 //wl_player.play(wl_entry);
             } else {
                 // It is rank 1~(n-1) 's job
-                int flag = 1; // 1: one more job to do
-                              //// 0: nothing to do
                 MPI_Send(&flag, 1, MPI_INT, wl_entry._pid, 1, MPI_COMM_WORLD);
                 
                 //// compose a serialized entry
@@ -80,11 +80,12 @@ WorkloadDispatcher::run()
             }
         }
         
-        //int dest_rank;
-        //for ( dest_rank = 1 ; dest_rank < np ; dest_rank++ ) {
-            //MPI_INT flag = 0;
-            //MPI_Send(&flag, 1, MPI_INT, dest_rank, 1, MPI_COMM_WORLD);
-        //}
+        cout << "fetched all entries from workload file" << endl;
+        int dest_rank;
+        flag = 0;
+        for ( dest_rank = 1 ; dest_rank < _np ; dest_rank++ ) {
+            MPI_Send(&flag, 1, MPI_INT, dest_rank, 1, MPI_COMM_WORLD);
+        }
     } else {
         int flag;
         MPI_Status stat;
@@ -93,14 +94,14 @@ WorkloadDispatcher::run()
             // get the flag and decide what to do
             MPI_Recv( &flag, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, &stat );
             cout << "rank:" << _rank << " flag:" << flag << endl;
-            //if ( flag == 1 ) {
-                //// have a workload entry to play
+            if ( flag == 1 ) {
+                // have a workload entry to play
                 
 
-            //} else {
-                //// nothing to do, the end
-                //return;
-            //}
+            } else {
+                // nothing to do, the end
+                break;
+            }
         }
     }
 
