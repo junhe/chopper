@@ -12,7 +12,9 @@ int main(int argc, char **argv)
     WorkloadEntry we;
     
     while (wf.fetchEntry(we) == 1) {
-        cout << we._entry_str << "---" << we._tokens.size() << "==" << we.isHEAD() << endl;
+        cout << we._entry_str << "---" 
+            << we._tokens.size() << "==" << we.isHEAD() << "Pid" << we._pid
+            << endl;
     }
 
     cout << "end of program" << endl;

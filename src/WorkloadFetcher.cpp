@@ -1,4 +1,3 @@
-
 #include <string>
 #include <stdlib.h>
 #include <iostream>
@@ -29,10 +28,25 @@ WorkloadEntry::setEntry(const std::string &line)
 {
     _entry_str = line;
     vector<string> a = Util::split(_entry_str, ';', _tokens);
+
+    setItemCache();
 }
 
+bool WorkloadEntry::setItemCache()
+{
+    if ( !isHEAD() ) {
+        istringstream( _tokens[0] ) >> _pid;
+        _path = _tokens[1];
+        _operation = _tokens[2];
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 bool
-WorkloadEntry::isHEAD()
+WorkloadEntry::isHEAD() const
 {
     if ( _tokens.size() > 0 && _tokens[0] == "HEAD" )
         return true;

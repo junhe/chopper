@@ -8,11 +8,16 @@ class WorkloadEntry {
     public:
         std::string _entry_str;
         std::vector<std::string> _tokens;
+        pid_t       _pid;
+        std::string _path;
+        std::string _operation;
 
         void setEntry(const std::string &line);
-        bool isHEAD();
+        bool isHEAD() const;
         WorkloadEntry(){};
         WorkloadEntry(const std::string &line);
+    private:
+        bool setItemCache();
 };
 
 class WorkloadFetcher
