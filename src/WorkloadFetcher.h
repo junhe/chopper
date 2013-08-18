@@ -7,6 +7,9 @@
 class WorkloadEntry {
     public:
         std::string _entry_str;
+        std::vector<std::string> _tokens;
+
+        void setEntry(const std::string &line);
 };
 
 class WorkloadFetcher

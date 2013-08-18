@@ -7,11 +7,24 @@
 #include <queue>
 #include <assert.h>
 #include <iterator>
+#include <string>
 
 #include "Util.h"
 #include "WorkloadFetcher.h"
 
 using namespace std;
+
+///////////////////////////////////////////
+///////////////////////////////////////////
+// WorkloadEntry
+void
+WorkloadEntry::setEntry(const std::string &line)
+{
+    _entry_str = line;
+    vector<string> a = Util::split(_entry_str, ';', _tokens);
+}
+
+
 
 WorkloadFetcher::WorkloadFetcher(int bsize, const char *workloadpath)
     :_bufSize(bsize)
@@ -39,7 +52,7 @@ WorkloadFetcher::readEntryFromStream(WorkloadEntry &entry)
     if (getline(_workloadStream, line)) {
         istringstream iss(line);
         
-        entry._entry_str = line;
+        entry.setEntry(line);
         return 1;
     }
     return EOF;
