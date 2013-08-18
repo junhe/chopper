@@ -57,5 +57,5 @@ def buildNewExt4(devname, mountpoint, confpath):
         print "this should not happen"
         return ret
 
-buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
+#buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 

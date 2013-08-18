@@ -39,10 +39,6 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-
-
-        
-
 class FSMonitor:
     """
     This monitor probes the ext4 file system and return information I 
@@ -257,6 +253,6 @@ class FSMonitor:
 
         
 
-fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
-fsmon.display(savedata=True)
+#fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
+#fsmon.display(savedata=True)
 
