@@ -63,7 +63,7 @@ WorkloadFetcher::WorkloadFetcher(int bsize, const char *workloadpath)
     assert(_bufSize > 0);
     _workloadStream.open(workloadpath);
     if (! _workloadStream.is_open()) {
-        cout << "ERROR, workload file (" << workloadpath << ") cannot be open." << endl;
+        cerr << "ERROR, workload file (" << workloadpath << ") cannot be open." << endl;
         exit(1);
     }
 }

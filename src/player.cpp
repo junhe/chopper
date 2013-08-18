@@ -61,13 +61,14 @@ WorkloadDispatcher::run()
         int flag = 1; // 1: one more job to do
                       // 0: nothing to do
         while (_fetcher->fetchEntry(wl_entry) == 1) {
-            cout << wl_entry._entry_str << "---" 
-                << wl_entry._tokens.size() << "==" << wl_entry.isHEAD() << "Pid" << wl_entry._pid
-                << endl;
+            //cout << wl_entry._entry_str << "---" 
+                //<< wl_entry._tokens.size() << "==" << wl_entry.isHEAD() << "Pid" << wl_entry._pid
+                //<< endl;
 
             if ( !wl_entry.isHEAD() && wl_entry._pid == 0) {
                 // It is rank0's job
                 _wl_player.play(wl_entry);
+                cout << "rank:" << _rank << " job:" << wl_entry._entry_str << endl;
             } else {
                 // It is rank 1~(n-1) 's job
                 
@@ -86,7 +87,7 @@ WorkloadDispatcher::run()
             }
         }
         
-        cout << "fetched all entries from workload file" << endl;
+        //cout << "fetched all entries from workload file" << endl;
         int dest_rank;
         flag = 0;
         for ( dest_rank = 1 ; dest_rank < _np ; dest_rank++ ) {
@@ -99,14 +100,14 @@ WorkloadDispatcher::run()
         while (true) {
             // get the flag and decide what to do
             MPI_Recv( &flag, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, &stat );
-            cout << "rank:" << _rank << " flag:" << flag << endl;
+            //cout << "rank:" << _rank << " flag:" << flag << endl;
             if ( flag == 1 ) {
                 // have a workload entry to play
                 MPI_Recv( comm_buf, _bufsize, MPI_CHAR,
                         0, 1, MPI_COMM_WORLD, &stat );
 
                 string bufstr = comm_buf;
-                cout << "bufstr:" << bufstr << endl;
+                cout << "rank:" << _rank << " job:" << bufstr << endl;
                 WorkloadEntry wl_entry(bufstr);
 
                 _wl_player.play(wl_entry);
@@ -134,23 +135,7 @@ int main(int argc, char **argv)
             "/home/junhe/workdir/metawalker/src/pyWorkload/workload001");
     wl_disp.run();
 
-    cout << "Hello" << endl;
-
     MPI_Finalize();
-
-    //WorkloadFetcher wf(1000, "/home/junhe/workdir/metawalker/src/pyWorkload/workload001");
-    
-    //WorkloadPlayer wl_player;
-    //WorkloadEntry wl_entry;
-    
-    //while (wf.fetchEntry(wl_entry) == 1) {
-        //cout << wl_entry._entry_str << "---" 
-            //<< wl_entry._tokens.size() << "==" << wl_entry.isHEAD() << "Pid" << wl_entry._pid
-            //<< endl;
-        //wl_player.play(wl_entry);
-    //}
-
-    //cout << "end of program" << endl;
     return 0;
 }
 

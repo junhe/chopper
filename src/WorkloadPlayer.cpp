@@ -21,14 +21,14 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
     if (wl_entry.isHEAD())
         return;
    
-    cout << "OPERATION:" << wl_entry._operation << "EOF" << endl;
+    //cout << "OPERATION:" << wl_entry._operation << "EOF" << endl;
     if ( wl_entry._operation == "mkdir" ) {
         // make dir
-        cout << "mkdir" << endl;
+        //cout << "mkdir" << endl;
         string cmd = "mkdir -p ";
         cmd += wl_entry._path;
         string ret = Util::exec(cmd.c_str());
-        cout << ret ;
+        //cout << ret ;
     } else if ( wl_entry._operation == "open" ) {
         // open file
         int fd = open( wl_entry._path.c_str(), O_CREAT|O_RDWR, 0666);
@@ -41,7 +41,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         }
     } else if ( wl_entry._operation == "close" ) {
         // close file
-        cout << "closing...." << endl;
+        //cout << "closing...." << endl;
         if ( _path2fd_dict.count(wl_entry._path) == 0 ) {
             cerr << "File to be closed is not open" << endl;
             exit(1);
@@ -53,7 +53,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
             exit(1);
         }
     } else if ( wl_entry._operation == "write" ) {
-        cout << "writing..." << endl;
+        //cout << "writing..." << endl;
         map<string, int>::const_iterator it;
         it = _path2fd_dict.find( wl_entry._path );
         if ( it == _path2fd_dict.end() ) { 
@@ -78,7 +78,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         free(buf);
         assert(ret == (int)length);
     } else if ( wl_entry._operation == "read" ) {
-        cout << "reading..." << endl;
+        //cout << "reading..." << endl;
         map<string, int>::const_iterator it;
         it = _path2fd_dict.find( wl_entry._path );
         if ( it == _path2fd_dict.end() ) { 
@@ -103,7 +103,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         free(buf);
         assert(ret == (int)length);
     } else if ( wl_entry._operation == "fsync" ) {
-        cout << "fsyncing..." << endl;
+        //cout << "fsyncing..." << endl;
         map<string, int>::const_iterator it;
         it = _path2fd_dict.find( wl_entry._path );
         if ( it == _path2fd_dict.end() ) { 
@@ -117,7 +117,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         string cmd = "rm -rf ";
         cmd += wl_entry._path;
         string ret = Util::exec(cmd.c_str());
-        cout << ret;
+        //cout << ret;
     } else {
         cerr << "Unrecognized Operation in play()" << endl;
     }
