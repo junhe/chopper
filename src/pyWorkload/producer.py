@@ -8,7 +8,7 @@ class Producer:
     def save2file(self, workload_str, tofile=""):
         if tofile != "":
             with open(tofile, 'w') as f:
-                f.write(workload)
+                f.write(workload_str)
                 f.flush()
             print "save2file. workload saved to file"
         else:
@@ -42,7 +42,7 @@ class Producer:
         workload = self._produce()
         
         if tofile != "":
-            self.save2file(workload_str, tofile=tofile)
+            self.save2file(workload, tofile=tofile)
         
         return workload
 

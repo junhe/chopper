@@ -14,6 +14,8 @@ import subprocess
 import MWpyFS
 import pyWorkload
 import time
+import shutil
+import os
 
 class Walkman:
     def __init__(self):
@@ -44,7 +46,7 @@ class Walkman:
     def produceWorkload(self, rootdir):
         self.wl_producer.produce(np=self.np, 
                                 startOff=0,
-                                nwrites_per_file = 50000, 
+                                nwrites_per_file = 50, 
                                 nfile_per_dir=3, 
                                 ndir_per_pid=self.ndir_per_pid,
                                 wsize=4097, 
@@ -61,6 +63,9 @@ class Walkman:
         rootdir = "round"+str(i)+"/"   #TODO: fix the "/" must thing
         return rootdir
 
+    def getLogFilenameBySeasonYear(self, season, year):
+        return "result.log.season-"+str(season)+".year-"+str(year)
+
     def displayFreeFrag():
         e2ff = self.monitor.e2freefrag()
         print e2ff[0]
@@ -71,17 +76,34 @@ def main():
     walkman = Walkman()
 
     #walkman.rebuildFS()
+    #return
 
-    n = 3 # play this workload for n time, monitor the FS status
-          # after each time
-    for i in range(9):
-        rootdir = getrootdirByIterIndex(i)
-        #walkman.produceWorkload(rootdir=rootdir)
 
-        #walkman.play()
+    nyears=3
+    nseasons_per_year = 4
+    
+    for y in range(nyears):
+        for s in range(nseasons_per_year):
+            rootdir = walkman.getrootdirByIterIndex(s)
+            walkman.produceWorkload(rootdir=rootdir)
 
-        #time.sleep(3)
-        walkman.monitor.display(savedata=True, logfile="result."+str(i))
+            walkman.play()
+
+            time.sleep(3)
+            walkman.monitor.display(savedata=True, 
+                                    logfile=walkman.getLogFilenameBySeasonYear(s,y))
+
+            # now, delete the previous dir if it exists
+            pre_s = (s - (nseasons_per_year-1))%nseasons_per_year
+            pre_s_rootdir = walkman.getrootdirByIterIndex(pre_s)
+            fullpath = os.path.join(walkman.mountpoint,pre_s_rootdir)
+            try:
+                print "removing ", fullpath
+                shutil.rmtree(fullpath)
+            except:
+                print "failed to rmtree (but should be OK):", fullpath
+
+            
 
 if __name__ == "__main__":
     main()
