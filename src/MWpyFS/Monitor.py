@@ -49,9 +49,13 @@ class FSMonitor:
         self.mountpoint = mp # please only provide path without mountpoint
                              # when using this class.
         self.col_width = cw
-        self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
         self.logdir = ld
+        self.resetMonitorTime()
     
+    def resetMonitorTime(self):
+        self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
+
+
     def e2freefrag(self):
         cmd = ["e2freefrag", self.devname]
         proc = subprocess.Popen(cmd,
@@ -235,6 +239,7 @@ class FSMonitor:
         return header + vals
 
     def display(self, savedata=False, logfile=""):
+        self.resetMonitorTime()
         "resultpath should be in another file system so they don't intervene"
         extstats = self.getAllExtentStatsSTR()
         frag = self.e2freefrag()
