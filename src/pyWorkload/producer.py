@@ -6,7 +6,7 @@ class Producer:
     """
     """
     def produce (self, np, startOff, nwrites_per_file, nfile_per_dir, ndir_per_pid,
-              wsize, wstride, mountpoint):
+              wsize, wstride, mountpoint, tofile=""):
         self.np = np
         self.startOff = startOff
 
@@ -20,7 +20,14 @@ class Producer:
 
         self.mountpoint = mountpoint
 
-        return self._produce()
+        workload = self._produce()
+
+        if tofile == "":
+            return workload
+        else:
+            with open(tofile, 'w') as f:
+                f.write(workload)
+            return ""
     
     def getFilepath(self, dir, pid, file_id ):
         fname = ".".join( [str(pid), str(file_id), "file"] )
@@ -80,7 +87,6 @@ class Producer:
                     entry = str(p)+";"+path+";"+"close"+"\n";
                     workload += entry
 
-
         return workload
 
 prd = Producer()
@@ -90,7 +96,8 @@ print prd.produce(np=2, startOff=0,
                 ndir_per_pid=2,
                 wsize=3331, 
                 wstride=3331, 
-                mountpoint="/mnt/scratch/"),
+                mountpoint="/mnt/scratch/", 
+                tofile="tmp.workload"),
 
 
 
