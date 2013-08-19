@@ -42,7 +42,7 @@ def mountExt4(devname, mountpoint):
     print "mountExt4:", p.returncode
     return p.returncode
 
-def chDirOwn(mountpoint, username):
+def chDirOwner(mountpoint, username):
     uid = pwd.getpwnam(username).pw_uid
     gid = grp.getgrnam(username).gr_gid
     
@@ -71,7 +71,7 @@ def buildNewExt4(devname, mountpoint, confpath, username):
     if ret != 0:
         print "Error in mountExt4: this should not happen"
         return ret
-    makeDirMine(mountpoint, username)
+    chDirOwner(mountpoint, username)
 
 #buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 
