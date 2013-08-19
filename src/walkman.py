@@ -151,6 +151,10 @@ class Walkman:
 def main():
     walkman = Walkman()
 
+    print walkman.monitor.dumpfsSTR(),
+    return
+
+
     #walkman.rebuildFS()
     walkman.remakeExt4()
     print 'sleeping 5 sec after building fs....'

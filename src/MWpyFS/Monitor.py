@@ -45,7 +45,7 @@ class FSMonitor:
     want in a nice format.
     """
     def __init__(self, dn, mp, ld="/tmp", cw=20):
-        self.devname = dn 
+        self.devname = dn   # this should be the device name of the partition 
         self.mountpoint = mp # please only provide path without mountpoint
                              # when using this class.
         self.col_width = cw
@@ -55,6 +55,66 @@ class FSMonitor:
     def resetMonitorTime(self):
         self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", localtime())
 
+    def _spliter_dumpfs(self, line):
+        elems = line.split(":")[1]
+        elems = elems.split()
+
+        new_elems = [] # [[a0,a1],[b0,b1]...]
+        for elem in elems:
+            e = elem.split("-")
+            elen = len(e)
+            if elen == 2:
+                new_elems.append(e)
+            elif elen == 1:
+                e.append(e)
+                new_elems.append(e)
+            else:
+                print "wrong split", elem
+                exit(1)
+        return new_elems
+
+    def dumpfs(self):
+        cmd = ["dumpe2fs", self.devname]
+        proc = subprocess.Popen(cmd, 
+                                stdout=subprocess.PIPE)
+        proc.wait()
+
+        freeblocks = []
+        freeinodes = []
+        for line in proc.stdout:
+            print "MYLINE!!!", line,
+            if line.startswith("  Free blocks:"):
+                print "free blocks"
+                freeblocks += self._spliter_dumpfs(line)
+            elif line.startswith("  Free inodes:"):
+                print "free inodes"
+                freeinodes += self._spliter_dumpfs(line)
+            else:
+                pass
+        return {"blocks":freeblocks, "inodes":freeinodes}
+
+    def dumpfsSTR(self):
+        ranges = self.dumpfs()
+
+        freeblocks = "start end monitor_time HEADERMARKER_freeblocks".split()
+        freeblocks = [ self.widen(x) for x in freeblocks ]
+        freeblocks = " ".join(freeblocks) + '\n'
+        for row in ranges['blocks']:
+            entry = row + [self.monitor_time,  "DATAMARKER_freeblocks"]
+            entry = [ self.widen(str(x)) for x in entry ]
+            entry = " ".join(entry)
+            freeblocks += entry + "\n"
+
+        freeinodes = "start end monitor_time HEADERMARKER_freeinodes".split()
+        freeinodes = [ self.widen(x) for x in freeinodes ]
+        freeinodes = " ".join(freeinodes) + '\n'
+        for row in ranges['inodes']:
+            entry = row + [self.monitor_time,  "DATAMARKER_freeinodes"]
+            entry = [ self.widen(str(x)) for x in entry ]
+            entry = " ".join(entry)
+            freeinodes += entry + "\n"
+        
+        return freeblocks + freeinodes
 
     def e2freefrag(self):
         cmd = ["e2freefrag", self.devname]
