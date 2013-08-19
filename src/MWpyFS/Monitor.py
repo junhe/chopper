@@ -21,7 +21,7 @@
 #       JUST LIKE THE ORIGINAL OUTPUT BUT FORMAT IT A LITTLE BIT
 
 import subprocess
-from time import gmtime, strftime
+from time import strftime, localtime
 import re
 import shlex
 import os
@@ -53,7 +53,7 @@ class FSMonitor:
         self.resetMonitorTime()
     
     def resetMonitorTime(self):
-        self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
+        self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", localtime())
 
 
     def e2freefrag(self):

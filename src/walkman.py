@@ -26,13 +26,17 @@ class Walkman:
         self.monitor = MWpyFS.Monitor.FSMonitor(self.partition, 
                                                  self.mountpoint,
                                                  ld = "./") # logdir
+        self.jobid = strftime("%Y-%m-%d-%H-%M-%S", localtime())
+
+
         self.workloadpath = "./pyWorkload/workload.buf"
         self.wl_producer = pyWorkload.producer.Producer()
         self.playerpath = "../build/src/player"
         self.mpirunpath = "/home/junhe/installs/openmpi-1.4.3/bin/mpirun"
-        self.np = 2 # put it here guide mpirun and wl producer
-        self.ndir_per_pid = 2
-    
+        self.np = 3 # put it here guide mpirun and wl producer
+        self.ndir_per_pid = 7
+        
+
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.devname,
                 self.mountpoint, self.diskconf, "junhe")
@@ -50,7 +54,7 @@ class Walkman:
                                 nfile_per_dir=3, 
                                 ndir_per_pid=self.ndir_per_pid,
                                 wsize=4097, 
-                                wstride=4098*2, 
+                                wstride=4097, 
                                 rootdir=self.mountpoint+rootdir,
                                 tofile=self.workloadpath)
     def play(self):
@@ -79,8 +83,8 @@ def main():
     #return
 
 
-    nyears=3
-    nseasons_per_year = 4
+    nyears=2
+    nseasons_per_year = 3
     
     for y in range(nyears):
         for s in range(nseasons_per_year):
