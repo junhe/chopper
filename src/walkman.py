@@ -51,7 +51,7 @@ def main():
 
     n = 3 # play this workload for n time, monitor the FS status
           # after each time
-    for i in [7]:
+    for i in [8]:
         rootdir = "round"+str(i)+"/"   #TODO: fix the "/" must thing
         walkman.produceWorkload(rootdir=rootdir)
 

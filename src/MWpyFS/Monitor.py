@@ -107,13 +107,15 @@ class FSMonitor:
                          "Physical_start", "Physical_end",
                          "Length", "Flag"]
             else:
-                line = re.sub(r'[/\-]', "", line)
+                savedline = line
+                line = re.sub(r'[/\-]', " ", line)
                 tokens = line.split()
                 d = {}
                 for i in range(9):
                     try:
                         d[ header[i] ] = tokens[i]
                     except:
+                        print savedline
                         print "token:", tokens
                         print "header:", header # having a try-except can grant you
                                             # the opportunity to do something 
