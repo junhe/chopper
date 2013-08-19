@@ -89,15 +89,14 @@ class Producer:
 
         return workload
 
-prd = Producer()
-print prd.produce(np=2, startOff=0, 
-                nwrites_per_file = 1000, 
-                nfile_per_dir=3, 
-                ndir_per_pid=2,
-                wsize=3331, 
-                wstride=3331, 
-                mountpoint="/mnt/scratch/", 
-                tofile="tmp.workload"),
+#print prd.produce(np=2, startOff=0, 
+                #nwrites_per_file = 1000, 
+                #nfile_per_dir=3, 
+                #ndir_per_pid=2,
+                #wsize=3331, 
+                #wstride=3331, 
+                #mountpoint="/mnt/scratch/", 
+                #tofile="tmp.workload"),
 
 
 
