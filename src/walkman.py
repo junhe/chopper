@@ -16,28 +16,30 @@ class Walkman:
         self.partition = '/dev/sdb1'
         self.diskconf = '../conf/sfdisk.conf'
         self.mountpoint = '/mnt/scratch/'
-        self.moniotor = MWpyFS.Monitor.FSMonitor(self.partition, 
-                                                 self.mountpoint)
+        self.monitor = MWpyFS.Monitor.FSMonitor(self.partition, 
+                                                 self.mountpoint,
+                                                 ld = "./") # logdir
         self.workloadpath = "./pyWorkload/workload.buf"
         self.wl_producer = pyWorkload.producer.Producer()
         self.playerpath = "../build/src/player"
+        self.mpirunpath = "/home/junhe/installs/openmpi-1.4.3/bin/mpirun"
         self.np = 4 # put it here guide mpirun and wl producer
     
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.devname,
-                self.mountpoint, self.diskconf)
+                self.mountpoint, self.diskconf, "junhe")
     def produceWorkload(self, rootdir):
         self.wl_producer.produce(np=self.np, 
-                                startOff=10000, 
-                                nwrites_per_file = 10, 
+                                startOff=0,
+                                nwrites_per_file = 10000, 
                                 nfile_per_dir=3, 
                                 ndir_per_pid=2,
-                                wsize=3331, 
-                                wstride=3331, 
+                                wsize=1, 
+                                wstride=2, 
                                 rootdir=self.mountpoint+rootdir,
                                 tofile=self.workloadpath)
     def play(self):
-        cmd = ["mpirun", "-np", self.np, self.playerpath, self.workloadpath]
+        cmd = [self.mpirunpath, "-np", self.np, self.playerpath, self.workloadpath]
         cmd = [str(x) for x in cmd]
         proc = subprocess.Popen(cmd) 
         proc.wait()
@@ -47,12 +49,13 @@ def main():
     walkman = Walkman()
     #walkman.rebuildFS()
 
-    n = 2 # play this workload for n time, monitor the FS status
+    n = 3 # play this workload for n time, monitor the FS status
           # after each time
-    for i in range(n):
+    for i in range(2,n):
         rootdir = "round"+str(i)+"/"   #TODO: fix the "/" must thing
         walkman.produceWorkload(rootdir=rootdir)
         walkman.play()
+        walkman.monitor.display(savedata=True)
 
 if __name__ == "__main__":
     main()
