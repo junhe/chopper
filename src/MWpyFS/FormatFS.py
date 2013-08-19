@@ -2,6 +2,9 @@
 
 import subprocess
 import os
+import getpass
+import pwd
+import grp
 
 def formatToOnePart(devname, confpath):
     conffile = open(confpath, "r")
@@ -39,23 +42,36 @@ def mountExt4(devname, mountpoint):
     print "mountExt4:", p.returncode
     return p.returncode
 
-def buildNewExt4(devname, mountpoint, confpath):
+def chDirOwn(mountpoint, username):
+    uid = pwd.getpwnam(username).pw_uid
+    gid = grp.getgrnam(username).gr_gid
+    
+    print username,uid,gid
+
+    os.chown(mountpoint, uid, gid)
+    return 0
+
+def buildNewExt4(devname, mountpoint, confpath, username):
     devname_part1 = devname+"1"
     
     ret = umountFS(mountpoint)
+    if ret != 0:
+        print "Error in umountFS: this should not happen"
+        print "Tolerated"
 
     ret = formatToOnePart(devname, confpath)
     if ret != 0:
-        print "this should not happen"
-        return ret
+        print "Error in formatToOnePart: this should not happen"
+        print "Tolerated"
     ret = makeExt4(devname_part1)
     if ret != 0:
-        print "this should not happen"
+        print "Error in makeExt4: this should not happen"
         return ret
     ret = mountExt4(devname_part1, mountpoint)
     if ret != 0:
-        print "this should not happen"
+        print "Error in mountExt4: this should not happen"
         return ret
+    makeDirMine(mountpoint, username)
 
 #buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 

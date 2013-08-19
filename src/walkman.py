@@ -10,12 +10,23 @@ import MWpyFS
 
 class Walkman:
     def __init__(self):
-        pass
+        self.devname = '/dev/sdb'
+        self.partition = '/dev/sdb1'
+        self.diskconf = '../conf/sfdisk.conf'
+        self.mountpoint = '/mnt/scratch/'
+        self.moniotor = MWpyFS.Monitor.FSMonitor(self.partition, 
+                                                 self.mountpoint)
     
     def rebuildFS(self):
-        pass
+        MWpyFS.FormatFS.buildNewExt4(self.devname,
+                self.mountpoint, self.diskconf)
 
-print "hello"
 
-fsmon = MWpyFS.Monitor.FSMonitor("/dev/sdb1", "/mnt/scratch")
-fsmon.display(savedata=False)
+
+def main():
+    walkman = Walkman()
+    walkman.rebuildFS()
+
+
+if __name_ == "__main__":
+    main()
