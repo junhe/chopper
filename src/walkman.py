@@ -16,6 +16,7 @@ import pyWorkload
 import time
 import shutil
 import os
+import socket
 
 
 class Config:
@@ -59,7 +60,8 @@ class Walkman:
         self.conf.dic['partition'] = '/dev/sdb1'
         self.conf.dic['diskconf'] = '../conf/sfdisk.conf'
         self.conf.dic['mountpoint'] = '/mnt/scratch/'
-        self.conf.dic['jobid'] = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+        self.conf.dic['jobid'] = socket.gethostname() + "-" \
+                + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
 
         self.conf.dic['workloadpath'] = "./pyWorkload/workload.buf"
         self.conf.dic['playerpath'] = "../build/src/player"
@@ -67,10 +69,10 @@ class Walkman:
         self.conf.dic['resultdir'] = "./results/"
 
         self.conf.dic['np'] = 3 # put it here guide mpirun and wl producer
-        self.conf.dic['ndir_per_pid'] = 3 
+        self.conf.dic['ndir_per_pid'] = 2 
         self.conf.dic['startOff'] = 0
-        self.conf.dic['nwrites_per_file'] = 4000
-        self.conf.dic['nfile_per_dir'] = 8
+        self.conf.dic['nwrites_per_file'] = 4
+        self.conf.dic['nfile_per_dir'] = 3
         self.conf.dic['wsize'] = 4097
         self.conf.dic['wstride'] = 4098
 
@@ -151,8 +153,8 @@ class Walkman:
 def main():
     walkman = Walkman()
 
-    print walkman.monitor.dumpfsSTR(),
-    return
+    #print walkman.monitor.dumpfsSTR(),
+    #return
 
 
     #walkman.rebuildFS()
