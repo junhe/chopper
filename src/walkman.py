@@ -26,7 +26,7 @@ class Walkman:
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.devname,
                 self.mountpoint, self.diskconf)
-    def produceWorkload(self):
+    def produceWorkload(self, rootdir):
         self.wl_producer.produce(np=self.np, 
                                 startOff=10000, 
                                 nwrites_per_file = 10, 
@@ -34,7 +34,7 @@ class Walkman:
                                 ndir_per_pid=2,
                                 wsize=3331, 
                                 wstride=3331, 
-                                mountpoint="/mnt/scratch/", 
+                                rootdir=self.mountpoint+rootdir,
                                 tofile=self.workloadpath)
     def play(self):
         cmd = ["mpirun", "-np", self.np, self.playerpath, self.workloadpath]
@@ -46,11 +46,12 @@ class Walkman:
 def main():
     walkman = Walkman()
     #walkman.rebuildFS()
-    walkman.produceWorkload()
 
-    n = 1 # play this workload for n time, monitor the FS status
+    n = 2 # play this workload for n time, monitor the FS status
           # after each time
     for i in range(n):
+        rootdir = "round"+str(i)+"/"   #TODO: fix the "/" must thing
+        walkman.produceWorkload(rootdir=rootdir)
         walkman.play()
 
 if __name__ == "__main__":

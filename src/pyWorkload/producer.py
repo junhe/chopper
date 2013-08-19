@@ -6,7 +6,7 @@ class Producer:
     """
     """
     def produce (self, np, startOff, nwrites_per_file, nfile_per_dir, ndir_per_pid,
-              wsize, wstride, mountpoint, tofile=""):
+              wsize, wstride, rootdir, tofile=""):
         self.np = np
         self.startOff = startOff
 
@@ -18,7 +18,7 @@ class Producer:
         self.wsize = wsize
         self.wstride = wstride
 
-        self.mountpoint = mountpoint
+        self.rootdir = rootdir
 
         workload = self._produce()
 
@@ -27,6 +27,7 @@ class Producer:
         else:
             with open(tofile, 'w') as f:
                 f.write(workload)
+                f.flush()
             return ""
     
     def getFilepath(self, dir, pid, file_id ):
@@ -44,7 +45,7 @@ class Producer:
         # make dir
         for p in range(self.np):
             for dir in range(self.ndir_per_pid):
-                path = self.mountpoint + self.getDirpath(p, dir)
+                path = self.rootdir + self.getDirpath(p, dir)
                 entry = str(p)+";"+path+";"+"mkdir"+"\n";
                 workload += entry
 
@@ -52,7 +53,7 @@ class Producer:
         for fid in range(self.nfile_per_dir):
             for dir in range(self.ndir_per_pid):
                 for p in range(self.np):
-                    path = self.mountpoint + self.getFilepath(dir, p, fid)
+                    path = self.rootdir + self.getFilepath(dir, p, fid)
                     entry = str(p)+";"+path+";"+"open"+"\n";
                     workload += entry
 
@@ -64,7 +65,7 @@ class Producer:
                 for dir in range(self.ndir_per_pid):
                     for p in range(self.np):
                         size = self.wsize
-                        path = self.mountpoint + self.getFilepath(dir, p, fid)
+                        path = self.rootdir + self.getFilepath(dir, p, fid)
 
                         entry = str(p)+";"+path+";"+"write"+";"+str(cur_off[p][dir][fid])+";"+str(size)+"\n"
                         cur_off[p][dir][fid] += self.wstride
@@ -74,7 +75,7 @@ class Producer:
         for fid in range(self.nfile_per_dir):
             for dir in range(self.ndir_per_pid):
                 for p in range(self.np):
-                    path = self.mountpoint + self.getFilepath(dir, p, fid)
+                    path = self.rootdir + self.getFilepath(dir, p, fid)
                     entry = str(p)+";"+path+";"+"fsync"+"\n";
                     workload += entry
 
@@ -83,7 +84,7 @@ class Producer:
         for fid in range(self.nfile_per_dir):
             for dir in range(self.ndir_per_pid):
                 for p in range(self.np):
-                    path = self.mountpoint + self.getFilepath(dir, p, fid)
+                    path = self.rootdir + self.getFilepath(dir, p, fid)
                     entry = str(p)+";"+path+";"+"close"+"\n";
                     workload += entry
 
@@ -95,7 +96,7 @@ class Producer:
                 #ndir_per_pid=2,
                 #wsize=3331, 
                 #wstride=3331, 
-                #mountpoint="/mnt/scratch/", 
+                #rootdir="/mnt/scratch/", 
                 #tofile="tmp.workload"),
 
 
