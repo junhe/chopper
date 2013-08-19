@@ -21,8 +21,6 @@ class Walkman:
         MWpyFS.FormatFS.buildNewExt4(self.devname,
                 self.mountpoint, self.diskconf)
 
-
-
 def main():
     walkman = Walkman()
     walkman.rebuildFS()
