@@ -127,12 +127,20 @@ int main(int argc, char **argv)
 {
     int rank, size;
 
+
     MPI_Init (&argc, &argv);/* starts MPI */
     MPI_Comm_rank (MPI_COMM_WORLD, &rank);/* get current process id */
     MPI_Comm_size (MPI_COMM_WORLD, &size);/* get number of processes */
 
-    WorkloadDispatcher wl_disp (rank, size, 
-            "/home/junhe/workdir/metawalker/src/pyWorkload/workload001");
+    if ( argc != 2 ) {
+        if ( rank == 0 )
+            cout << "usage: mpirun -np N " << argv[0] << " workload-file" << endl;
+        MPI_Finalize();
+        return 1;
+    }
+
+
+    WorkloadDispatcher wl_disp (rank, size, argv[1]); 
     wl_disp.run();
 
     MPI_Finalize();
