@@ -67,12 +67,12 @@ class Walkman:
         self.conf.dic['resultdir'] = "./results/"
 
         self.conf.dic['np'] = 3 # put it here guide mpirun and wl producer
-        self.conf.dic['ndir_per_pid'] = 7
+        self.conf.dic['ndir_per_pid'] = 3 
         self.conf.dic['startOff'] = 0
-        self.conf.dic['nwrites_per_file'] = 5
-        self.conf.dic['nfile_per_dir'] = 5
-        self.conf.dic['wsize'] = 5
-        self.conf.dic['wstride'] = 5
+        self.conf.dic['nwrites_per_file'] = 4000
+        self.conf.dic['nfile_per_dir'] = 8
+        self.conf.dic['wsize'] = 4097
+        self.conf.dic['wstride'] = 4098
 
         self.conf.dic['HEADERMARKER_walkman_config'] = \
                 'DATAMARKER_walkman_config'
@@ -103,6 +103,12 @@ class Walkman:
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.conf.dic["devname"],
                 self.conf.dic['mountpoint'], self.conf.dic['diskconf'], "junhe")
+
+    def remakeExt4(self):
+        MWpyFS.FormatFS.remakeExt4(partition=self.conf.dic['partition'],
+                                   mountpoint=self.conf.dic['mountpoint'],
+                                   username="junhe")
+
 
     #def produceWorkload_rmdir(self, rootdir):
         #self.wl_producer.produce_rmdir(np=self.conf.dic['np'],
@@ -146,13 +152,15 @@ def main():
     walkman = Walkman()
 
     #walkman.rebuildFS()
-    #return
+    walkman.remakeExt4()
+    print 'sleeping 5 sec after building fs....'
+    time.sleep(5)
 
     walkman.displayandsaveConfig()
     time.sleep(5)
 
-    nyears=2
-    nseasons_per_year = 3
+    nyears=100
+    nseasons_per_year = 7 
     
     for y in range(nyears):
         for s in range(nseasons_per_year):

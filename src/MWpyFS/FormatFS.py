@@ -51,6 +51,21 @@ def chDirOwner(mountpoint, username):
     os.chown(mountpoint, uid, gid)
     return 0
 
+def remakeExt4(partition, mountpoint, username):
+    ret = umountFS(mountpoint)
+    if ret != 0:
+        print "Error in umountFS: this should not happen"
+        print "Tolerated"
+    ret = makeExt4(partition)
+    if ret != 0:
+        print "Error in makeExt4: this should not happen"
+        return ret
+    ret = mountExt4(partition, mountpoint)
+    if ret != 0:
+        print "Error in mountExt4: this should not happen"
+        return ret
+    chDirOwner(mountpoint, username)
+
 def buildNewExt4(devname, mountpoint, confpath, username):
     devname_part1 = devname+"1"
     
@@ -63,15 +78,8 @@ def buildNewExt4(devname, mountpoint, confpath, username):
     if ret != 0:
         print "Error in formatToOnePart: this should not happen"
         print "Tolerated"
-    ret = makeExt4(devname_part1)
-    if ret != 0:
-        print "Error in makeExt4: this should not happen"
-        return ret
-    ret = mountExt4(devname_part1, mountpoint)
-    if ret != 0:
-        print "Error in mountExt4: this should not happen"
-        return ret
-    chDirOwner(mountpoint, username)
+
+    remakeExt4(devname_part1, mountpoint, username)
 
 #buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 
