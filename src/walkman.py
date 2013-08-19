@@ -8,7 +8,7 @@
 import subprocess
 import MWpyFS
 import pyWorkload
-
+import time
 
 class Walkman:
     def __init__(self):
@@ -23,7 +23,7 @@ class Walkman:
         self.wl_producer = pyWorkload.producer.Producer()
         self.playerpath = "../build/src/player"
         self.mpirunpath = "/home/junhe/installs/openmpi-1.4.3/bin/mpirun"
-        self.np = 4 # put it here guide mpirun and wl producer
+        self.np = 2 # put it here guide mpirun and wl producer
     
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.devname,
@@ -31,11 +31,11 @@ class Walkman:
     def produceWorkload(self, rootdir):
         self.wl_producer.produce(np=self.np, 
                                 startOff=0,
-                                nwrites_per_file = 10000, 
+                                nwrites_per_file = 50000, 
                                 nfile_per_dir=3, 
                                 ndir_per_pid=2,
-                                wsize=1, 
-                                wstride=2, 
+                                wsize=4097, 
+                                wstride=4098*2, 
                                 rootdir=self.mountpoint+rootdir,
                                 tofile=self.workloadpath)
     def play(self):
@@ -51,11 +51,15 @@ def main():
 
     n = 3 # play this workload for n time, monitor the FS status
           # after each time
-    for i in range(2,n):
+    for i in [7]:
         rootdir = "round"+str(i)+"/"   #TODO: fix the "/" must thing
         walkman.produceWorkload(rootdir=rootdir)
+
         walkman.play()
-        walkman.monitor.display(savedata=True)
+
+        time.sleep(3)
+        walkman.monitor.display(savedata=True, "result"+str(i))
 
 if __name__ == "__main__":
     main()
+

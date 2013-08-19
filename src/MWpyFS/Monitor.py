@@ -111,7 +111,13 @@ class FSMonitor:
                 tokens = line.split()
                 d = {}
                 for i in range(9):
-                    d[ header[i] ] = tokens[i]
+                    try:
+                        d[ header[i] ] = tokens[i]
+                    except:
+                        print "token:", tokens
+                        print "header:", header # having a try-except can grant you
+                                            # the opportunity to do something 
+                                            # after bad thing happen
                 
                 if len(tokens) == 10:
                     d["Flag"] = tokens[10]
@@ -226,7 +232,7 @@ class FSMonitor:
 
         return header + vals
 
-    def display(self, savedata=False):
+    def display(self, savedata=F, logfile=""):
         "resultpath should be in another file system so they don't intervene"
         extstats = self.getAllExtentStatsSTR()
         frag = self.e2freefrag()
@@ -241,7 +247,10 @@ class FSMonitor:
         print frag1_header, frag[1]
 
         if savedata: 
-            filename = self.monitor_time + ".result"
+            if logfile == "":
+                filename = self.monitor_time + ".result"
+            else:
+                filename = logfile
             fullpath = os.path.join(self.logdir, filename)
             f = open(fullpath, 'w')
             f.write(extstats_header + extstats)
