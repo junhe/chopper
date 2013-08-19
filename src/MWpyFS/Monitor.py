@@ -232,7 +232,7 @@ class FSMonitor:
 
         return header + vals
 
-    def display(self, savedata=F, logfile=""):
+    def display(self, savedata=False, logfile=""):
         "resultpath should be in another file system so they don't intervene"
         extstats = self.getAllExtentStatsSTR()
         frag = self.e2freefrag()

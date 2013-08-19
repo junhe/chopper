@@ -58,7 +58,7 @@ def main():
         walkman.play()
 
         time.sleep(3)
-        walkman.monitor.display(savedata=True, "result"+str(i))
+        walkman.monitor.display(savedata=True, logfile="result."+str(i))
 
 if __name__ == "__main__":
     main()
