@@ -5,6 +5,11 @@
 #   2. For each workload:
 #       2. play workload by player
 #       3. monitor the FS status
+# 
+#
+# Possible ways to make more fragments:
+#   1. delete previous files
+#   2. append previous files
 import subprocess
 import MWpyFS
 import pyWorkload
@@ -24,16 +29,24 @@ class Walkman:
         self.playerpath = "../build/src/player"
         self.mpirunpath = "/home/junhe/installs/openmpi-1.4.3/bin/mpirun"
         self.np = 2 # put it here guide mpirun and wl producer
+        self.ndir_per_pid = 2
     
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.devname,
                 self.mountpoint, self.diskconf, "junhe")
+
+    #def produceWorkload_rmdir(self, rootdir):
+        #self.wl_producer.produce_rmdir(np=self.np,
+                                       #ndir_per_pid=self.ndir_per_pid,
+                                       #rootdir=self.mountpoint+rootdir,
+                                       #tofile=self.workloadpath)
+
     def produceWorkload(self, rootdir):
         self.wl_producer.produce(np=self.np, 
                                 startOff=0,
                                 nwrites_per_file = 50000, 
                                 nfile_per_dir=3, 
-                                ndir_per_pid=2,
+                                ndir_per_pid=self.ndir_per_pid,
                                 wsize=4097, 
                                 wstride=4098*2, 
                                 rootdir=self.mountpoint+rootdir,
@@ -44,20 +57,30 @@ class Walkman:
         proc = subprocess.Popen(cmd) 
         proc.wait()
 
+    def getrootdirByIterIndex(self, i):
+        rootdir = "round"+str(i)+"/"   #TODO: fix the "/" must thing
+        return rootdir
+
+    def displayFreeFrag():
+        e2ff = self.monitor.e2freefrag()
+        print e2ff[0]
+        print e2ff[1]
+        return 
 
 def main():
     walkman = Walkman()
+
     #walkman.rebuildFS()
 
     n = 3 # play this workload for n time, monitor the FS status
           # after each time
-    for i in [8]:
-        rootdir = "round"+str(i)+"/"   #TODO: fix the "/" must thing
-        walkman.produceWorkload(rootdir=rootdir)
+    for i in range(9):
+        rootdir = getrootdirByIterIndex(i)
+        #walkman.produceWorkload(rootdir=rootdir)
 
-        walkman.play()
+        #walkman.play()
 
-        time.sleep(3)
+        #time.sleep(3)
         walkman.monitor.display(savedata=True, logfile="result."+str(i))
 
 if __name__ == "__main__":

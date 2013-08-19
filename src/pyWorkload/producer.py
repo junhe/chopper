@@ -5,6 +5,25 @@
 class Producer:
     """
     """
+    def save2file(self, workload_str, tofile=""):
+        if tofile != "":
+            with open(tofile, 'w') as f:
+                f.write(workload)
+                f.flush()
+            print "save2file. workload saved to file"
+        else:
+            print "save2file. no output file assigned"
+
+    def produce_rmdir (self, np, ndir_per_pid, rootdir, pid=0, tofile=""):
+        workload = ""
+        for p in range(np):
+            for dir in range(ndir_per_pid):
+                path = self.rootdir + self.getDirpath(p, dir)
+                entry = str(p)+";"+path+";"+"rm"+"\n";
+                workload += entry
+        
+        return workload
+
     def produce (self, np, startOff, nwrites_per_file, nfile_per_dir, ndir_per_pid,
               wsize, wstride, rootdir, tofile=""):
         self.np = np
@@ -21,14 +40,12 @@ class Producer:
         self.rootdir = rootdir
 
         workload = self._produce()
+        
+        if tofile != "":
+            self.save2file(workload_str, tofile=tofile)
+        
+        return workload
 
-        if tofile == "":
-            return workload
-        else:
-            with open(tofile, 'w') as f:
-                f.write(workload)
-                f.flush()
-            return ""
     
     def getFilepath(self, dir, pid, file_id ):
         fname = ".".join( [str(pid), str(file_id), "file"] )
