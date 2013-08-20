@@ -57,22 +57,27 @@ class Walkman:
 
         self.conf.dic['devname'] = '/dev/sdb'
 
-        self.conf.dic['partition'] = '/dev/sdb1'
-        self.conf.dic['diskconf'] = '../conf/sfdisk.conf'
-        self.conf.dic['mountpoint'] = '/mnt/scratch/'
-        self.conf.dic['jobid'] = socket.gethostname() + "-" \
+        self.conf.dic['partition'] = '/dev/sda4'
+        self.conf.dic['diskconf'] = '../conf/sfdisk.conf' #not valid on Marmot
+        self.conf.dic['mountpoint'] = '/l0/'
+        self.conf.dic['hostname'] = socket.gethostname()
+        self.conf.dic['jobid'] = self.conf.dic['hostname'] + "-" \
                 + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
 
-        self.conf.dic['workloadpath'] = "./pyWorkload/workload.buf"
+        self.conf.dic['blockscount'] = 67108864
+        self.conf.dic['username'] = 'jhe'
+        self.conf.dic['workloadpath'] = "./pyWorkload/workload.buf.h0"
         self.conf.dic['playerpath'] = "../build/src/player"
-        self.conf.dic['mpirunpath'] = "/home/junhe/installs/openmpi-1.4.3/bin/mpirun"
-        self.conf.dic['resultdir'] = "./results/"
+        self.conf.dic['mpirunpath'] = "/usr/bin/mpirun"
+        self.conf.dic['resultdir'] = "./results." + self.conf.dic['hostname'] + '/'
+        if not os.path.exists(self.conf.dic['resultdir']):
+            os.makedirs(self.conf.dic['resultdir'])
 
-        self.conf.dic['np'] = 3 # put it here guide mpirun and wl producer
-        self.conf.dic['ndir_per_pid'] = 2 
+        self.conf.dic['np'] = 4 # put it here guide mpirun and wl producer
+        self.conf.dic['ndir_per_pid'] = 10
         self.conf.dic['startOff'] = 0
-        self.conf.dic['nwrites_per_file'] = 4
-        self.conf.dic['nfile_per_dir'] = 3
+        self.conf.dic['nwrites_per_file'] = 10000
+        self.conf.dic['nfile_per_dir'] = 2
         self.conf.dic['wsize'] = 4097
         self.conf.dic['wstride'] = 4098
 
@@ -104,12 +109,14 @@ class Walkman:
 
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.conf.dic["devname"],
-                self.conf.dic['mountpoint'], self.conf.dic['diskconf'], "junhe")
+                self.conf.dic['mountpoint'], self.conf.dic['diskconf'], 
+                self.conf.dic['username'])
 
     def remakeExt4(self):
         MWpyFS.FormatFS.remakeExt4(partition=self.conf.dic['partition'],
                                    mountpoint=self.conf.dic['mountpoint'],
-                                   username="junhe")
+                                   username=self.conf.dic['username'],
+                                   blockscount=self.conf.dic['blockscount'])
 
 
     #def produceWorkload_rmdir(self, rootdir):
@@ -136,7 +143,7 @@ class Walkman:
         proc.wait()
 
     def getrootdirByIterIndex(self, i):
-        rootdir = "round"+str(i)+"/"   #TODO: fix the "/" must thing
+        rootdir = "season"+str(i).zfill(3)+"/"   #TODO: fix the "/" must thing
         return rootdir
 
     def getLogFilenameBySeasonYear(self, season, year):
@@ -159,26 +166,26 @@ def main():
 
     #walkman.rebuildFS()
     walkman.remakeExt4()
-    print 'sleeping 5 sec after building fs....'
+    #print 'sleeping 5 sec after building fs....'
     time.sleep(5)
+    #return 
 
+    print "starting......"
     walkman.displayandsaveConfig()
-    time.sleep(5)
+    time.sleep(3)
 
-    nyears=100
-    nseasons_per_year = 7 
+    nyears=1000
+    nseasons_per_year = 10
     
+    print "start looping..."
     for y in range(nyears):
         for s in range(nseasons_per_year):
             rootdir = walkman.getrootdirByIterIndex(s)
             walkman.produceWorkload(rootdir=rootdir)
 
             walkman.play()
-
-            time.sleep(3)
-            walkman.monitor.display(savedata=True, 
-                                    logfile=walkman.getLogFilenameBySeasonYear(s,y))
-
+            
+ 
             # now, delete the previous dir if it exists
             pre_s = (s - (nseasons_per_year-1))%nseasons_per_year
             pre_s_rootdir = walkman.getrootdirByIterIndex(pre_s)
@@ -189,9 +196,14 @@ def main():
             except:
                 print "failed to rmtree (but should be OK):", fullpath
 
-            print "------ End of this year, sleep 10 sec ----------"
-            time.sleep(10)
-            
+
+            # Monitor at the end of each year
+            time.sleep(3)
+            walkman.monitor.display(savedata=True, 
+                                    logfile=walkman.getLogFilenameBySeasonYear(s,y))
+            print "------ End of this year, sleep 2 sec ----------"
+            time.sleep(2)
+           
 
 if __name__ == "__main__":
     main()
