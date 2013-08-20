@@ -35,7 +35,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
             perror(wl_entry._path.c_str());
             exit(1);
         } else {
-            cout << wl_entry._path << " opened" << endl;
+            //cout << wl_entry._path << " opened" << endl;
             _path2fd_dict[wl_entry._path] = fd; 
         }
     } else if ( wl_entry._operation == "close" ) {

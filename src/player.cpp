@@ -21,7 +21,7 @@ using namespace std;
 class WorkloadDispatcher {
     public:
         void run();
-        WorkloadDispatcher(int rank, int np, string wl_path, int bufsz=512);
+        WorkloadDispatcher(int rank, int np, string wl_path, int bufsz=1024);
         ~WorkloadDispatcher();
     private:
         int _rank;
@@ -68,7 +68,8 @@ WorkloadDispatcher::run()
             if ( !wl_entry.isHEAD() && wl_entry._pid == 0) {
                 // It is rank0's job
                 _wl_player.play(wl_entry);
-                cout << "rank:" << _rank << " job:" << wl_entry._entry_str << endl;
+                //cout << "rank:" << _rank << " job:" << wl_entry._entry_str << endl;
+                cout << "." ;
             } else {
                 // It is rank 1~(n-1) 's job
                 
@@ -107,7 +108,8 @@ WorkloadDispatcher::run()
                         0, 1, MPI_COMM_WORLD, &stat );
 
                 string bufstr = comm_buf;
-                cout << "rank:" << _rank << " job:" << bufstr << endl;
+                //cout << "rank:" << _rank << " job:" << bufstr << endl;
+                cout << ".";
                 WorkloadEntry wl_entry(bufstr);
 
                 _wl_player.play(wl_entry);
