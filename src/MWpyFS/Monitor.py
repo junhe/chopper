@@ -152,7 +152,7 @@ class FSMonitor:
 
         
     def dump_extents(self, filepath):
-        cmd = "debugfs /dev/sdb1 -R 'dump_extents " + filepath + "'"
+        cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         cmd = shlex.split(cmd)
         #print cmd
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
