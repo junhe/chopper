@@ -18,8 +18,9 @@ def formatToOnePart(devname, confpath):
     print "formatToOnePart:", p.returncode
     return p.returncode
 
-def makeExt4(devname):
-    cmd = ["mkfs.ext4", devname]
+def makeExt4(devname, blockscount=16777216):
+    cmd = ["mkfs.ext4", devname, blockscount]
+    cmd = [str(x) for x in cmd]
     p = subprocess.Popen(cmd)
     p.wait()
     print "makeExt4:", p.returncode
@@ -43,20 +44,23 @@ def mountExt4(devname, mountpoint):
     return p.returncode
 
 def chDirOwner(mountpoint, username):
-    uid = pwd.getpwnam(username).pw_uid
-    gid = grp.getgrnam(username).gr_gid
+    try:
+        uid = pwd.getpwnam(username).pw_uid
+        gid = grp.getgrnam(username).gr_gid
     
-    print username,uid,gid
+        print username,uid,gid
+        os.chown(mountpoint, uid, gid)
+    except:
+        print "cannot chown", username, "in system"
 
-    os.chown(mountpoint, uid, gid)
     return 0
 
-def remakeExt4(partition, mountpoint, username):
+def remakeExt4(partition, mountpoint, username, blockscount=16777216):
     ret = umountFS(mountpoint)
     if ret != 0:
         print "Error in umountFS: this should not happen"
         print "Tolerated"
-    ret = makeExt4(partition)
+    ret = makeExt4(partition, blockscount)
     if ret != 0:
         print "Error in makeExt4: this should not happen"
         return ret

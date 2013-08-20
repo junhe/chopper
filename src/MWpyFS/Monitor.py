@@ -56,6 +56,7 @@ class FSMonitor:
         self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", localtime())
 
     def _spliter_dumpfs(self, line):
+        line.replace(",", " ")
         elems = line.split(":")[1]
         elems = elems.split()
 
@@ -74,27 +75,28 @@ class FSMonitor:
         return new_elems
 
     def dumpfs(self):
+        print "dumpfs..."
         cmd = ["dumpe2fs", self.devname]
         proc = subprocess.Popen(cmd, 
                                 stdout=subprocess.PIPE)
-        proc.wait()
 
+        print "dumpfs finished. Parsing results..."
         freeblocks = []
         freeinodes = []
         for line in proc.stdout:
-            print "MYLINE!!!", line,
             if line.startswith("  Free blocks:"):
-                print "free blocks"
                 freeblocks += self._spliter_dumpfs(line)
             elif line.startswith("  Free inodes:"):
-                print "free inodes"
                 freeinodes += self._spliter_dumpfs(line)
             else:
                 pass
+        proc.wait()
         return {"blocks":freeblocks, "inodes":freeinodes}
 
     def dumpfsSTR(self):
+        print "dumpfsSTR...."
         ranges = self.dumpfs()
+        print "after dumpfs()..."
 
         freeblocks = "start end monitor_time HEADERMARKER_freeblocks".split()
         freeblocks = [ self.widen(x) for x in freeblocks ]
