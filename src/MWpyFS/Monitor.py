@@ -56,7 +56,7 @@ class FSMonitor:
         self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", localtime())
 
     def _spliter_dumpfs(self, line):
-        line.replace(",", " ")
+        line = line.replace(",", " ")
         elems = line.split(":")[1]
         elems = elems.split()
 
@@ -67,7 +67,7 @@ class FSMonitor:
             if elen == 2:
                 new_elems.append(e)
             elif elen == 1:
-                e.append(e)
+                e = e*2
                 new_elems.append(e)
             else:
                 print "wrong split", elem
