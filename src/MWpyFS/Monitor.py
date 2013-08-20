@@ -302,21 +302,20 @@ class FSMonitor:
 
     def display(self, savedata=False, logfile=""):
         self.resetMonitorTime()
-        "resultpath should be in another file system so they don't intervene"
-        extstats = self.getAllExtentStatsSTR()
+        #extstats = self.getAllExtentStatsSTR()
         frag = self.e2freefrag()
         freespaces = self.dumpfsSTR()
         
         # display
-        extstats_header = "-----------  Extent statistics  -------------\n"
+        #extstats_header = "-----------  Extent statistics  -------------\n"
         frag0_header  = "-----------  Extent summary  -------------\n"
         frag1_header = "----------- Extent Histogram   -------------\n"
         dumpfs_header = "----------- Dumpfs Header ------------\n"
-
-        print extstats_header, extstats,
-        print frag0_header, frag[0]
-        print frag1_header, frag[1]
-        print dumpfs_header, freespaces
+        print "........working on monitor............"
+        #print extstats_header, extstats,
+        #print frag0_header, frag[0]
+        #print frag1_header, frag[1]
+        #print dumpfs_header, freespaces
 
         if savedata: 
             if logfile == "":
@@ -325,7 +324,7 @@ class FSMonitor:
                 filename = logfile
             fullpath = os.path.join(self.logdir, filename)
             f = open(fullpath, 'w')
-            f.write(extstats_header + extstats)
+            #f.write(extstats_header + extstats)
             f.write(frag0_header + frag[0])
             f.write(frag1_header + frag[1])
             f.write(dumpfs_header + freespaces)
