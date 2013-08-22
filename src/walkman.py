@@ -98,14 +98,16 @@ class Walkman:
 
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.confparser.get('system','devname'),
-                self.confparser.get('system','mountpoint'), 
-                self.confparser.get('system','diskconf'), 
-                self.confparser.get('system','username'))
+                mountpoint=self.confparser.get('system','mountpoint'), 
+                confpath=self.confparser.get('system','diskconf'), 
+                username=self.confparser.get('system','username'),
+                groupname=self.confparser.get('system','groupname'))
 
     def remakeExt4(self):
         MWpyFS.FormatFS.remakeExt4(partition  =self.confparser.get('system','partition'),
                                    mountpoint =self.confparser.get('system','mountpoint'),
                                    username   =self.confparser.get('system','username'),
+                                   groupname   =self.confparser.get('system','groupname'),
                                    blockscount=self.confparser.get('system','blockscount'))
 
 

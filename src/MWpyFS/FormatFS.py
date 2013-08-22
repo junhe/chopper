@@ -43,19 +43,19 @@ def mountExt4(devname, mountpoint):
     print "mountExt4:", p.returncode
     return p.returncode
 
-def chDirOwner(mountpoint, username):
+def chDirOwner(mountpoint, username, groupname):
     try:
         uid = pwd.getpwnam(username).pw_uid
-        gid = grp.getgrnam(username).gr_gid
+        gid = grp.getgrnam(groupname).gr_gid
     
-        print username,uid,gid
+        print username,groupname,uid,gid
         os.chown(mountpoint, uid, gid)
     except:
-        print "cannot chown", username, "in system"
+        print "cannot chown", username, ":", groupname, "in system"
 
     return 0
 
-def remakeExt4(partition, mountpoint, username, blockscount=16777216):
+def remakeExt4(partition, mountpoint, username, groupname, blockscount=16777216):
     ret = umountFS(mountpoint)
     if ret != 0:
         print "Error in umountFS: this should not happen"
@@ -68,9 +68,9 @@ def remakeExt4(partition, mountpoint, username, blockscount=16777216):
     if ret != 0:
         print "Error in mountExt4: this should not happen"
         return ret
-    chDirOwner(mountpoint, username)
+    chDirOwner(mountpoint, username, groupname)
 
-def buildNewExt4(devname, mountpoint, confpath, username):
+def buildNewExt4(devname, mountpoint, confpath, username, groupname):
     devname_part1 = devname+"1"
     
     ret = umountFS(mountpoint)
@@ -83,7 +83,7 @@ def buildNewExt4(devname, mountpoint, confpath, username):
         print "Error in formatToOnePart: this should not happen"
         print "Tolerated"
 
-    remakeExt4(devname_part1, mountpoint, username)
+    remakeExt4(devname_part1, mountpoint, username, groupname)
 
 #buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 
