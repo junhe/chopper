@@ -85,8 +85,8 @@ class Walkman:
 
     def displayandsaveConfig(self):
         colwidth = 30
-        conflogpath = self.confparser.get('system','resultdir') + \
-                    "walkmanJOB-"+self.confparser.get('system','jobid')+".conf.rows"
+        conflogpath = os.path.join(self.confparser.get('system','resultdir'),
+                    "walkmanJOB-"+self.confparser.get('system','jobid')+".conf.rows")
 
         for section_name in self.confparser.sections():
             print '[',section_name,']'
@@ -166,6 +166,13 @@ def main(args):
         time.sleep(1)
     else:
         print "skipped formating fs"
+
+
+    # save the fs summary so I can traceback if needed
+    fssumpath = os.path.join(walkman.confparser.get('system', 'resultdir'),
+                    "walkmanJOB-"+walkman.confparser.get('system','jobid')+".FS-summary")
+    with open(fssumpath, 'w') as f:
+        f.write( walkman.monitor.dumpfsSummary())
 
     # for short
     NYEARS = walkman.confparser.getint('workload','nyears')
