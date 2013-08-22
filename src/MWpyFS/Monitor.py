@@ -190,6 +190,10 @@ class FSMonitor:
                 savedline = line
                 line = re.sub(r'[/\-]', " ", line)
                 tokens = line.split()
+                if len(tokens) == 8:
+                    # there is no physical end
+                    tokens.insert(7, "NA") #TODO: this is dangerous
+
                 d = {}
                 for i in range(9):
                     try:
