@@ -68,7 +68,7 @@ class Walkman:
 
         self.confparser.set('system','workloadbufpath', 
                    os.path.join(self.confparser.get('system', 'workloaddir')
-                                + "workload.buf." 
+                                + "_workload.buf." 
                                 + self.confparser.get('system', 'hostname')))
         self.confparser.set('system','resultdir', 
                 "./results." + self.confparser.get('system','hostname') + '/')
@@ -138,10 +138,12 @@ class Walkman:
         rootdir = "season"+str(i).zfill(3)+"/"   #TODO: fix the "/" must thing
         return rootdir
 
+    def getYearSeasonStr(self, year, season):
+        return "year"+str(year).zfill(5)+\
+                    ".season"+str(season).zfill(5)
     def getLogFilenameBySeasonYear(self, season, year):
         return "walkmanJOB-"+self.confparser.get('system','jobid')+\
-                ".result.log.year-"+str(year).zfill(5)+\
-                ".season-"+str(season).zfill(5)
+                ".result.log." + self.getYearSeasonStr(year, season)
 
     def displayFreeFrag():
         e2ff = self.monitor.e2freefrag()
@@ -192,7 +194,9 @@ def main(args):
             # Monitor at the end of each year
             time.sleep(3)
             walkman.monitor.display(savedata=True, 
-                                logfile=walkman.getLogFilenameBySeasonYear(s,y))
+                                logfile=walkman.getLogFilenameBySeasonYear(s,y),
+                                monitorid=walkman.getYearSeasonStr(year=y, season=s) #
+                                )
             print "------ End of this year, sleep 2 sec ----------"
             time.sleep(2)
            

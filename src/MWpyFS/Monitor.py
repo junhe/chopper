@@ -52,8 +52,12 @@ class FSMonitor:
         self.logdir = ld
         self.resetMonitorTime()
     
-    def resetMonitorTime(self):
-        self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", localtime())
+    def resetMonitorTime(self, monitorid=""):
+        "monitor_time is used to identify each data retrieval"
+        if monitorid == "":
+            self.monitor_time = strftime("%Y-%m-%d-%H-%M-%S", localtime())
+        else:
+            self.monitor_time = monitorid
 
     def _spliter_dumpfs(self, line):
         line = line.replace(",", " ")
@@ -300,14 +304,14 @@ class FSMonitor:
 
         return header + vals
 
-    def display(self, savedata=False, logfile=""):
-        self.resetMonitorTime()
-        #extstats = self.getAllExtentStatsSTR()
+    def display(self, savedata=False, logfile="", monitorid=""):
+        self.resetMonitorTime(monitorid=monitorid)
+        extstats = self.getAllExtentStatsSTR()
         frag = self.e2freefrag()
         freespaces = self.dumpfsSTR()
         
         # display
-        #extstats_header = "-----------  Extent statistics  -------------\n"
+        extstats_header = "-----------  Extent statistics  -------------\n"
         frag0_header  = "-----------  Extent summary  -------------\n"
         frag1_header = "----------- Extent Histogram   -------------\n"
         dumpfs_header = "----------- Dumpfs Header ------------\n"
@@ -324,7 +328,7 @@ class FSMonitor:
                 filename = logfile
             fullpath = os.path.join(self.logdir, filename)
             f = open(fullpath, 'w')
-            #f.write(extstats_header + extstats)
+            f.write(extstats_header + extstats)
             f.write(frag0_header + frag[0])
             f.write(frag1_header + frag[1])
             f.write(dumpfs_header + freespaces)
