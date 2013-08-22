@@ -267,6 +267,20 @@ class FSMonitor:
             stats.append( self.dump_extents(f) )
         return stats
         
+    def getAllExtentStatsSTRSTR(self, rootdir="."):
+        ret = self.getAllExtentStatsSTR(rootdir=rootdir)
+        extstats_str = ret['extstats_str']
+        fs_nmetablocks = ret['fs_nmetablocks']
+        fs_ndatablocks = ret['fs_ndatablocks']
+
+        fssum = "fs_nmetablocks fs_ndatablocks monitor_time HEADERMARKER_extstatssum\n"
+        items = [fs_nmetablocks, fs_ndatablocks, self.monitor_time, 'DATAMARKER_extstatssum']
+        items = [self.widen(str(x)) for x in items]
+        fssum += " ".join(items) + '\n'
+        
+        return extstats_str + "\n" + fssum
+
+
     def getAllExtentStatsSTR(self, rootdir="."):
         stats = self.getAllExtentStats(rootdir)
 
@@ -279,12 +293,25 @@ class FSMonitor:
         header += self.widen("monitor_time") + " HEADERMARKER_extstats\n"
 
         vals = ""
+        fs_nmetablocks = 0
+        fs_ndatablocks = 0
         for entry in stats:
             for keyname in entry:
                 vals += self.widen(str(entry[keyname])) + " "
+                if keyname == 'n_metablock':
+                    fs_nmetablocks += int( entry[keyname] )
+                elif keyname == 'n_datablock':
+                    fs_ndatablocks += int( entry[keyname] )
+                else:
+                    pass
             vals += self.widen(str(self.monitor_time)) + " DATAMARKER_extstats\n"
         
-        return header + vals
+        extstats_str = header + vals
+
+        retdic = {'extstats_str':extstats_str,
+                  'fs_nmetablocks': fs_nmetablocks,
+                  'fs_ndatablocks': fs_ndatablocks}
+        return retdic
         
     def widen(self, s):
         return s.rjust(self.col_width)
@@ -306,7 +333,7 @@ class FSMonitor:
 
     def display(self, savedata=False, logfile="", monitorid=""):
         self.resetMonitorTime(monitorid=monitorid)
-        extstats = self.getAllExtentStatsSTR()
+        extstats = self.getAllExtentStatsSTRSTR()
         frag = self.e2freefrag()
         freespaces = self.dumpfsSTR()
         

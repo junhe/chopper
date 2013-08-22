@@ -162,8 +162,8 @@ def main(args):
     
     if walkman.confparser.get('system', 'formatfs').lower() == "yes":
         walkman.remakeExt4()
-        print 'sleeping 5 sec after building fs....'
-        time.sleep(5)
+        print 'sleeping 1 sec after building fs....'
+        time.sleep(1)
     else:
         print "skipped formating fs"
 
