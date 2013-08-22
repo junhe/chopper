@@ -21,7 +21,7 @@ using namespace std;
 class WorkloadDispatcher {
     public:
         void run();
-        WorkloadDispatcher(int rank, int np, string wl_path, int bufsz=1024);
+        WorkloadDispatcher(int rank, int np, string wl_path, int bufsz=4096);
         ~WorkloadDispatcher();
     private:
         int _rank;
@@ -56,6 +56,7 @@ WorkloadDispatcher::run()
     char *comm_buf = (char *) malloc(_bufsize);
     assert(comm_buf != NULL);
 
+    long long cnt = 0;
     if ( _rank == 0 ) {
         WorkloadEntry wl_entry;
         int flag = 1; // 1: one more job to do
@@ -69,13 +70,20 @@ WorkloadDispatcher::run()
                 // It is rank0's job
                 _wl_player.play(wl_entry);
                 //cout << "rank:" << _rank << " job:" << wl_entry._entry_str << endl;
-                cout << "." ;
+                if (cnt % 1000 == 0)
+                    cout << "." ;
+                cnt++;
             } else {
                 // It is rank 1~(n-1) 's job
                 
                 // compose a serialized entry
                 string enstr = wl_entry._entry_str;
-                assert( enstr.size()+1 < _bufsize );
+                if ( enstr.size()+1 > _bufsize ) {
+                    cout << "size of " << enstr << " " << enstr.size() << "+1<" 
+                        << _bufsize << endl;
+                    MPI_Finalize();
+                    exit(1);
+                }
                 strcpy(comm_buf, enstr.c_str());
               
                 // tell receiver a job is coming
@@ -109,7 +117,9 @@ WorkloadDispatcher::run()
 
                 string bufstr = comm_buf;
                 //cout << "rank:" << _rank << " job:" << bufstr << endl;
-                cout << ".";
+                if (cnt % 1000 == 0)
+                    cout << "." ;
+                cnt++;
                 WorkloadEntry wl_entry(bufstr);
 
                 _wl_player.play(wl_entry);
