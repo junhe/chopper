@@ -20,38 +20,6 @@ import socket
 import sys
 from ConfigParser import SafeConfigParser
 
-#class Config:
-    #def __init__(self):
-        #self.dic = {}
-
-    #def display(self, style="columns", colwidth=15, save2file=""):
-        #contents = ""
-        #if style == "columns":
-            #header = self.dic.keys()
-            #header = [ str(x).ljust(colwidth) for x in header]
-            #header = " ".join(header) + '\n'
-
-            #vals = self.dic.values()
-            #vals = [ str(x).ljust(colwidth) for x in vals]
-            #vals = " ".join(vals) + '\n'
-
-            #contents = header + vals
-        #else:
-            #tablestr = ""
-            #for keyname in self.dic:
-                #k = str(keyname).ljust(colwidth)
-                #v = str(self.dic[keyname]).ljust(colwidth)
-                #entry = " ".join([k, v]) 
-                #tablestr += entry + '\n'
-
-            #contents = tablestr
-
-        #if save2file != "":
-            #with open(save2file, 'w') as f:
-                #f.write(contents)
-                #f.flush()
-        #return contents
-
 class Walkman:
     def __init__(self, confpath):
         self.confparser = SafeConfigParser()
@@ -86,15 +54,29 @@ class Walkman:
     def displayandsaveConfig(self):
         colwidth = 30
         conflogpath = os.path.join(self.confparser.get('system','resultdir'),
-                    "walkmanJOB-"+self.confparser.get('system','jobid')+".conf.rows")
+                    "walkmanJOB-"+self.confparser.get('system','jobid')+".conf")
 
+        header_items = []
+        data_items = []
+        
         for section_name in self.confparser.sections():
             print '[',section_name,']'
             for name, value in self.confparser.items(section_name):
                 print '  %s = %s' % (name.ljust(colwidth), value.ljust(colwidth))
+                header_items.append(name)
+                data_items.append(value)
             print
-        with open(conflogpath, 'w') as f: 
+
+        with open(conflogpath+".rows", 'w') as f: 
             self.confparser.write(f)
+
+        header = [ str(x).ljust(colwidth) for x in header_items ]
+        header = " ".join(header) + "\n"
+        datas = [ str(x).ljust(colwidth) for x in data_items ]
+        datas = " ".join(datas) + "\n"
+
+        with open(conflogpath+".cols", 'w') as f:
+            f.write(header+datas)
 
     def rebuildFS(self):
         MWpyFS.FormatFS.buildNewExt4(self.confparser.get('system','devname'),
