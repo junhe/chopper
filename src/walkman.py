@@ -17,7 +17,8 @@ import time
 import shutil
 import os
 import socket
-
+import sys
+from ConfigParser import SafeConfigParser
 
 class Config:
     def __init__(self):
@@ -52,92 +53,82 @@ class Config:
         return contents
 
 class Walkman:
-    def __init__(self):
+    def __init__(self, confpath):
+        self.confparser = SafeConfigParser()
+        try:
+            self.confparser.readfp(open(confpath, 'r'))
+        except:
+            print "unable to read config file:", confpath
+        
+
         self.conf = Config()
 
-        self.conf.dic['devname'] = '/dev/sdb'
+        self.confparser.set('system','hostname', socket.gethostname())
+        self.confparser.set('system','jobid', 
+            self.confparser.get('system','hostname') + "-" +
+            time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()))
 
-        self.conf.dic['partition'] = '/dev/sda4'
-        self.conf.dic['diskconf'] = '../conf/sfdisk.conf' #not valid on Marmot
-        self.conf.dic['mountpoint'] = '/l0/'
-        self.conf.dic['hostname'] = socket.gethostname()
-        self.conf.dic['jobid'] = self.conf.dic['hostname'] + "-" \
-                + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')\
+                                + self.confparser.get('system', 'hostname')))
+        self.confparser.set('system','resultdir', 
+                "./results." + self.confparser.get('system','hostname') + '/')
+        if not os.path.exists(self.confparser.get('system','resultdir')):
+            os.makedirs(self.confparser.get('system','resultdir'))
 
-        self.conf.dic['blockscount'] = 67108864
-        self.conf.dic['username'] = 'jhe'
-        self.conf.dic['workloadpath'] = "./pyWorkload/workload.buf.h0"
-        self.conf.dic['playerpath'] = "../build/src/player"
-        self.conf.dic['mpirunpath'] = "/usr/bin/mpirun"
-        self.conf.dic['resultdir'] = "./results." + self.conf.dic['hostname'] + '/'
-        if not os.path.exists(self.conf.dic['resultdir']):
-            os.makedirs(self.conf.dic['resultdir'])
-
-        self.conf.dic['np'] = 4 # put it here guide mpirun and wl producer
-        self.conf.dic['ndir_per_pid'] = 10
-        self.conf.dic['startOff'] = 0
-        self.conf.dic['nwrites_per_file'] = 10000
-        self.conf.dic['nfile_per_dir'] = 2
-        self.conf.dic['wsize'] = 4097
-        self.conf.dic['wstride'] = 4098
-
-        self.conf.dic['HEADERMARKER_walkman_config'] = \
-                'DATAMARKER_walkman_config'
-
-       
         # monitor
-        self.monitor = MWpyFS.Monitor.FSMonitor(self.conf.dic['partition'], 
-                                                 self.conf.dic['mountpoint'],
-                                                 ld = self.conf.dic['resultdir']) # logdir
+        self.monitor = MWpyFS.Monitor.FSMonitor(self.confparser.get('system','partition'), 
+                                                 self.confparser.get('system','mountpoint'),
+                                                 ld = self.confparser.get('system','resultdir')) # logdir
         # producer
         self.wl_producer = pyWorkload.producer.Producer()
 
 
     def displayandsaveConfig(self):
         colwidth = 30
-        conflog = self.conf.dic['resultdir'] + \
-                    "walkmanJOB-"+self.conf.dic['jobid']+".conf.rows"
-        print self.conf.display(style="rows",
-                                colwidth=colwidth,
-                                save2file=conflog)
+        conflogpath = self.confparser.get('system','resultdir') + \
+                    "walkmanJOB-"+self.confparser.get('system','jobid')+".conf.rows"
 
-        conflog = self.conf.dic['resultdir'] + \
-                    "walkmanJOB-"+self.conf.dic['jobid']+".conf.columns"
-        self.conf.display(style="columns",
-                                colwidth=colwidth,
-                                save2file=conflog)
+        for section_name in self.confparser.sections():
+            print '[',section_name,']'
+            for name, value in self.confparser.items(section_name):
+                print '  %s = %s' % (name.ljust(colwidth), value.ljust(colwidth))
+            print
 
     def rebuildFS(self):
-        MWpyFS.FormatFS.buildNewExt4(self.conf.dic["devname"],
-                self.conf.dic['mountpoint'], self.conf.dic['diskconf'], 
-                self.conf.dic['username'])
+        MWpyFS.FormatFS.buildNewExt4(self.confparser.get('system','devname'),
+                self.confparser.get('system','mountpoint'), 
+                self.confparser.get('system','diskconf'), 
+                self.confparser.get('system','username'))
 
     def remakeExt4(self):
-        MWpyFS.FormatFS.remakeExt4(partition=self.conf.dic['partition'],
-                                   mountpoint=self.conf.dic['mountpoint'],
-                                   username=self.conf.dic['username'],
-                                   blockscount=self.conf.dic['blockscount'])
+        MWpyFS.FormatFS.remakeExt4(partition  =self.confparser.get('system','partition'),
+                                   mountpoint =self.confparser.get('system','mountpoint'),
+                                   username   =self.confparser.get('system','username'),
+                                   blockscount=self.confparser.get('system','blockscount'))
 
 
     #def produceWorkload_rmdir(self, rootdir):
-        #self.wl_producer.produce_rmdir(np=self.conf.dic['np'],
+        #self.wl_producer.produce_rmdir(np=self.confparser.get('system','np'),
                                        #ndir_per_pid=self.ndir_per_pid,
                                        #rootdir=self.mountpoint+rootdir,
-                                       #tofile=self.workloadpath)
+                                       #tofile=self.workloadbufpath)
 
     def produceWorkload(self, rootdir):
-        self.wl_producer.produce(np=self.conf.dic['np'], 
-                                startOff=self.conf.dic['startOff'],
-                                nwrites_per_file = self.conf.dic['nwrites_per_file'], 
-                                nfile_per_dir=self.conf.dic['nfile_per_dir'], 
-                                ndir_per_pid=self.conf.dic['ndir_per_pid'],
-                                wsize=self.conf.dic['wsize'], 
-                                wstride=self.conf.dic['wstride'], 
-                                rootdir=self.conf.dic['mountpoint']+rootdir,
-                                tofile=self.conf.dic['workloadpath'])
+        self.wl_producer.produce(np=self.confparser.get('workload','np'), 
+                                startOff=self.confparser.get('workload','startOff'),
+                                nwrites_per_file = self.confparser.get('workload','nwrites_per_file'), 
+                                nfile_per_dir=self.confparser.get('workload','nfile_per_dir'), 
+                                ndir_per_pid=self.confparser.get('workload','ndir_per_pid'),
+                                wsize=self.confparser.get('workload','wsize'), 
+                                wstride=self.confparser.get('workload','wstride'), 
+                                rootdir=self.confparser.get('system','mountpoint')+rootdir,
+                                tofile=self.confparser.get('system','workloadbufpath'))
     def play(self):
-        cmd = [self.conf.dic['mpirunpath'], "-np", self.conf.dic['np'], 
-                self.conf.dic['playerpath'], self.conf.dic['workloadpath']]
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('system','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
         cmd = [str(x) for x in cmd]
         proc = subprocess.Popen(cmd) 
         proc.wait()
@@ -147,7 +138,7 @@ class Walkman:
         return rootdir
 
     def getLogFilenameBySeasonYear(self, season, year):
-        return "walkmanJOB-"+self.conf.dic['jobid']+\
+        return "walkmanJOB-"+self.confparser.get('system','jobid')+\
                 ".result.log.year-"+str(year).zfill(5)+\
                 ".season-"+str(season).zfill(5)
 
@@ -157,8 +148,15 @@ class Walkman:
         print e2ff[1]
         return 
 
-def main():
-    walkman = Walkman()
+def main(args):
+    if len(args) != 2:
+        print "usage:", args[0], "config-file"
+        exit(1)
+
+    confpath = args[1]
+    walkman = Walkman(confpath)
+    walkman.displayandsaveConfig()
+    return
 
     #print walkman.monitor.dumpfsSTR(),
     #return
@@ -171,7 +169,6 @@ def main():
     #return 
 
     print "starting......"
-    walkman.displayandsaveConfig()
     time.sleep(3)
 
     nyears=1000
@@ -206,5 +203,5 @@ def main():
            
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
 
