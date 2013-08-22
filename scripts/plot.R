@@ -1,0 +1,186 @@
+rdmine <- function() 
+{
+	a = read.table("C:/Users/Jun/Dropbox/0-Research/0-PLFS/exp/indexexp.txt", header=T)
+	return(a)
+}
+
+sme <- function()
+{
+    source("C:/Users/Jun/Dropbox/0-Research/0-metadata/src/metawalker/scripts/plot.R")
+}
+
+plot_exthist <- function(df, monitor_by=1)
+{
+    # in case of too many monitors, pick some of them
+    monitors = levels(df$monitor_time) 
+    monitors = monitors[seq(1, length(monitors), by=monitor_by)]
+    df = subset(df, monitor_time %in% monitors)
+
+
+    df$Ext_range =  paste(df$Extent_start, df$Extent_end, sep="-")
+    
+    df$finestart = df$start_num*df$start_unit
+
+    mydf = ddply(df, .(finestart), head, n=1)
+    mydf = arrange(mydf, finestart)
+    sortedRange = as.character(mydf$Ext_range)
+   
+
+    # sort the factor
+    df$Ext_range = factor(df$Ext_range, levels=sortedRange)
+
+    p <- ggplot(df, aes(x=Ext_range, y=Percent, 
+                        color=monitor_time,
+                        group=monitor_time))+
+        geom_line(alpha=3/3) +
+        geom_jitter(size=5, alpha=3/3, position = position_jitter(height = 0, width = 0.3)) +
+        ylab("Percent (fregment size/FS capacity)")+
+        xlab("Extent Ranges")
+    print(p)
+}
+
+plot_exthist_bar <- function(df, monitor_by=1, ptitle="PlotTitle", manjust=5, dotext=T)
+{
+    # in case of too many monitors, pick some of them
+    monitors = levels(df$monitor_time) 
+    monitors = monitors[seq(1, length(monitors), by=monitor_by)]
+    df = subset(df, monitor_time %in% monitors)
+
+
+    df$Ext_range =  paste(df$Extent_start, df$Extent_end, sep="-")
+    
+    df$finestart = df$start_num*df$start_unit
+
+    mydf = ddply(df, .(finestart), head, n=1)
+    mydf = arrange(mydf, finestart)
+    sortedRange = as.character(mydf$Ext_range)
+   
+    df = ddply(df, .(Ext_range), pickandset, all_times=unique(df$monitor_time),
+                                             col2set="Percent")
+
+    # sort the factor
+    df$Ext_range = factor(df$Ext_range, levels=sortedRange)
+    df$Percentpos = df$Percent+manjust
+
+    p <- ggplot(df, aes(x=Ext_range, y=Percent, 
+                        color=monitor_time,
+                        fill=monitor_time,
+                        group=monitor_time))+
+        #geom_line(alpha=3/3) +
+        #geom_jitter(size=5, alpha=3/3, position = position_jitter(height = 0, width = 0.3)) +
+        #geom_point(position='dodge')+
+        geom_bar(position='dodge',stat='identity', drop=F)+
+        ylab("Percent (fregment size/FS capacity)")+
+        xlab("Extent Ranges")+
+        ggtitle(ptitle)
+    if ( dotext == T ) {
+        p = p + geom_text(aes(label=Percent, x=Ext_range, y=Percentpos), 
+                  angle=90, size=4, color='blue',
+                  position=position_dodge(width=1))
+    }
+    print(p)
+}
+
+plot_exthist_bar_count <- function(df, monitor_by=1, ptitle="PlotTitle", manjust=0,
+                                   dotext=T)
+{
+    # in case of too many monitors, pick some of them
+    monitors = levels(df$monitor_time) 
+    monitors = monitors[seq(1, length(monitors), by=monitor_by)]
+    df = subset(df, monitor_time %in% monitors)
+
+
+    df$Ext_range =  paste(df$Extent_start, df$Extent_end, sep="-")
+    
+    df$finestart = df$start_num*df$start_unit
+
+    mydf = ddply(df, .(finestart), head, n=1)
+    mydf = arrange(mydf, finestart)
+    sortedRange = as.character(mydf$Ext_range)
+   
+
+    df = ddply(df, .(Ext_range), pickandset, all_times=unique(df$monitor_time))
+
+    # calc text position
+    myymax = max( df$Free_extents, na.rm=T)
+    txt_y_adust = myymax * 0.08 
+    df$textypos = df$Free_extents+txt_y_adust + manjust
+    # sort the factor
+    df$Ext_range = factor(df$Ext_range, levels=sortedRange)
+
+    p <- ggplot(df, aes(x=Ext_range, y=Free_extents, 
+                        color=monitor_time,
+                        fill=monitor_time,
+                        group=monitor_time))+
+        #geom_line(alpha=3/3) +
+        #geom_jitter(size=5, alpha=3/3, position = position_jitter(height = 0, width = 0.3)) +
+        #geom_point(position='dodge')+
+        geom_bar(position='dodge',stat='identity')+
+        ylab("Number of free extents")+
+        xlab("Extent Ranges") +
+        coord_cartesian(ylim=c(0,95000))+
+        ggtitle(ptitle)
+        #scale_x_discrete(drop=F)
+
+    if (dotext) {
+        p = p + geom_text(aes(label=Free_extents, x=Ext_range, y=textypos), 
+                  angle=90, size=2, color='blue',
+                  position=position_dodge(width=1))
+    }
+    print(p)
+}
+
+pickandset <- function(df, all_times, col2set="Free_extents") {
+    if ( nrow(df) == 0 ) {
+        print("IT IS ZERO ROWS")
+        return()
+    }
+    df.ret = df[, c('Ext_range', col2set, 'monitor_time')]
+    missed_times_index = !(all_times %in% df.ret$monitor_time)
+    missed_times = all_times[missed_times_index]
+
+    if ( length( missed_times ) == 0 ) {
+        # nothing missed
+        return (df.ret)
+    }
+
+    df.missed = data.frame(monitor_time=missed_times)
+    df.missed[,col2set]=0
+    df.missed$Ext_range = df.ret$Ext_range[1]
+
+    ret = rbind(df.ret, df.missed)
+    return (ret)
+}
+
+
+
+
+plot_all <- function(df)
+{
+    #h3times = unique(df.h3$monitor_time)
+    #h3times = h3times[1:9]
+    #df.h3plot = subset(df.h3, monitor_time %in% h3times)
+    #plot_exthist_bar(df.h3plot, monitor_by=1, ptitle="test 3")
+    #windows()
+    #plot_exthist_bar_count(df.h3plot, monitor_by=1, ptitle="test 3", manjust = 10000)
+
+    plot_exthist_bar(df.h4, monitor_by=1, ptitle="test 4 (whole set)", dotext=F)
+    windows()
+    plot_exthist_bar(df.h4, monitor_by=15, ptitle="test 4 (sampled)", dotext=T)
+    windows()
+    plot_exthist_bar_count(df.h4, monitor_by=15, ptitle="test 4 (sampled)", dotext=T, manjust=10000)
+    windows()
+    plot_exthist_bar_count(df.h4, monitor_by=1, ptitle="test 4 (whole set)", dotext=F)
+}
+
+
+
+
+
+
+
+
+
+
+
+
