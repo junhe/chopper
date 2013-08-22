@@ -116,18 +116,18 @@ class Walkman:
                                        #tofile=self.workloadbufpath)
 
     def produceWorkload(self, rootdir):
-        self.wl_producer.produce(np=self.confparser.get('workload','np'), 
-            startOff=self.confparser.get('workload','startOff'),
-            nwrites_per_file = self.confparser.get('workload','nwrites_per_file'), 
-            nfile_per_dir=self.confparser.get('workload','nfile_per_dir'), 
-            ndir_per_pid=self.confparser.get('workload','ndir_per_pid'),
-            wsize=self.confparser.get('workload','wsize'), 
-            wstride=self.confparser.get('workload','wstride'), 
-            rootdir=self.confparser.get('system','mountpoint')+rootdir,
+        self.wl_producer.produce(np=self.confparser.getint('workload','np'), 
+            startOff=self.confparser.getint('workload','startOff'),
+            nwrites_per_file = self.confparser.getint('workload','nwrites_per_file'), 
+            nfile_per_dir=self.confparser.getint('workload','nfile_per_dir'), 
+            ndir_per_pid=self.confparser.getint('workload','ndir_per_pid'),
+            wsize=self.confparser.getint('workload','wsize'), 
+            wstride=self.confparser.getint('workload','wstride'), 
+            rootdir=os.path.join(self.confparser.get('system','mountpoint')+rootdir),
             tofile=self.confparser.get('system','workloadbufpath'))
     def play(self):
         cmd = [self.confparser.get('system','mpirunpath'), "-np", 
-                self.confparser.get('system','np'), 
+                self.confparser.get('workload','np'), 
                 self.confparser.get('system','playerpath'), 
                 self.confparser.get('system','workloadbufpath')]
         cmd = [str(x) for x in cmd]
@@ -158,7 +158,7 @@ def main(args):
     walkman = Walkman(confpath)
     walkman.displayandsaveConfig()
     
-    if walkman.confparser.get('formatfs').lower() == "yes":
+    if walkman.confparser.get('system', 'formatfs').lower() == "yes":
         walkman.remakeExt4()
         print 'sleeping 5 sec after building fs....'
         time.sleep(5)
@@ -166,8 +166,8 @@ def main(args):
         print "skipped formating fs"
 
     # for short
-    NYEARS = walkman.confparser.get('nyears')
-    NSEASONS_PER_YEAR = walkman.confparser.get('nseasons_per_year')
+    NYEARS = walkman.confparser.getint('workload','nyears')
+    NSEASONS_PER_YEAR = walkman.confparser.getint('workload', 'nseasons_per_year')
     
     print "start looping..."
     for y in range(NYEARS):
@@ -180,7 +180,8 @@ def main(args):
             # now, delete the previous dir if it exists
             pre_s = (s - (NSEASONS_PER_YEAR-1))%NSEASONS_PER_YEAR
             pre_s_rootdir = walkman.getrootdirByIterIndex(pre_s)
-            fullpath = os.path.join(walkman.conf.dic['mountpoint'],pre_s_rootdir)
+            fullpath = os.path.join(walkman.confparser.get('system', 'mountpoint'),
+                            pre_s_rootdir)
             try:
                 print "removing ", fullpath
                 shutil.rmtree(fullpath)
