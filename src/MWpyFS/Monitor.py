@@ -78,6 +78,16 @@ class FSMonitor:
                 exit(1)
         return new_elems
 
+    def dumpfsSummary(self):
+        print "dumpfs..."
+        cmd = ["dumpe2fs", "-h", self.devname]
+        proc = subprocess.Popen(cmd, 
+                                stdout=subprocess.PIPE)
+
+        print "dumpfs finished. Parsing results..."
+        proc.wait()
+        return proc.communicate()[0]
+
     def dumpfs(self):
         print "dumpfs..."
         cmd = ["dumpe2fs", self.devname]
@@ -278,7 +288,7 @@ class FSMonitor:
         items = [self.widen(str(x)) for x in items]
         fssum += " ".join(items) + '\n'
         
-        return extstats_str + "\n" + fssum
+        return {'extstats_str':extstats_str, 'fssum':fssum}
 
 
     def getAllExtentStatsSTR(self, rootdir="."):
@@ -333,7 +343,10 @@ class FSMonitor:
 
     def display(self, savedata=False, logfile="", monitorid=""):
         self.resetMonitorTime(monitorid=monitorid)
-        extstats = self.getAllExtentStatsSTRSTR()
+        ext_ret = self.getAllExtentStatsSTRSTR()
+        extstats = ext_ret['extstats_str']
+        extstats += ext_ret['fssum']
+
         frag = self.e2freefrag()
         freespaces = self.dumpfsSTR()
         
@@ -343,6 +356,7 @@ class FSMonitor:
         frag1_header = "----------- Extent Histogram   -------------\n"
         dumpfs_header = "----------- Dumpfs Header ------------\n"
         print "........working on monitor............"
+        print extstats_header, ext_ret['fssum']
         #print extstats_header, extstats,
         #print frag0_header, frag[0]
         #print frag1_header, frag[1]
