@@ -14,7 +14,6 @@ os.chdir(dirpath)
 files = glob.glob("*"+filenamekey+"*")
 files = sorted(files)
 
-
 header = ""
 entries = ""
 for fn in files:

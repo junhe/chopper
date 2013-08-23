@@ -3,6 +3,17 @@ import os
 import sys
 import re
 
+class cd:
+    def __init__(self, newPath):
+        self.newPath = newPath
+
+    def __enter__(self):
+        self.savedPath = os.getcwd()
+        os.chdir(self.newPath)
+
+    def __exit__(self, etype, value, traceback):
+        os.chdir(self.savedPath)
+
 def prettyline(line):
     "line is string with items separated by white space"
     items = line.strip()
@@ -13,43 +24,48 @@ def prettyline(line):
 
 def gethist(dirpath, filenamekey):
     linekey = "_freefrag_hist"
-    os.chdir(dirpath)
+
+    with cd(dirpath):
+        files = glob.glob("*"+filenamekey+"*")
+        files = sorted(files)
 
 
-    files = glob.glob("*"+filenamekey+"*")
-    files = sorted(files)
+        tablefile=open("zparsed."+filenamekey+"."+linekey, 'w')
 
+        header = ""
+        entries = ""
+        trans={"B":1,"K":1024,"M":1024*1024,"G":1024*1024*1024}
+        for fn in files:
+            with open(fn, 'r') as f:
+                for line in f:
+                    if "DATAMARKER"+linekey in line:
+                        items = line.lstrip().replace("%", " ")
+                        items = items.split()
 
-    header = ""
-    entries = ""
-    trans={"B":1,"K":1024,"M":1024*1024,"G":1024*1024*1024}
-    for fn in files:
-        with open(fn, 'r') as f:
-            for line in f:
-                if "DATAMARKER"+linekey in line:
-                    items = line.lstrip().replace("%", " ")
-                    items = items.split()
+                        # number
+                        mo = re.search(r'\d+', items[0])
+                        n = mo.group()
+                        # unit
+                        mo = re.search('[a-zA-Z]', items[0])
+                        u = mo.group()
+                        if u == "":
+                            u = "B"
+                        u = trans[u]
+                        
+                        items.extend([n,u])
+                        items = [str(x) for x in items]
+                        entry = " ".join(items) + '\n'
+                        entry = prettyline(entry)
+                        print entry,
+                        tablefile.write(entry)
 
-                    # number
-                    mo = re.search(r'\d+', items[0])
-                    n = mo.group()
-                    # unit
-                    mo = re.search('[a-zA-Z]', items[0])
-                    u = mo.group()
-                    if u == "":
-                        u = "B"
-                    u = trans[u]
-                    
-                    items.extend([n,u])
-                    items = [str(x) for x in items]
-                    entry = " ".join(items) + '\n'
-                    print prettyline(entry),
-
-                elif "HEADERMARKER"+linekey in line and header == "":
-                    header = line.lstrip().rstrip('\n') + " start_num start_unit\n"
-                    print prettyline(header),
-                else:
-                    pass
+                    elif "HEADERMARKER"+linekey in line and header == "":
+                        header = line.lstrip().rstrip('\n') + " start_num start_unit\n"
+                        header = prettyline(header)
+                        print header,
+                        tablefile.write(header)
+                    else:
+                        pass
 
 def isDataline(linekey, line):
     linekey = "DATAMARKER" + linekey
@@ -69,33 +85,49 @@ def gettable(dirpath, filenamekey, linekey):
         gethist(dirpath, filenamekey)
         return
 
-    os.chdir(dirpath)
+    with cd(dirpath):
+        if linekey == "_walkman_config":
+            files = glob.glob("*"+filenamekey+"*.cols")
+        else:
+            files = glob.glob("*"+filenamekey+"*")
 
-    files = glob.glob("*"+filenamekey+"*")
-    files = sorted(files)
+        files = sorted(files)
+        
+        tablefile=open("zparsed."+filenamekey+"."+linekey, 'w')
 
-    header = ""
-    entries = ""
-    for fn in files:
-        with open(fn, 'r') as f:
-            for line in f:
-                if isDataline(linekey, line):
-                    print prettyline(line),
+        header = ""
+        entries = ""
+        for fn in files:
+            with open(fn, 'r') as f:
+                for line in f:
+                    if isDataline(linekey, line):
+                        line = prettyline(line)
+                        print line,
+                        tablefile.write(line)
 
-                elif isHeaderline(linekey, line) \
-                        and header == "":
-                    header = line
-                    print prettyline(header), 
-                else:
-                    pass
-       
-    
+                    elif isHeaderline(linekey, line) \
+                            and header == "":
+                        header = "gotit" 
+                        line = prettyline(line)
+                        print line,
+                        tablefile.write(line)
+                    else:
+                        pass
+        tablefile.flush()
+        tablefile.close()
     
 def main(args):
+    keys = ['_extstats', '_extstatssum', '_freefrag_sum',
+            '_freefrag_hist', '_freeblocks', '_freeinodes',
+            '_walkman_config']
+    if len(args) != 3:
+        print "usage:", args[0], 'dirpath', 'filenamekey'
+        exit(1)
+
     dirpath = args[1]
     filenamekey = args[2]
-    linekey = args[3]
-    gettable(dirpath, filenamekey, linekey)
+    for mykey in keys:
+        gettable(dirpath, filenamekey, mykey)
 
 if __name__ == "__main__":
     """
