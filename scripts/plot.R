@@ -72,7 +72,10 @@ plot_exthist_bar <- function(df, monitor_by=1, ptitle="PlotTitle", manjust=5, do
         geom_bar(position='dodge',stat='identity', drop=F)+
         ylab("Percent (fregment size/FS capacity)")+
         xlab("Extent Ranges")+
-        ggtitle(ptitle)
+        ggtitle(ptitle) +
+        facet_wrap(~jobid, ncol=2) +
+        opts(axis.text.x=theme_text(angle=45, hjust=1))
+
     if ( dotext == T ) {
         p = p + geom_text(aes(label=Percent, x=Ext_range, y=Percentpos), 
                   angle=90, size=4, color='blue',
@@ -82,7 +85,7 @@ plot_exthist_bar <- function(df, monitor_by=1, ptitle="PlotTitle", manjust=5, do
 }
 
 plot_exthist_bar_count <- function(df, monitor_by=1, ptitle="PlotTitle", manjust=0,
-                                   dotext=T)
+                                   dotext=T, mapstride=F, dfmapper=NULL)
 {
     # in case of too many monitors, pick some of them
     monitors = levels(df$monitor_time) 
@@ -99,7 +102,7 @@ plot_exthist_bar_count <- function(df, monitor_by=1, ptitle="PlotTitle", manjust
     sortedRange = as.character(mydf$Ext_range)
    
 
-    df = ddply(df, .(Ext_range), pickandset, all_times=unique(df$monitor_time))
+    df = ddply(df, .(Ext_range, jobid), pickandset, all_times=unique(df$monitor_time))
 
     # calc text position
     myymax = max( df$Free_extents, na.rm=T)
@@ -107,6 +110,10 @@ plot_exthist_bar_count <- function(df, monitor_by=1, ptitle="PlotTitle", manjust
     df$textypos = df$Free_extents+txt_y_adust + manjust
     # sort the factor
     df$Ext_range = factor(df$Ext_range, levels=sortedRange)
+
+    if ( mapstride ) {
+        df$jobid = mapvalues(df$jobid, from=dfmapper$jobid, to=dfmapper$wstride)
+    }
 
     p <- ggplot(df, aes(x=Ext_range, y=Free_extents, 
                         color=monitor_time,
@@ -118,8 +125,10 @@ plot_exthist_bar_count <- function(df, monitor_by=1, ptitle="PlotTitle", manjust
         geom_bar(position='dodge',stat='identity')+
         ylab("Number of free extents")+
         xlab("Extent Ranges") +
-        coord_cartesian(ylim=c(0,95000))+
-        ggtitle(ptitle)
+        #coord_cartesian(ylim=c(0,95000))+
+        ggtitle(ptitle) + 
+        facet_wrap(~jobid) +
+        opts(axis.text.x=theme_text(angle=45, hjust=1))
         #scale_x_discrete(drop=F)
 
     if (dotext) {
@@ -130,12 +139,19 @@ plot_exthist_bar_count <- function(df, monitor_by=1, ptitle="PlotTitle", manjust
     print(p)
 }
 
+mapstride <- function(df, dfmapper) 
+{
+    df$wstride = mapvalues(df$jobid, from=dfmapper$jobid, to=dfmapper$wstride)
+    return(df)
+}
+
+
 pickandset <- function(df, all_times, col2set="Free_extents") {
     if ( nrow(df) == 0 ) {
         print("IT IS ZERO ROWS")
         return()
     }
-    df.ret = df[, c('Ext_range', col2set, 'monitor_time')]
+    df.ret = df[, c('Ext_range', col2set, 'monitor_time', 'jobid')]
     missed_times_index = !(all_times %in% df.ret$monitor_time)
     missed_times = all_times[missed_times_index]
 
@@ -147,6 +163,7 @@ pickandset <- function(df, all_times, col2set="Free_extents") {
     df.missed = data.frame(monitor_time=missed_times)
     df.missed[,col2set]=0
     df.missed$Ext_range = df.ret$Ext_range[1]
+    df.missed$jobid = df.ret$jobid[1]
 
     ret = rbind(df.ret, df.missed)
     return (ret)
@@ -174,11 +191,46 @@ plot_all <- function(df)
 }
 
 
+files2df <- function(dirpath)
+{
+    dflist = list()
+    files = list.files(dirpath)
+    for (f in files) {
+        fpath = paste(dirpath, f, sep="/")
+        fidx = sub("^.*\\.", "", f)
+        dflist[[fidx]] = read.table(fpath, header=T)
+    }
+    #print (str(dflist))
+    # put walkman config to all other df
 
+    dfvec = c("_extstats", "_extstatssum", "_freefrag_sum",
+              "_freefrag_hist", "_freeblocks", "_freeinodes",
+              "_walkman_config")
+    conf = dflist[['_walkman_config']][,c("hostname", "jobid", "nyears", "nseasons_per_year",
+                                          "np", "ndir_per_pid", "nfile_per_dir", "nwrites_per_file",
+                                          "wsize", "wstride", "startoff")]
+    for ( dfname in dfvec[ dfvec!='_walkman_config'] ) {
+        dflist[[dfname]] = merge(dflist[[dfname]], conf, by=c("jobid")) 
+    }
 
+    return (dflist)
+}
 
+plot_freefrag <- function(df)
+{
+    plot_exthist_bar(df)
+    plot_exthist_bar_count(df)
+            #_extstats: how many metadata/data blocks per file, and more
+            #_extstatssum: total numbers of metadata/data blocks for
+                #the whole file system
+            #_freefrag_sum: average size of extent....
+            #_freefrag_hist: the histgram of extents
+            #_freeblocks: the start and end block number of each free extent
+            #_freeinodes: free inode number ranges
+        #In *.cols:
+            #_walkman_config: the config of this run (system and workload)
 
-
+}
 
 
 
