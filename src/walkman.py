@@ -21,13 +21,9 @@ import sys
 from ConfigParser import SafeConfigParser
 
 class Walkman:
-    def __init__(self, confpath):
-        self.confparser = SafeConfigParser()
-        try:
-            self.confparser.readfp(open(confpath, 'r'))
-        except:
-            print "unable to read config file:", confpath
-        
+    def __init__(self, confparser):
+        "confparser must be ready to use get()"
+        self.confparser = confparser
 
         self.confparser.set('system','hostname', socket.gethostname())
         self.confparser.set('system','jobid', 
@@ -135,63 +131,78 @@ class Walkman:
         print e2ff[1]
         return 
 
+    def walk(self):
+        """
+        This is the main function of walkman. It takes a
+        ConfigParser as input, run a walkman for this input.
+        By doing so, I can pass different config to walkman
+        to make it do different things, making walkman a better module.
+        """
+        self.displayandsaveConfig()
+        
+        if self.confparser.get('system', 'formatfs').lower() == "yes":
+            self.remakeExt4()
+            print 'sleeping 1 sec after building fs....'
+            time.sleep(1)
+        else:
+            print "skipped formating fs"
+
+
+        # save the fs summary so I can traceback if needed
+        fssumpath = os.path.join(self.confparser.get('system', 'resultdir'),
+                        "walkmanJOB-"+self.confparser.get('system','jobid')+".FS-summary")
+        with open(fssumpath, 'w') as f:
+            f.write( self.monitor.dumpfsSummary())
+
+
+        # for short
+        NYEARS = self.confparser.getint('workload','nyears')
+        NSEASONS_PER_YEAR = self.confparser.getint('workload', 'nseasons_per_year')
+        
+        print "start looping..."
+        for y in range(NYEARS):
+            for s in range(NSEASONS_PER_YEAR):
+                rootdir = self.getrootdirByIterIndex(s)
+                self.produceWorkload(rootdir=rootdir)
+
+                self.play()
+     
+                # now, delete the previous dir if it exists
+                pre_s = (s - (NSEASONS_PER_YEAR-1))%NSEASONS_PER_YEAR
+                pre_s_rootdir = self.getrootdirByIterIndex(pre_s)
+                fullpath = os.path.join(self.confparser.get('system', 'mountpoint'),
+                                pre_s_rootdir)
+                try:
+                    print "removing ", fullpath
+                    shutil.rmtree(fullpath)
+                except:
+                    print "failed to rmtree (but should be OK):", fullpath
+
+
+                # Monitor at the end of each year
+                time.sleep(3)
+                self.monitor.display(savedata=True, 
+                                    logfile=self.getLogFilenameBySeasonYear(s,y),
+                                    monitorid=self.getYearSeasonStr(year=y, season=s),
+                                    jobid=self.confparser.get('system','jobid')
+                                    )
+                print "------ End of this year, sleep 2 sec ----------"
+                time.sleep(2)
+
 def main(args):
     if len(args) != 2:
-        print "usage:", args[0], "config-file"
+        print 'usage:', args[0], 'config-file'
         exit(1)
-
+    
     confpath = args[1]
-    walkman = Walkman(confpath)
-    walkman.displayandsaveConfig()
-    
-    if walkman.confparser.get('system', 'formatfs').lower() == "yes":
-        walkman.remakeExt4()
-        print 'sleeping 1 sec after building fs....'
-        time.sleep(1)
-    else:
-        print "skipped formating fs"
+    confparser = SafeConfigParser()
+    try:
+        confparser.readfp(open(confpath, 'r'))
+    except:
+        print "unable to read config file:", confpath
 
-
-    # save the fs summary so I can traceback if needed
-    fssumpath = os.path.join(walkman.confparser.get('system', 'resultdir'),
-                    "walkmanJOB-"+walkman.confparser.get('system','jobid')+".FS-summary")
-    with open(fssumpath, 'w') as f:
-        f.write( walkman.monitor.dumpfsSummary())
-
-    # for short
-    NYEARS = walkman.confparser.getint('workload','nyears')
-    NSEASONS_PER_YEAR = walkman.confparser.getint('workload', 'nseasons_per_year')
-    
-    print "start looping..."
-    for y in range(NYEARS):
-        for s in range(NSEASONS_PER_YEAR):
-            rootdir = walkman.getrootdirByIterIndex(s)
-            walkman.produceWorkload(rootdir=rootdir)
-
-            walkman.play()
- 
-            # now, delete the previous dir if it exists
-            pre_s = (s - (NSEASONS_PER_YEAR-1))%NSEASONS_PER_YEAR
-            pre_s_rootdir = walkman.getrootdirByIterIndex(pre_s)
-            fullpath = os.path.join(walkman.confparser.get('system', 'mountpoint'),
-                            pre_s_rootdir)
-            try:
-                print "removing ", fullpath
-                shutil.rmtree(fullpath)
-            except:
-                print "failed to rmtree (but should be OK):", fullpath
-
-
-            # Monitor at the end of each year
-            time.sleep(3)
-            walkman.monitor.display(savedata=True, 
-                                logfile=walkman.getLogFilenameBySeasonYear(s,y),
-                                monitorid=walkman.getYearSeasonStr(year=y, season=s),
-                                jobid=walkman.confparser.get('system','jobid')
-                                )
-            print "------ End of this year, sleep 2 sec ----------"
-            time.sleep(2)
-           
+    walkman = Walkman(confparser)
+    walkman.walk()
 
 if __name__ == "__main__":
     main(sys.argv)
