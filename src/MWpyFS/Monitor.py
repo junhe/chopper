@@ -130,7 +130,8 @@ class FSMonitor:
             entry = " ".join(entry)
             freeinodes += entry + "\n"
         
-        return freeblocks + freeinodes
+        return {'freeblocks':freeblocks, 
+                'freeinodes':freeinodes}
 
     def e2freefrag(self):
         cmd = ["e2freefrag", self.devname]
@@ -154,6 +155,7 @@ class FSMonitor:
                     sums_dict[keyname] = mo.group(2)
             elif part == 1:
                 # This part is the histogram.
+                line = line.strip()
                 if "Extent Size" in line:
                     hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent monitor_time HEADERMARKER_freefrag_hist\n"
                     continue
@@ -328,7 +330,7 @@ class FSMonitor:
         return retdic
         
     def widen(self, s):
-        return s.rjust(self.col_width)
+        return s.ljust(self.col_width)
 
     def dict2table(self, mydict):
         mytable = ""
@@ -345,26 +347,29 @@ class FSMonitor:
 
         return header + vals
 
-    def display(self, savedata=False, logfile="", monitorid=""):
+    def display(self, savedata=False, logfile="", monitorid="", jobid="myjobid"):
         self.resetMonitorTime(monitorid=monitorid)
+
         ext_ret = self.getAllExtentStatsSTRSTR()
-        extstats = ext_ret['extstats_str']
-        extstats += ext_ret['fssum']
+        extstats = self.addCol( ext_ret['extstats_str'],
+                                "jobid", jobid )
+        extstatssum = self.addCol( ext_ret['fssum'],
+                                "jobid", jobid)
 
         frag = self.e2freefrag()
         freespaces = self.dumpfsSTR()
         
-        # display
         extstats_header = "-----------  Extent statistics  -------------\n"
-        frag0_header  = "-----------  Extent summary  -------------\n"
-        frag1_header = "----------- Extent Histogram   -------------\n"
-        dumpfs_header = "----------- Dumpfs Header ------------\n"
+        frag0_header    = "-----------  Extent summary  -------------\n"
+        frag1_header    = "----------- Extent Histogram   -------------\n"
+        dumpfs_header   = "----------- Dumpfs Header ------------\n"
         print "........working on monitor............"
-        print extstats_header, ext_ret['fssum']
+        #print extstats_header, ext_ret['fssum']
         #print extstats_header, extstats,
         #print frag0_header, frag[0]
         #print frag1_header, frag[1]
         #print dumpfs_header, freespaces
+        
 
         if savedata: 
             if logfile == "":
@@ -374,15 +379,24 @@ class FSMonitor:
             fullpath = os.path.join(self.logdir, filename)
             f = open(fullpath, 'w')
             f.write(extstats_header + extstats)
-            f.write(frag0_header + frag[0])
-            f.write(frag1_header + frag[1])
-            f.write(dumpfs_header + freespaces)
+            f.write(extstatssum)
+            f.write(frag0_header + self.addCol(frag[0], 'jobid', jobid))
+            f.write(frag1_header + self.addCol(frag[1], 'jobid', jobid))
+            f.write(dumpfs_header + self.addCol(freespaces['freeblocks'], 'jobid', jobid))
+            f.write(dumpfs_header + self.addCol(freespaces['freeinodes'], 'jobid', jobid))
             f.flush()
             f.close()
-        
         return
 
-        
+    def addCol(self, table, colname, val):
+        "add a col to table with same val"
+        lines = table.splitlines()
+        for i, line in enumerate(lines):
+            if i == 0:
+                lines[i] += " " + self.widen(colname)
+            else:
+                lines[i] += " " + self.widen(str(val))
+        return '\n'.join(lines)+'\n'
 
 #fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
 #fsmon.display(savedata=True)

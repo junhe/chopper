@@ -186,7 +186,8 @@ def main(args):
             time.sleep(3)
             walkman.monitor.display(savedata=True, 
                                 logfile=walkman.getLogFilenameBySeasonYear(s,y),
-                                monitorid=walkman.getYearSeasonStr(year=y, season=s) #
+                                monitorid=walkman.getYearSeasonStr(year=y, season=s),
+                                jobid=walkman.confparser.get('system','jobid')
                                 )
             print "------ End of this year, sleep 2 sec ----------"
             time.sleep(2)
