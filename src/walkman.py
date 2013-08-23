@@ -142,8 +142,6 @@ class Walkman:
         
         if self.confparser.get('system', 'formatfs').lower() == "yes":
             self.remakeExt4()
-            print 'sleeping 1 sec after building fs....'
-            time.sleep(1)
         else:
             print "skipped formating fs"
 
@@ -180,14 +178,12 @@ class Walkman:
 
 
                 # Monitor at the end of each year
-                time.sleep(3)
                 self.monitor.display(savedata=True, 
                                     logfile=self.getLogFilenameBySeasonYear(s,y),
                                     monitorid=self.getYearSeasonStr(year=y, season=s),
                                     jobid=self.confparser.get('system','jobid')
                                     )
                 print "------ End of this year, sleep 2 sec ----------"
-                time.sleep(2)
 
 def main(args):
     if len(args) != 2:
@@ -201,9 +197,18 @@ def main(args):
     except:
         print "unable to read config file:", confpath
 
-    walkman = Walkman(confparser)
-    walkman.walk()
+    stride_space = [4097, 4098, 4097*2, 4097*3, 4097*4]
+    for istride in stride_space:
+        confparser.set("workload", "wstride", str(istride))
+
+        walkman = Walkman(confparser)
+        walkman.walk()
 
 if __name__ == "__main__":
     main(sys.argv)
+
+
+
+
+
 
