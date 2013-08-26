@@ -232,7 +232,177 @@ plot_freefrag <- function(df)
 
 }
 
+# seecol can be fs_nmetablocks or fs_datablocks
+plot_extstatssum <- function(df, seecol)
+{
+    df$wstride = factor(df$wstride)
+    p <- ggplot(df, aes_string(x="wstride", y=seecol, fill="monitor_time")) +
+        geom_bar(stat='identity', position='dodge', drop=F) +
+        #geom_text(aes(label=fs_nmetablocks), position=position_dodge(width=1))+
+        scale_x_discrete(drop=F) 
+    print(p)
+}
+
+main <- function() {
+    #df = mylist[['_extstatssum']]
+    #plot_extstatssum(df, "fs_nmetablocks")
+    #windows()
+    #plot_extstatssum(df, "fs_ndatablocks")
+
+    #df = mylist[['_freefrag_sum']]
+    #plot_extstatssum(df, 'Max_free_extent')
+
+    innerfunc <- function() {
+        print ("I am innerfunc\n")
+    }
+}
+
+#################################################
+#################################################
+#################################################
+#################################################
+#################################################
+# For wstride and wsize
+# list.ss
+plot_one_yvar <- function(df, seecol, n_per_jobid=10)
+{
+    df = ddply(df, .(jobid), head, n=n_per_jobid)
+    #df$wstride = factor(df$wstride)
+    df$wsize = factor(df$wsize)
+    levels(df$wsize) = paste("WriteSize:", levels(df$wsize))
+    p <- ggplot(df, aes_string(x="factor(wstride)", y=seecol, fill="monitor_time")) +
+        geom_bar(stat='identity', position='dodge', drop=F) +
+        #geom_text(aes(label=fs_nmetablocks), position=position_dodge(width=1))+
+        scale_x_discrete(drop=F) +
+        facet_wrap(~wsize) +
+        xlab("Write stride")
+    print(p)
+}
+
+plot_freefrag_sum <- function(df, n_per_jobid=10)
+{
+    df = ddply(df, .(jobid), head, n=n_per_jobid)
+
+    df = melt(df, id=c("jobid", "monitor_time", "wsize", "wstride"),
+                  measure=c(
+                            "Avg_free_extent",
+                            "Max_free_extent", 
+                            "Blocksize",
+                            "Total_blocks", 
+                            "Free_blocks",
+                            "Min_free_extent"
+                            ))
+
+    head(df)
+
+    df$wstride = factor(df$wstride)
+    levels(df$wstride) = paste("Stride:", levels(df$wstride)) 
+    df$wsize = factor(df$wsize)
+    levels(df$wsize) = paste("WSize:", levels(df$wsize))
+
+    p <- ggplot(df, aes(x=variable, y=value, fill=monitor_time))+
+            geom_bar(stat='identity', position='dodge') +
+            scale_x_discrete(drop=F)+
+            facet_wrap(wstride~wsize)+
+            #opts(axis.text.x=theme_text(angle=45, hjust=1))
+            theme(axis.text.x=element_text(angle=45,hjust=1))
+    print(p)
+}
+
+ss_main <- function() 
+{
+    #list.ss = files2df("C:/Users/Jun/Dropbox/0-Research/0-metadata/datahub/results.h0.wsize.wstride")
+    
+    #df = list.ss[['_extstatssum']]
+    #plot_one_yvar(df, "fs_ndatablocks", n_per_jobid=10)
+    #windows()
+    #plot_one_yvar(df, "fs_nmetablocks", n_per_jobid=10)
+
+    #df = list.ss[['_freefrag_sum']]
+    #plot_freefrag_sum(df, n_per_jobid=100)
+
+    df = list.ss[['_freefrag_hist']]
+    ss_plot_exthist_bar(df, dotext=F)
+}
+
+# input should be _free_fraghist
+ss_plot_exthist_bar <- function(df, monitor_by=1, ptitle="PlotTitle", manjust=5, dotext=T)
+{
+    # in case of too many monitors, pick some of them
+    monitors = levels(df$monitor_time) 
+    monitors = monitors[seq(1, length(monitors), by=monitor_by)]
+    df = subset(df, monitor_time %in% monitors)
+
+    df$Ext_range =  paste(df$Extent_start, df$Extent_end, sep="-")
+    
+    df$finestart = df$start_num*df$start_unit
+    mydf = ddply(df, .(finestart), head, n=1)
+    mydf = arrange(mydf, finestart)
+    sortedRange = as.character(mydf$Ext_range)
+   
+    # sort the factor
+    df$Ext_range = factor(df$Ext_range, levels=sortedRange)
+    df$Percentpos = df$Percent+manjust
+
+    df = ddply(df, .(jobid, monitor_time), ss_pickandset, all_exts=unique(df$Ext_range),
+                                             col2set="Percent")
+    
+    df$wstride = factor(df$wstride)
+    df$wsize = factor(df$wsize)
+
+    # clearer annotation
+    levels(df$wstride) = paste("Stride:", levels(df$wstride))
+    levels(df$wsize) = paste("Size:", levels(df$wsize))
+    print (summary(df$wsize))
+    p <- ggplot(df, aes(x=Ext_range, y=Percent, 
+                        color=monitor_time,
+                        fill=monitor_time,
+                        group=monitor_time))+
+        #geom_line(alpha=3/3) +
+        #geom_jitter(size=5, alpha=3/3, position = position_jitter(height = 0, width = 0.3)) +
+        #geom_point(position='dodge')+
+        geom_bar(position='dodge',stat='identity', drop=F)+
+        ylab("Percent (fregment size/FS capacity)")+
+        xlab("Extent Ranges")+
+        ggtitle(ptitle) +
+        facet_grid(wsize~wstride)+
+        theme(axis.text.x=element_text(angle=45, hjust=1))
 
 
+    if ( dotext == T ) {
+        p = p + geom_text(aes(label=Percent, x=Ext_range, y=Percentpos), 
+                  angle=90, size=4, color='blue',
+                  position=position_dodge(width=1))
+    }
+    print(p)
+}
+
+# df has same ext_range and jobid
+# for one monitor_time of a particular jobid, there should
+# be only one row for one extent range
+# WARNING: in the return of this function, except for 
+# jobid, monitor_time, Ext_range, col2set, other colums
+# are NOT valid.
+ss_pickandset <- function(df, all_exts, col2set="Free_extents") {
+    if ( nrow(df) == 0 ) {
+        print("IT IS ZERO ROWS")
+        return()
+    }
+    missed_exts_index = !(all_exts %in% df$Ext_range)
+    missed_exts = all_exts[missed_exts_index]
+
+    if ( length( missed_exts ) == 0 ) {
+        # nothing missed
+        return (df)
+    }
+
+    nrows.missed = length(missed_exts)
+    df.missed =  df[rep(1, nrows.missed), ]
+    df.missed[,col2set]=0
+    df.missed$Ext_range = missed_exts
+
+    ret = rbind(df, df.missed)
+    return (ret)
+}
 
 
