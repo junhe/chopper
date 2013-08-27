@@ -223,7 +223,6 @@ class FSMonitor:
         exttable = self.addCol(exttable, "filepath", filepath) 
         exttable = self.addCol(exttable, "HEADERMARKER_extlist", 
                                     "DATAMARKER_extlist") 
-        print exttable
         return exttable
 
 
