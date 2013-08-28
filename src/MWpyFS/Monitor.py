@@ -466,6 +466,8 @@ class FSMonitor:
     def addCol(self, table, colname, val):
         "add a col to table with same val"
         lines = table.splitlines()
+        if len(lines) == 0:
+            return table
         for i, line in enumerate(lines):
             if i == 0:
                 lines[i] += " " + self.widen(colname)
