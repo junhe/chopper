@@ -76,7 +76,12 @@ def isDataline(linekey, line):
 def isHeaderline(linekey, line):
     linekey = "HEADERMARKER" + linekey
     linekey = linekey.upper()
-    ret = re.search(r'\b'+linekey+r'\b', line.upper())
+
+    if linekey == "HEADERMARKER_EXTLIST":
+        line = line.strip()
+        ret = re.search(r'[^^]\b'+linekey+r'\b', line.upper(), re.M)
+    else:
+        ret = re.search(r'\b'+linekey+r'\b', line.upper())
     return ret
 
 def gettable(dirpath, filenamekey, linekey):

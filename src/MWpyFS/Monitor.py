@@ -169,6 +169,8 @@ class FSMonitor:
     
     def dump_extents2(self, filepath):
         "This function only gets ext list for this file"
+        print filepath
+        
         cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         cmd = shlex.split(cmd)
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
