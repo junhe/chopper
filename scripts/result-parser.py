@@ -30,7 +30,7 @@ def gethist(dirpath, filenamekey):
         files = sorted(files)
 
 
-        tablefile=open("zparsed."+filenamekey+"."+linekey, 'w')
+        tablefile=open("zparsed."+linekey, 'w')
 
         header = ""
         entries = ""
@@ -76,7 +76,12 @@ def isDataline(linekey, line):
 def isHeaderline(linekey, line):
     linekey = "HEADERMARKER" + linekey
     linekey = linekey.upper()
-    ret = re.search(r'\b'+linekey+r'\b', line.upper())
+
+    if linekey == "HEADERMARKER_EXTLIST":
+        line = line.strip()
+        ret = re.search(r'[^^]\b'+linekey+r'\b', line.upper(), re.M)
+    else:
+        ret = re.search(r'\b'+linekey+r'\b', line.upper())
     return ret
 
 def gettable(dirpath, filenamekey, linekey):
@@ -93,7 +98,7 @@ def gettable(dirpath, filenamekey, linekey):
 
         files = sorted(files)
         
-        tablefile=open("zparsed."+filenamekey+"."+linekey, 'w')
+        tablefile=open("zparsed."+linekey, 'w')
 
         header = ""
         entries = ""
@@ -119,7 +124,7 @@ def gettable(dirpath, filenamekey, linekey):
 def main(args):
     keys = ['_extstats', '_extstatssum', '_freefrag_sum',
             '_freefrag_hist', '_freeblocks', '_freeinodes',
-            '_walkman_config']
+            '_walkman_config', '_extlist']
     if len(args) != 3:
         print "usage:", args[0], 'dirpath', 'filenamekey'
         exit(1)

@@ -166,7 +166,68 @@ class FSMonitor:
                  
         return (self.dict2table(sums_dict), hist_table)
 
+    
+    def dump_extents2(self, filepath):
+        "This function only gets ext list for this file"
+        print filepath
         
+        cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
+        cmd = shlex.split(cmd)
+        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+        proc.wait()
+
+        ext_list = [] # Use list here in case I want to extract data in Python
+        header = []
+
+        max_level = 0
+        exttable = ""
+        for line in proc.stdout:
+            #print "LLL:", line,
+            if "Level" in line:
+                header = ["Level_index", "Max_level", 
+                         "Entry_index", "N_Entry",
+                         "Logical_start", "Logical_end",
+                         "Physical_start", "Physical_end",
+                         "Length", "Flag"]
+                headstr = [self.widen(x) for x in header]
+                exttable = " ".join(headstr) + '\n'
+            else:
+                savedline = line
+                line = re.sub(r'[/\-]', " ", line)
+                tokens = line.split()
+                if len(tokens) == 8:
+                    # there is no physical end
+                    tokens.insert(7, tokens[6]) #TODO: this is dangerous
+
+                d = {}
+                for i in range(9):
+                    try:
+                        d[ header[i] ] = tokens[i]
+                    except:
+                        print savedline
+                        print "token:", tokens
+                        print "header:", header # having a try-except can grant you
+                                            # the opportunity to do something 
+                                            # after bad thing happen
+                
+                if len(tokens) == 10:
+                    d["Flag"] = tokens[10]
+                else:
+                    d["Flag"] = "NA"
+                
+                itms = []
+                l = len(header)
+                for i in range(l):
+                    itms.append( d[ header[i] ] )
+                itms = [self.widen(x) for x in itms]
+                itms = " ".join(itms)
+                exttable += itms + '\n'
+        exttable = self.addCol(exttable, "filepath", filepath) 
+        exttable = self.addCol(exttable, "HEADERMARKER_extlist", 
+                                    "DATAMARKER_extlist") 
+        return exttable
+
+
     def dump_extents(self, filepath):
         cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         cmd = shlex.split(cmd)
@@ -174,12 +235,12 @@ class FSMonitor:
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
         proc.wait()
 
-        ext_list = [] # Use list here in case I want to extract data in Python
         header = []
         n_entries = [0] * 3 # n_entries[k] is the number of entries at level k
                             # it can be used to calculate number of 
                             # internal/leaf nodes
         max_level = 0
+        exttable = ""
         for line in proc.stdout:
             #print "LLL:", line,
             if "Level" in line:
@@ -276,6 +337,17 @@ class FSMonitor:
             
         return paths
 
+    def getAllExtentList(self, rootdir=".", jobid="myjobid", monitor_time="mymonitortime"):
+        files = self.getAllInodePaths(rootdir)
+        lists = ""
+        for f in files:
+            lst = self.dump_extents2(f)
+            lst = self.addCol(lst, "jobid", jobid)
+            lst = self.addCol(lst, "monitor_time", monitor_time)
+            lists += lst
+        return lists
+
+
     def getAllExtentStats(self, rootdir="."):
         files = self.getAllInodePaths(rootdir)
         stats = []
@@ -355,6 +427,8 @@ class FSMonitor:
                                 "jobid", jobid )
         extstatssum = self.addCol( ext_ret['fssum'],
                                 "jobid", jobid)
+        
+        extlist = self.getAllExtentList(jobid=jobid, monitor_time=monitorid)
 
         frag = self.e2freefrag()
         freespaces = self.dumpfsSTR()
@@ -384,6 +458,7 @@ class FSMonitor:
             f.write(frag1_header + self.addCol(frag[1], 'jobid', jobid))
             f.write(dumpfs_header + self.addCol(freespaces['freeblocks'], 'jobid', jobid))
             f.write(dumpfs_header + self.addCol(freespaces['freeinodes'], 'jobid', jobid))
+            f.write(extlist)
             f.flush()
             f.close()
         return
