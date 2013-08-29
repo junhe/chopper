@@ -6,7 +6,7 @@ class DataFrame:
     row-column format. This is good for outputing as
     R input, pretty performance output.
     """
-    def __init__ (self, header, table=[]):
+    def __init__ (self, header=[], table=[]):
         """
         header has to be a list of strings, [str0, str1,..]
         table has to be a 2D list [ list.row0, list.row1, ... ]
@@ -38,7 +38,13 @@ class DataFrame:
 
         return line
 
-    def addRow(self, rowdic):
+    def addRowByList(self, rowlist):
+        if len(rowlist) != len(self.header):
+            print "row length does not match header length"
+            exit(1)
+        self.table.append(rowlist)
+
+    def addRowByDict(self, rowdic):
         """
         to prevent from adding items in wrong order,
         row has to be added as dictionary.
@@ -75,4 +81,5 @@ class DataFrame:
 
 #df.addColumn("newcol", 1000)
 
+#df.addRowByList([3,4,5])
 #print df.toStr()
