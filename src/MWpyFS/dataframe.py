@@ -13,6 +13,7 @@ class DataFrame:
         """
         self.header = header
         self.table = table
+        self.colwidth = 24
 
     def toStr(self):
         return self.headerStr() + self.tableStr() 
@@ -27,8 +28,8 @@ class DataFrame:
             tblstr += self.items2line(row, linechange=True)
         return tblstr
 
-    def widen(self, item, colwidth=20):
-        return str(item).ljust(colwidth)
+    def widen(self, item):
+        return str(item).ljust(self.colwidth)
 
     def items2line(self, items, linechange=True):
         itms = [self.widen(x) for x in items]
@@ -63,7 +64,7 @@ class DataFrame:
 
     def addColumn(self, key, value):
         "value will be the same for each row"
-        self.header.append(str(key))
+        self.header.append(key)
         for row in self.table:
             row.append(value)
 

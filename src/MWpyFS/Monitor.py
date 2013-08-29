@@ -27,6 +27,8 @@ import shlex
 import os
 import pprint
 
+import dataframe
+
 class cd:
     """Context manager for changing the current working directory"""
     def __init__(self, newPath):
@@ -142,6 +144,7 @@ class FSMonitor:
         part = 0
         sums_dict = {}
         hist_table = ""
+        hist_df = dataframe.DataFrame()
         for line in proc.stdout:
             if part == 0:
                 if "HISTOGRAM" in line:
@@ -158,13 +161,20 @@ class FSMonitor:
                 line = line.strip()
                 if "Extent Size" in line:
                     hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent monitor_time HEADERMARKER_freefrag_hist\n"
+                    hist_df.header = hist_table.split()
                     continue
                 fline = re.sub(r'[\-:\n]', "", line)
                 fline = re.sub(r'\.{3}', "", fline)
-                hist_table += fline + " " + self.widen(str(self.monitor_time)) \
-                              + " DATAMARKER_freefrag_hist\n"
+                row = fline.split() + \
+                    [self.monitor_time, "DATAMARKER_freefrag_hist"]
+                hist_df.addRowByList(row)
+
+        # convert dict to data frame
+        sums_df = dataframe.DataFrame(header=sums_dict.keys(),
+                                      table=[sums_dict.values()])
+                                      
                  
-        return (self.dict2table(sums_dict), hist_table)
+        return {"FragSummary":sums_df, "ExtSizeHistogram":hist_df}
 
     
     def dump_extents2(self, filepath):
@@ -422,28 +432,6 @@ class FSMonitor:
     def display(self, savedata=False, logfile="", monitorid="", jobid="myjobid"):
         self.resetMonitorTime(monitorid=monitorid)
 
-        ext_ret = self.getAllExtentStatsSTRSTR()
-        extstats = self.addCol( ext_ret['extstats_str'],
-                                "jobid", jobid )
-        extstatssum = self.addCol( ext_ret['fssum'],
-                                "jobid", jobid)
-        
-        extlist = self.getAllExtentList(jobid=jobid, monitor_time=monitorid)
-
-        frag = self.e2freefrag()
-        freespaces = self.dumpfsSTR()
-        
-        extstats_header = "-----------  Extent statistics  -------------\n"
-        frag0_header    = "-----------  Extent summary  -------------\n"
-        frag1_header    = "----------- Extent Histogram   -------------\n"
-        dumpfs_header   = "----------- Dumpfs Header ------------\n"
-        print "........working on monitor............"
-        #print extstats_header, ext_ret['fssum']
-        #print extstats_header, extstats,
-        #print frag0_header, frag[0]
-        #print frag1_header, frag[1]
-        #print dumpfs_header, freespaces
-        
 
         if savedata: 
             if logfile == "":
@@ -452,10 +440,47 @@ class FSMonitor:
                 filename = logfile
             fullpath = os.path.join(self.logdir, filename)
             f = open(fullpath, 'w')
+
+
+        ext_ret = self.getAllExtentStatsSTRSTR()
+        extstats = self.addCol( ext_ret['extstats_str'],
+                                "jobid", jobid )
+        extstatssum = self.addCol( ext_ret['fssum'],
+                                "jobid", jobid)
+        
+        extlist = self.getAllExtentList(jobid=jobid, monitor_time=monitorid)
+
+        ######################
+        # e2freefrag
+        frag = self.e2freefrag()
+        print frag["FragSummary"].toStr()
+        frag["FragSummary"].addColumn(key="jobid", value=jobid)
+        print "----------------------------------------------------------------"
+        print frag["FragSummary"].toStr()
+        frag["ExtSizeHistogram"].addColumn(key="jobid", value=jobid)
+        if savedata:
+            frag0_header    = "-----------  Extent summary  -------------\n"
+            frag1_header    = "----------- Extent Histogram   -------------\n"
+            f.write(frag0_header + frag["FragSummary"].toStr())
+            f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
+
+
+
+        freespaces = self.dumpfsSTR()
+        
+        extstats_header = "-----------  Extent statistics  -------------\n"
+        dumpfs_header   = "----------- Dumpfs Header ------------\n"
+        print "........working on monitor............"
+        #print extstats_header, ext_ret['fssum']
+        #print extstats_header, extstats,
+        #print frag0_header, frag[0]
+        #print frag1_header, frag[1]
+        #print dumpfs_header, freespaces
+        
+        if savedata:
+
             f.write(extstats_header + extstats)
             f.write(extstatssum)
-            f.write(frag0_header + self.addCol(frag[0], 'jobid', jobid))
-            f.write(frag1_header + self.addCol(frag[1], 'jobid', jobid))
             f.write(dumpfs_header + self.addCol(freespaces['freeblocks'], 'jobid', jobid))
             f.write(dumpfs_header + self.addCol(freespaces['freeinodes'], 'jobid', jobid))
             f.write(extlist)
