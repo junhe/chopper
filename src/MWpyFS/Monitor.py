@@ -188,7 +188,7 @@ class FSMonitor:
         return {"FragSummary":sums_df, "ExtSizeHistogram":hist_df}
 
     
-    def dump_extents2(self, filepath):
+    def dump_extents_of_a_file(self, filepath):
         "This function only gets ext list for this file"
         print filepath
         
@@ -201,7 +201,7 @@ class FSMonitor:
         header = []
 
         max_level = 0
-        exttable = ""
+        df_ext = dataframe.DataFrame()
         for line in proc.stdout:
             #print "LLL:", line,
             if "Level" in line:
@@ -210,8 +210,7 @@ class FSMonitor:
                          "Logical_start", "Logical_end",
                          "Physical_start", "Physical_end",
                          "Length", "Flag"]
-                headstr = [self.widen(x) for x in header]
-                exttable = " ".join(headstr) + '\n'
+                df_ext.header = header
             else:
                 savedline = line
                 line = re.sub(r'[/\-]', " ", line)
@@ -236,23 +235,24 @@ class FSMonitor:
                 else:
                     d["Flag"] = "NA"
                 
-                itms = []
-                l = len(header)
-                for i in range(l):
-                    itms.append( d[ header[i] ] )
-                itms = [self.widen(x) for x in itms]
-                itms = " ".join(itms)
-                exttable += itms + '\n'
-        exttable = self.addCol(exttable, "filepath", filepath) 
-        exttable = self.addCol(exttable, "HEADERMARKER_extlist", 
-                                    "DATAMARKER_extlist") 
-        return exttable
+                df_ext.addRowByDict(d)
+
+        df_ext.addColumn(key = "filepath",
+                         value = filepath)
+        df_ext.addColumn(key = "HEADERMARKER_extlist",
+                         value = "DATAMARKER_extlist")
+        df_ext.addColumn(key = "jobid",
+                         value = self.jobid)
+        df_ext.addColumn(key = "monitor_time",
+                         value = self.monitor_time)
+
+        return df_ext
 
 
-    def dump_extents(self, filepath):
+    def dumpextents_sum(self, filepath):
         cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         cmd = shlex.split(cmd)
-        #print cmd
+
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
         proc.wait()
 
@@ -358,70 +358,56 @@ class FSMonitor:
             
         return paths
 
-    def getAllExtentList(self, rootdir=".", jobid="myjobid", monitor_time="mymonitortime"):
+    def getExtentList_of_a_dir(self, rootdir="."):
         files = self.getAllInodePaths(rootdir)
-        lists = ""
+        df = dataframe.DataFrame()
         for f in files:
-            lst = self.dump_extents2(f)
-            lst = self.addCol(lst, "jobid", jobid)
-            lst = self.addCol(lst, "monitor_time", monitor_time)
-            lists += lst
-        return lists
+            if len(df.header) == 0:
+                df = self.dump_extents_of_a_file(f)
+            else:
+                df.table.extend( self.dump_extents_of_a_file(f).table )
+        return df
 
 
-    def getAllExtentStats(self, rootdir="."):
+    def getPerFileBlockCounts(self, rootdir="."):
         files = self.getAllInodePaths(rootdir)
-        stats = []
+        counts_df = dataframe.DataFrame()
         for f in files:
-            stats.append( self.dump_extents(f) )
-        return stats
+            d = self.dumpextents_sum(f) 
+            if len(counts_df.header) == 0:
+                counts_df.header = d.keys()
+            counts_df.addRowByDict(d)
+
+        counts_df.addColumns(keylist=["HEADERMARKER_extstats",
+                                     "monitor_time",
+                                     "jobid"],
+                            valuelist=["DATAMARKER_extstats",
+                                     self.monitor_time,
+                                     self.jobid])
+           
+        return counts_df
         
-    def getAllExtentStatsSTRSTR(self, rootdir="."):
-        ret = self.getAllExtentStatsSTR(rootdir=rootdir)
-        extstats_str = ret['extstats_str']
-        fs_nmetablocks = ret['fs_nmetablocks']
-        fs_ndatablocks = ret['fs_ndatablocks']
-
-        fssum = "fs_nmetablocks fs_ndatablocks monitor_time HEADERMARKER_extstatssum\n"
-        items = [fs_nmetablocks, fs_ndatablocks, self.monitor_time, 'DATAMARKER_extstatssum']
-        items = [self.widen(str(x)) for x in items]
-        fssum += " ".join(items) + '\n'
-        
-        return {'extstats_str':extstats_str, 'fssum':fssum}
-
-
-    def getAllExtentStatsSTR(self, rootdir="."):
-        stats = self.getAllExtentStats(rootdir)
-
-        if len(stats) == 0:
+    def getFSBlockCount(self, df_files):
+        "df_files has number of metablocks datablocks of each file"
+        if len(df_files.table) == 0:
             return ""
-            
-        header = ""
-        for keyname in stats[0]:
-            header += self.widen(keyname) + " "
-        header += self.widen("monitor_time") + " HEADERMARKER_extstats\n"
 
-        vals = ""
         fs_nmetablocks = 0
         fs_ndatablocks = 0
-        for entry in stats:
-            for keyname in entry:
-                vals += self.widen(str(entry[keyname])) + " "
-                if keyname == 'n_metablock':
-                    fs_nmetablocks += int( entry[keyname] )
-                elif keyname == 'n_datablock':
-                    fs_ndatablocks += int( entry[keyname] )
-                else:
-                    pass
-            vals += self.widen(str(self.monitor_time)) + " DATAMARKER_extstats\n"
-        
-        extstats_str = header + vals
+        nmetaindex = df_files.header.index('n_metablock')
+        ndataindex = df_files.header.index('n_datablock')
 
-        retdic = {'extstats_str':extstats_str,
-                  'fs_nmetablocks': fs_nmetablocks,
-                  'fs_ndatablocks': fs_ndatablocks}
-        return retdic
-        
+        for row in df_files.table:
+            fs_nmetablocks += int(row[nmetaindex])
+            fs_ndatablocks += int(row[ndataindex])
+
+        fsblkcount_df = dataframe.DataFrame()
+        headerstr = "fs_nmetablocks fs_ndatablocks monitor_time HEADERMARKER_extstatssum jobid"
+        fsblkcount_df.addColumns(keylist = headerstr.split(),
+            valuelist = [fs_nmetablocks, fs_ndatablocks, self.monitor_time, 
+                        'DATAMARKER_extstatssum', self.jobid])
+        return fsblkcount_df
+
     def widen(self, s):
         return s.ljust(self.col_width)
 
@@ -441,9 +427,9 @@ class FSMonitor:
         return header + vals
 
     def display(self, savedata=False, logfile="", monitorid="", jobid="myjobid"):
+
         self.resetMonitorTime(monitorid=monitorid)
         self.resetJobID(jobid=jobid)
-
 
         if savedata: 
             if logfile == "":
@@ -454,66 +440,46 @@ class FSMonitor:
             f = open(fullpath, 'w')
 
 
-        ext_ret = self.getAllExtentStatsSTRSTR()
-        extstats = self.addCol( ext_ret['extstats_str'],
-                                "jobid", jobid )
-        extstatssum = self.addCol( ext_ret['fssum'],
-                                "jobid", jobid)
+        ######################
+        # get per file block count
+        df_bcounts = self.getPerFileBlockCounts()
+        if savedata:
+            extstats_header = "----------- per file block counts  -------------\n"
+            f.write(extstats_header + df_bcounts.toStr())
+
+        # FS block count
+        df_fscounts = self.getFSBlockCount(df_bcounts)
+        if savedata:
+            h = "------------- FS block counts ---------------\n"
+            f.write(h+df_fscounts.toStr())
         
-        extlist = self.getAllExtentList(jobid=jobid, monitor_time=monitorid)
+        ######################
+        # get extents of all files
+        extlist = self.getExtentList_of_a_dir()
+        if savedata:
+            h = "---------------- extent list -------------------\n"
+            f.write(h+extlist.toStr())
 
         ######################
         # e2freefrag
         frag = self.e2freefrag()
-        print frag["FragSummary"].toStr()
-        print "----------------------------------------------------------------"
-        print frag["FragSummary"].toStr()
         if savedata:
             frag0_header    = "-----------  Extent summary  -------------\n"
             frag1_header    = "----------- Extent Histogram   -------------\n"
             f.write(frag0_header + frag["FragSummary"].toStr())
             f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
 
-
         ######################
         # dumpfs
-        dumpfs_header   = "----------- Dumpfs Header ------------\n"
         freespaces = self.dumpfs()
-        print freespaces['freeblocks'].toStr()
         if savedata:
+            dumpfs_header   = "----------- Dumpfs Header ------------\n"
             f.write(dumpfs_header + freespaces['freeblocks'].toStr())
             f.write(dumpfs_header + freespaces['freeinodes'].toStr())
 
         
-        extstats_header = "-----------  Extent statistics  -------------\n"
-        print "........working on monitor............"
-        #print extstats_header, ext_ret['fssum']
-        #print extstats_header, extstats,
-        #print frag0_header, frag[0]
-        #print frag1_header, frag[1]
-        #print dumpfs_header, freespaces
-        
         if savedata:
-
-            f.write(extstats_header + extstats)
-            f.write(extstatssum)
-            f.write(extlist)
             f.flush()
             f.close()
         return
-
-    def addCol(self, table, colname, val):
-        "add a col to table with same val"
-        lines = table.splitlines()
-        if len(lines) == 0:
-            return table
-        for i, line in enumerate(lines):
-            if i == 0:
-                lines[i] += " " + self.widen(colname)
-            else:
-                lines[i] += " " + self.widen(str(val))
-        return '\n'.join(lines)+'\n'
-
-#fsmon = FSMonitor("/dev/sdb1", "/mnt/scratch")
-#fsmon.display(savedata=True)
 
