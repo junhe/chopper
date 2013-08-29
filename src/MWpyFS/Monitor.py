@@ -61,6 +61,9 @@ class FSMonitor:
         else:
             self.monitor_time = monitorid
 
+    def resetJobID(self, jobid="DefaultJOBID"):
+        self.jobid = jobid
+
     def _spliter_dumpfs(self, line):
         line = line.replace(",", " ")
         elems = line.split(":")[1]
@@ -107,33 +110,29 @@ class FSMonitor:
             else:
                 pass
         proc.wait()
-        return {"blocks":freeblocks, "inodes":freeinodes}
 
-    def dumpfsSTR(self):
-        print "dumpfsSTR...."
-        ranges = self.dumpfs()
-        print "after dumpfs()..."
+        # initialize
+        freeblocks_df = dataframe.DataFrame(header=['start', 'end'],
+                                           table=freeblocks)
+        freeinodes_df = dataframe.DataFrame(header=['start', 'end'],
+                                           table=freeinodes)
 
-        freeblocks = "start end monitor_time HEADERMARKER_freeblocks".split()
-        freeblocks = [ self.widen(x) for x in freeblocks ]
-        freeblocks = " ".join(freeblocks) + '\n'
-        for row in ranges['blocks']:
-            entry = row + [self.monitor_time,  "DATAMARKER_freeblocks"]
-            entry = [ self.widen(str(x)) for x in entry ]
-            entry = " ".join(entry)
-            freeblocks += entry + "\n"
+        # add additional columns 
+        freeblocks_df.addColumn(key="monitor_time",
+                                       value=self.monitor_time)
+        freeblocks_df.addColumn(key="jobid",
+                                       value=self.jobid)
+        freeblocks_df.addColumn(key="HEADERMARKER_freeblocks",
+                                       value="DATAMARKER_freeblocks")
 
-        freeinodes = "start end monitor_time HEADERMARKER_freeinodes".split()
-        freeinodes = [ self.widen(x) for x in freeinodes ]
-        freeinodes = " ".join(freeinodes) + '\n'
-        for row in ranges['inodes']:
-            entry = row + [self.monitor_time,  "DATAMARKER_freeinodes"]
-            entry = [ self.widen(str(x)) for x in entry ]
-            entry = " ".join(entry)
-            freeinodes += entry + "\n"
-        
-        return {'freeblocks':freeblocks, 
-                'freeinodes':freeinodes}
+        freeinodes_df.addColumn(key="monitor_time",
+                                       value=self.monitor_time)
+        freeinodes_df.addColumn(key="jobid",
+                                       value=self.jobid)
+        freeinodes_df.addColumn(key="HEADERMARKER_freeinodes",
+                                       value="DATAMARKER_freeinodes")
+
+        return {"freeblocks":freeblocks_df, "freeinodes":freeinodes_df}
 
     def e2freefrag(self):
         cmd = ["e2freefrag", self.devname]
@@ -160,18 +159,30 @@ class FSMonitor:
                 # This part is the histogram.
                 line = line.strip()
                 if "Extent Size" in line:
-                    hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent monitor_time HEADERMARKER_freefrag_hist\n"
+                    hist_table = "Extent_start Extent_end  Free_extents   Free_Blocks  Percent"
                     hist_df.header = hist_table.split()
                     continue
                 fline = re.sub(r'[\-:\n]', "", line)
                 fline = re.sub(r'\.{3}', "", fline)
-                row = fline.split() + \
-                    [self.monitor_time, "DATAMARKER_freefrag_hist"]
+                row = fline.split()
                 hist_df.addRowByList(row)
+
+        hist_df.addColumns(keylist = ["HEADERMARKER_freefrag_hist",
+                                      "monitor_time",
+                                      "jobid"],
+                           valuelist = ["DATAMARKER_freefrag_hist",
+                                        self.monitor_time,
+                                        self.jobid])
 
         # convert dict to data frame
         sums_df = dataframe.DataFrame(header=sums_dict.keys(),
                                       table=[sums_dict.values()])
+        sums_df.addColumn(key="HEADERMARKER_freefrag_sum",
+                          value="DATAMARKER_freefrag_sum")
+        sums_df.addColumn(key="monitor_time",
+                          value=self.monitor_time)
+        sums_df.addColumn(key="jobid",
+                          value=self.jobid)
                                       
                  
         return {"FragSummary":sums_df, "ExtSizeHistogram":hist_df}
@@ -431,6 +442,7 @@ class FSMonitor:
 
     def display(self, savedata=False, logfile="", monitorid="", jobid="myjobid"):
         self.resetMonitorTime(monitorid=monitorid)
+        self.resetJobID(jobid=jobid)
 
 
         if savedata: 
@@ -454,10 +466,8 @@ class FSMonitor:
         # e2freefrag
         frag = self.e2freefrag()
         print frag["FragSummary"].toStr()
-        frag["FragSummary"].addColumn(key="jobid", value=jobid)
         print "----------------------------------------------------------------"
         print frag["FragSummary"].toStr()
-        frag["ExtSizeHistogram"].addColumn(key="jobid", value=jobid)
         if savedata:
             frag0_header    = "-----------  Extent summary  -------------\n"
             frag1_header    = "----------- Extent Histogram   -------------\n"
@@ -465,11 +475,17 @@ class FSMonitor:
             f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
 
 
+        ######################
+        # dumpfs
+        dumpfs_header   = "----------- Dumpfs Header ------------\n"
+        freespaces = self.dumpfs()
+        print freespaces['freeblocks'].toStr()
+        if savedata:
+            f.write(dumpfs_header + freespaces['freeblocks'].toStr())
+            f.write(dumpfs_header + freespaces['freeinodes'].toStr())
 
-        freespaces = self.dumpfsSTR()
         
         extstats_header = "-----------  Extent statistics  -------------\n"
-        dumpfs_header   = "----------- Dumpfs Header ------------\n"
         print "........working on monitor............"
         #print extstats_header, ext_ret['fssum']
         #print extstats_header, extstats,
@@ -481,8 +497,6 @@ class FSMonitor:
 
             f.write(extstats_header + extstats)
             f.write(extstatssum)
-            f.write(dumpfs_header + self.addCol(freespaces['freeblocks'], 'jobid', jobid))
-            f.write(dumpfs_header + self.addCol(freespaces['freeinodes'], 'jobid', jobid))
             f.write(extlist)
             f.flush()
             f.close()
