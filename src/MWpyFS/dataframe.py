@@ -68,6 +68,12 @@ class DataFrame:
         for row in self.table:
             row.append(value)
 
+    def addColumns(self, keylist, valuelist):
+        "value will be the same for each row"
+        self.header.extend(keylist)
+        for row in self.table:
+            row.extend(valuelist)
+
 #df = DataFrame(['h1', 'h2'], [[1,2],[3,4]])
 #df = DataFrame(['h1', 'h2'])
 
