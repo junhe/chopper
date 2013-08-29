@@ -6,11 +6,15 @@ class DataFrame:
     row-column format. This is good for outputing as
     R input, pretty performance output.
     """
-    def __init__ (self, header=[], table=[]):
+    def __init__ (self, header=None, table=None):
         """
         header has to be a list of strings, [str0, str1,..]
         table has to be a 2D list [ list.row0, list.row1, ... ]
         """
+        if header == None:
+            header = []
+        if table == None:
+            table = []
         self.header = header
         self.table = table
         self.colwidth = 24
@@ -61,6 +65,7 @@ class DataFrame:
         except:
             print "failed to add row:"
             print "rowdic:", rowdic
+            print "header:", self.header
 
     def addColumn(self, key, value):
         "value will be the same for each row"
