@@ -53,6 +53,7 @@ class FSMonitor:
         self.col_width = cw
         self.logdir = ld
         self.resetMonitorTime()
+        self.resetJobID()
     
     def resetMonitorTime(self, monitorid=""):
         "monitor_time is used to identify each data retrieval"
@@ -250,6 +251,7 @@ class FSMonitor:
 
 
     def dumpextents_sum(self, filepath):
+        "TODO: merge this with dump_extents_of_a_file()"
         cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         cmd = shlex.split(cmd)
 
