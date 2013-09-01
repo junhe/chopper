@@ -249,6 +249,15 @@ class FSMonitor:
 
         return df_ext
 
+    def setBlock(self, blockn, count):
+        cmd = "debugfs " + self.devname + \
+                " -w -R 'setb " + str(blockn) + " " + str(count) + "'"
+        cmd = shlex.split(cmd)
+
+        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+        proc.wait()
+        return proc.returncode
+
 
     def dumpextents_sum(self, filepath):
         "TODO: merge this with dump_extents_of_a_file()"

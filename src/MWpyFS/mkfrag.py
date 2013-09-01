@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import Monitor
 import FormatFS
 
-
 def plothist(x):
     plt.hist(x, 1000, facecolor='g', alpha=0.75)
     plt.show()
@@ -23,44 +22,79 @@ def generateFrags(alpha, beta, count, sum_lim):
     fragsz = []
     for x in expl:
         fragsz.append( sum_lim*x/sm )
+    
+    # since the atom unit is block and we cannot
+    # have a fraction of a block, so we rount it
+    # this is dangerous though, if in fragsz, they
+    # are all 0.x, you end up with all 0s. 
+    # So, be carefuly when generating it.
+    for i,x in enumerate(fragsz):
+        fragsz[i] = int(x)
+
     plothist(fragsz)
+    return fragsz
         
-def probeAndAssign(partition, mountpoint):
+def _getSizeFromRange(zone_ranges):
+    sizes = []
+    for row in zone_ranges:
+        sizes.append( row[1] - row[0] )
+
+    return sizes
+
+
+
+def getFreeZonesOfPartition(partition, mountpoint):
+    "Note that the index of zone here may not match the group index"
     mo = Monitor.FSMonitor(dn=partition, 
                            mp=mountpoint)
     groups = mo.dumpfs()['freeblocks']
 
-    print groups.toStr()
+    #print groups.toStr()
 
-    # extract start and end from groups
     si = groups.header.index('start')
     ei = groups.header.index('end')
-    free_ranges = []
+    free_zones = []
     for row in groups.table:
-        free_ranges.append( [int(row[si]), int(row[ei])] )
+        free_zones.append( [int(row[si]), int(row[ei])] )
 
-    free_sizes = []
-    for row in free_ranges:
-        free_sizes.append( row[1] - row[0] )
+    return free_zones
 
-    print 'free_ranges', free_ranges
-    print 'free_sizes', free_sizes
-
-def applyFrags(free_zone_ranges, frags_of_zones ):
+def applyFrags(free_zone_ranges, frags_of_zones, partition, mountpoint):
     """
     free_zone_ranges: [[startblock, endblock], [],...]
     frags_of_zones: [[frag size of zone0], [], ...]
     """
+
+    print "free_zone_ranges", free_zone_ranges
+    print "frags_of_zones", frags_of_zones
+
+    setter = Monitor.FSMonitor(dn=partition, mp=mountpoint)
+
     # do it zone by zone
-    for zi,zone in free_zone_ranges:
+    for zi,zone in enumerate(free_zone_ranges):
+        print zone
         zstart = zone[0]
         zfirst_avail = zstart
         zend = zone[1]
         for fragsize in frags_of_zones[zi]:
-            setBlock(zfirst_avail+fragsize, 1)
+            toset = zfirst_avail+fragsize 
+            
+            # try not to set wrong blocks, very dangerous
+            if toset > zend:
+                print "you dont want to set blocks beyond the end"
+                exit(1)
+
+            ret = setter.setBlock(zfirst_avail+fragsize, 1)
+            print "setter return:", ret
+            zfirst_avail = toset + 1
+        if zfirst_avail <= zend:
+            ret = setter.setBlock(zfirst_avail, zend-zfirst_avail+1)
+            print "setter return:", ret
 
 
-
+# test applyFrags
+#applyFrags([[1, 100], [200, 3000]], [[1,2,3,4,5], [33,2,11,22,3,444,3]] )
+#exit(0)
 
 def assignFragsToZones(free_zone_sizes, frag_sizes):
     """
@@ -121,22 +155,45 @@ def assignFragsToZones(free_zone_sizes, frag_sizes):
     print "free space of each group:", free_zone_spaces
     return zone_frags
 
+def makeFragments(partition, mountpoint):
+    free_zones = getFreeZonesOfPartition(
+                                partition=partition,
+                                mountpoint=mountpoint)
+    zone_sizes = _getSizeFromRange(free_zones)
+    print "free_zones", free_zones
+    print "free_zones sizes", zone_sizes
+
+    fragment_list = generateFrags(2, 3, 100, 10000)
+    print "fragment_list", fragment_list
+
+    zone_frags = assignFragsToZones(zone_sizes, fragment_list)
+    print "zone_frags:", zone_frags
+
+    applyFrags(free_zones, zone_frags, partition, mountpoint)
+
+    # check the free zones
+    print "free zone after all:", getFreeZonesOfPartition(
+                                partition=partition,
+                                mountpoint=mountpoint)
+
+
+makeFragments(partition='/dev/ram0', mountpoint='/mnt/scratch/')
 #fragplan([100, 100], [3,44,2,4,3,3,2,3,9,2])
 
 #frags(100, 8, 1000, 100)
-par = '/dev/ram0'
-mp = '/mnt/scratch'
-FormatFS.remakeExt4(partition=par,
-                    mountpoint=mp,
-                    username="junhe",
-                    groupname="junhe",
-                    blockscount=65536)
-print 'remade fs'
-probeAndAssign(partition=par, 
-               mountpoint=mp)
+#par = '/dev/ram0'
+#mp = '/mnt/scratch'
+#FormatFS.remakeExt4(partition=par,
+                    #mountpoint=mp,
+                    #username="junhe",
+                    #groupname="junhe",
+                    #blockscount=65536)
+#print 'remade fs'
+#probeAndAssign(partition=par, 
+               #mountpoint=mp)
 
-#a = stats.lognorm(scale=0.1)
-#a = np.random.beta(0.75, 0.25, 10000)
+##a = stats.lognorm(scale=0.1)
+##a = np.random.beta(0.75, 0.25, 10000)
 #print a.rvs(2, size=10)
 #help(stats.lognorm.rvs)
 #help(a.rvs)
