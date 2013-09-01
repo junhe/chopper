@@ -258,6 +258,22 @@ class FSMonitor:
         proc.wait()
         return proc.returncode
 
+    def isAllBlocksInUse(self, blockn, count):
+        "if any of the blocks is not in use, return false. return true otherwise"
+        cmd = "debugfs " + self.devname + \
+                " -w -R 'testb " + str(blockn) + " " + str(count) + "'"
+        cmd = shlex.split(cmd)
+
+        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+
+        for line in proc.stdout:
+            if 'not' in line:
+                return False
+        proc.wait()
+
+        return True
+
+
 
     def dumpextents_sum(self, filepath):
         "TODO: merge this with dump_extents_of_a_file()"
