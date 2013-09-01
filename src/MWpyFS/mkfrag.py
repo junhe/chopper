@@ -176,11 +176,8 @@ def assignFragsToZones(free_zone_sizes, frag_sizes):
     printwithindex(free_zone_spaces)
     return zone_frags
 
-def makeFragments(partition, mountpoint):
-
-    FormatFS.remakeExt4(partition, mountpoint, 'junhe', 'junhe', 65535)
-
-
+def makeFragmentsOnFS(partition, mountpoint, 
+                      alpha, beta, count, sumlimit):
     free_zones = getFreeZonesOfPartition(
                                 partition=partition,
                                 mountpoint=mountpoint)
@@ -190,7 +187,8 @@ def makeFragments(partition, mountpoint):
     print "free_zones sizes"
     printwithindex(zone_sizes)
 
-    fragment_list = generateFrags(2, 3, 100, 10000)
+    fragment_list = generateFrags(alpha, beta,
+                                  count, sumlimit)
     print "fragment_list"
     printwithindex(fragment_list)
 
@@ -215,7 +213,12 @@ def printwithindex( l ):
 
 
 
-makeFragments(partition='/dev/ram0', mountpoint='/mnt/scratch/')
+#FormatFS.makeLoopDevice('/dev/loop0', '/mnt/mytmpfs', 512)
+#FormatFS.remakeExt4('/dev/loop0', '/mnt/scratch/', 'junhe', 'junhe',
+                    #512*1024)
+#makeFragmentsOnFS(partition='/dev/loop0', mountpoint='/mnt/scratch/')
+
+
 #fragplan([100, 100], [3,44,2,4,3,3,2,3,9,2])
 
 #frags(100, 8, 1000, 100)
