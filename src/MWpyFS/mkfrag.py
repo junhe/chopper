@@ -65,14 +65,11 @@ def applyFrags(free_zone_ranges, frags_of_zones, partition, mountpoint):
     frags_of_zones: [[frag size of zone0], [], ...]
     """
 
-    print "free_zone_ranges", free_zone_ranges
-    print "frags_of_zones", frags_of_zones
-
     setter = Monitor.FSMonitor(dn=partition, mp=mountpoint)
 
     # do it zone by zone
     for zi,zone in enumerate(free_zone_ranges):
-        print zone
+        print zi, zone
         zstart = zone[0]
         zfirst_avail = zstart
         zend = zone[1]
@@ -84,11 +81,22 @@ def applyFrags(free_zone_ranges, frags_of_zones, partition, mountpoint):
                 print "you dont want to set blocks beyond the end"
                 exit(1)
 
-            ret = setter.setBlock(zfirst_avail+fragsize, 1)
+            ret = setter.setBlock(toset, 1)
+            print toset, 1
+            print "testing if blocks are in use...."
+            if not setter.isAllBlocksInUse(toset, 1):
+                print "you failed to set some blocks as in used"
+                exit(1)
             print "setter return:", ret
             zfirst_avail = toset + 1
         if zfirst_avail <= zend:
-            ret = setter.setBlock(zfirst_avail, zend-zfirst_avail+1)
+            cnt = zend - zfirst_avail + 1
+            ret = setter.setBlock(zfirst_avail, cnt)
+            print zfirst_avail, cnt
+            print "testing if blocks are in use...."
+            if not setter.isAllBlocksInUse(zfirst_avail, cnt):
+                print "you failed to set some blocks as in used"
+                exit(1)
             print "setter return:", ret
 
 
@@ -98,9 +106,9 @@ def applyFrags(free_zone_ranges, frags_of_zones, partition, mountpoint):
 
 def assignFragsToZones(free_zone_sizes, frag_sizes):
     """
-    input: a list of sizes, each representing an existing free zone.
-           A zone is very likely to be a free space of a group
-           a list of sizes, each representing size of a fragment
+    input: 1. A list of sizes, each representing an existing free zone.
+             A zone is very likely to be a free space of a group
+           2. A list of sizes, each representing size of a fragment
     output: multiple sets of sizes, each of which is for one group
             the return is the assignment
     
@@ -136,13 +144,13 @@ def assignFragsToZones(free_zone_sizes, frag_sizes):
 
     # the allocation algorithm is greedy.
     # pick the largest fragment and put it in the group
-    # with largest free space
+    # with largest free zone
     frag_sizes = sorted(frag_sizes, reverse=True)
     for frg in frag_sizes:
-        space = sorted(free_zone_spaces, reverse=True)[0]
-        g_idx = free_zone_spaces.index(space)
+        zone = sorted(free_zone_spaces, reverse=True)[0]
+        g_idx = free_zone_spaces.index(zone)
 
-        if frg <= space:
+        if frg <= zone:
             # put frg in group[g_idx]
             zone_frags[g_idx].append(frg)
             free_zone_spaces[g_idx] -= (frg+1) # +1 for the 
@@ -150,31 +158,59 @@ def assignFragsToZones(free_zone_sizes, frag_sizes):
         else:
             print "not good, this should not happend"
             exit(1)
-
-    print "frags of each group:", zone_frags
-    print "free space of each group:", free_zone_spaces
+    # sometimes, some zone is never touched, in which case
+    # it will not be divided to smaller fragments. 
+    # Let us assign a 0-length fragment to it, so later the
+    # whole zone will be marked as allocated and no fragments in
+    # it (as we expected)
+    for i, frags_of_a_zone in enumerate(zone_frags):
+        if len(frags_of_a_zone) == 0:
+            # it has not been touched
+            zone_frags[i].append(0)
+    
+    print "frags of each group:"
+    printwithindex(zone_frags)
+    print "free zone of each group:"
+    printwithindex(free_zone_spaces)
     return zone_frags
 
 def makeFragments(partition, mountpoint):
+
+    FormatFS.remakeExt4(partition, mountpoint, 'junhe', 'junhe', 65000)
+
+
     free_zones = getFreeZonesOfPartition(
                                 partition=partition,
                                 mountpoint=mountpoint)
     zone_sizes = _getSizeFromRange(free_zones)
-    print "free_zones", free_zones
-    print "free_zones sizes", zone_sizes
+    print "free_zones"
+    printwithindex(free_zones)
+    print "free_zones sizes"
+    printwithindex(zone_sizes)
 
     fragment_list = generateFrags(2, 3, 100, 10000)
-    print "fragment_list", fragment_list
+    print "fragment_list"
+    printwithindex(fragment_list)
 
     zone_frags = assignFragsToZones(zone_sizes, fragment_list)
-    print "zone_frags:", zone_frags
+    print "zone_frags:"
+    printwithindex(zone_frags)
 
     applyFrags(free_zones, zone_frags, partition, mountpoint)
 
     # check the free zones
-    print "free zone after all:", getFreeZonesOfPartition(
+    free_zones = getFreeZonesOfPartition(
                                 partition=partition,
                                 mountpoint=mountpoint)
+    zone_sizes = _getSizeFromRange(free_zones)
+    
+    for i, zone in enumerate(free_zones):
+        print i, zone, zone_sizes[i]
+
+def printwithindex( l ):
+    for i, x in enumerate(l):
+        print i, x
+
 
 
 makeFragments(partition='/dev/ram0', mountpoint='/mnt/scratch/')

@@ -56,6 +56,7 @@ def chDirOwner(mountpoint, username, groupname):
     return 0
 
 def remakeExt4(partition, mountpoint, username, groupname, blockscount=16777216):
+    "= format that partition"
     ret = umountFS(mountpoint)
     if ret != 0:
         print "Error in umountFS: this should not happen"
