@@ -55,8 +55,9 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
     mkImageFile(imgpath, sizeMB)
     mkLoopDevOnFile(devname, imgpath) 
 
-def makeExt4(devname, blockscount=16777216):
+def makeExt4(devname, blockscount=16777216, blocksize=4096):
     cmd = ["mkfs.ext4", 
+           "-b", blocksize,
            "-O", "has_journal,extent,huge_file,flex_bg,^uninit_bg,dir_nlink,extra_isize",
            devname, blockscount]
     cmd = [str(x) for x in cmd]
@@ -94,13 +95,14 @@ def chDirOwner(mountpoint, username, groupname):
 
     return 0
 
-def remakeExt4(partition, mountpoint, username, groupname, blockscount=16777216):
+def remakeExt4(partition, mountpoint, username, groupname, 
+                blockscount=16777216, blocksize=4096):
     "= format that partition"
     ret = umountFS(mountpoint)
     if ret != 0:
         print "Error in umountFS: this should not happen"
         print "Tolerated"
-    ret = makeExt4(partition, blockscount)
+    ret = makeExt4(partition, blockscount, blocksize)
     if ret != 0:
         print "Error in makeExt4: this should not happen"
         return ret
