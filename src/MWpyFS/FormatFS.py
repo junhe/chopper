@@ -18,6 +18,42 @@ def formatToOnePart(devname, confpath):
     print "formatToOnePart:", p.returncode
     return p.returncode
 
+def mountTmpfs(mountpoint, size):
+    if not os.path.exists(mountpoint):
+        os.makedirs(mountpoint)
+    cmd = ['mount', '-t', 'tmpfs',
+           '-o', 'size='+str(size), 'tmpfs', mountpoint]
+    cmd = [str(x) for x in cmd]
+    print " ".join(cmd), "......"
+    proc = subprocess.Popen(cmd)
+    proc.wait()
+    
+    return proc.returncode
+
+def mkImageFile(filepath, size):
+    "size is in bytes"
+    cmd = ['dd', 'if=/dev/zero', 'of='+filepath,
+           'bs=1', 'count='+str(size)]
+    print " ".join(cmd), "......"
+    proc = subprocess.Popen(cmd)
+    proc.wait()
+    return proc.returncode
+
+def mkLoopDevOnFile(devname, filepath):
+    cmd = ['losetup', devname, filepath]
+    cmd = [str(x) for x in cmd]
+    print " ".join(cmd), "......"
+    proc = subprocess.Popen(cmd)
+    proc.wait()
+
+    return proc.returncode
+
+def makeLoopDevice(devname, tmpfs_mountpoint, size):
+    mountTmpfs(tmpfs_mountpoint, size)
+    imgpath = os.path.join(tmpfs_mountpoint, "disk.img")
+    mkImageFile(os.path.join(imgpath, size)
+    mkLoopDevOnFile(devname, imgpath) 
+
 def makeExt4(devname, blockscount=16777216):
     cmd = ["mkfs.ext4", 
            "-O", "has_journal,extent,huge_file,flex_bg,^uninit_bg,dir_nlink,extra_isize",

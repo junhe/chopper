@@ -178,7 +178,7 @@ def assignFragsToZones(free_zone_sizes, frag_sizes):
 
 def makeFragments(partition, mountpoint):
 
-    FormatFS.remakeExt4(partition, mountpoint, 'junhe', 'junhe', 65000)
+    FormatFS.remakeExt4(partition, mountpoint, 'junhe', 'junhe', 65535)
 
 
     free_zones = getFreeZonesOfPartition(
