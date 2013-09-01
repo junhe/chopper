@@ -82,11 +82,28 @@ class Walkman:
                 groupname=self.confparser.get('system','groupname'))
 
     def remakeExt4(self):
+        blockscount = self.confparser.getint('system', 'blockscount')
+        blocksize = self.confparser.getint('system', 'blocksize')
+
+        if self.confparser.get('system', 'makeloopdevice') == 'yes':
+            MWpyFS.FormatFS.makeLoopDevice(
+                    devname=self.confparser.get('system', 'partition'),
+                    tmpfs_mountpoint=self.confparser.get('system', 'tmpfs_mountpoint'),
+                    sizeMB=blockscount*blocksize/(1024*1024))
+
         MWpyFS.FormatFS.remakeExt4(partition  =self.confparser.get('system','partition'),
                                    mountpoint =self.confparser.get('system','mountpoint'),
                                    username   =self.confparser.get('system','username'),
                                    groupname   =self.confparser.get('system','groupname'),
-                                   blockscount=self.confparser.get('system','blockscount'))
+                                   blockscount=blockscount)
+    def makeFragmentsOnFS(self):
+        MWpyFS.mkfrag.makeFragmentsOnFS(
+                partition=self.confparser.get('system', 'partition'),
+                mountpoint=self.confparser.get('system', 'mountpoint'),
+                alpha=self.confparser.getfloat('fragment', 'alpha'),
+                beta=self.confparser.getfloat('fragment', 'beta'),
+                count=self.confparser.getint('fragment', 'count'),
+                sumlimit=self.confparser.getint('fragment', 'sumlimit'))
 
 
     #def produceWorkload_rmdir(self, rootdir):
@@ -139,12 +156,16 @@ class Walkman:
         to make it do different things, making walkman a better module.
         """
         self.displayandsaveConfig()
-        
+
+        if self.confparser.get('system', 'makeloopdevice') == 'yes'\
+                and self.confparser.get('system', 'formatfs') != 'yes':
+            print "you asked to make loop device without formatting FS. i cannot do this"
+            exit(1)
+
         if self.confparser.get('system', 'formatfs').lower() == "yes":
             self.remakeExt4()
         else:
             print "skipped formating fs"
-
 
         # save the fs summary so I can traceback if needed
         fssumpath = os.path.join(self.confparser.get('system', 'resultdir'),
@@ -196,6 +217,7 @@ def main(args):
         confparser.readfp(open(confpath, 'r'))
     except:
         print "unable to read config file:", confpath
+        exit(1)
 
     stride_space = [4097, 4098, 4097*2, 4097*3, 4097*4]
     for istride in stride_space:
