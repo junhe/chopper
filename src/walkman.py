@@ -84,18 +84,21 @@ class Walkman:
     def remakeExt4(self):
         blockscount = self.confparser.getint('system', 'blockscount')
         blocksize = self.confparser.getint('system', 'blocksize')
+            
+        loodevsizeMB = blockscount*blocksize/(1024*1024)
 
         if self.confparser.get('system', 'makeloopdevice') == 'yes':
             MWpyFS.FormatFS.makeLoopDevice(
                     devname=self.confparser.get('system', 'partition'),
                     tmpfs_mountpoint=self.confparser.get('system', 'tmpfs_mountpoint'),
-                    sizeMB=blockscount*blocksize/(1024*1024))
+                    sizeMB=loodevsizeMB)
 
         MWpyFS.FormatFS.remakeExt4(partition  =self.confparser.get('system','partition'),
                                    mountpoint =self.confparser.get('system','mountpoint'),
                                    username   =self.confparser.get('system','username'),
                                    groupname   =self.confparser.get('system','groupname'),
-                                   blockscount=blockscount)
+                                   blockscount=blockscount,
+                                   blocksize=blocksize)
     def makeFragmentsOnFS(self):
         MWpyFS.mkfrag.makeFragmentsOnFS(
                 partition=self.confparser.get('system', 'partition'),
@@ -197,7 +200,6 @@ class Walkman:
                 except:
                     print "failed to rmtree (but should be OK):", fullpath
 
-
                 # Monitor at the end of each year
                 self.monitor.display(savedata=True, 
                                     logfile=self.getLogFilenameBySeasonYear(s,y),
@@ -219,7 +221,7 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
 
-    stride_space = [4097, 4098, 4097*2, 4097*3, 4097*4]
+    stride_space = [4097]
     for istride in stride_space:
         confparser.set("workload", "wstride", str(istride))
 
@@ -228,9 +230,5 @@ def main(args):
 
 if __name__ == "__main__":
     main(sys.argv)
-
-
-
-
 
 
