@@ -1,6 +1,4 @@
-import scipy as sp
-import numpy as np
-from scipy import stats
+import random
 import matplotlib.pyplot as plt
 import Monitor
 import FormatFS
@@ -12,7 +10,11 @@ def plothist(x):
 
 def generateFrags(alpha, beta, count, sum_lim):
     "Using R to find proper parameters (because I am better with R..)"
-    l = np.random.beta(alpha, beta, count)
+    #l = np.random.beta(alpha, beta, count)
+    l = []
+    for i in range(count):
+        l.append( random.betavariate(alpha, beta) )
+
     expl = []
     for x in l:
         expl.append( 2**(10*x) )
