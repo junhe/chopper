@@ -19,7 +19,9 @@ def formatToOnePart(devname, confpath):
     return p.returncode
 
 def makeExt4(devname, blockscount=16777216):
-    cmd = ["mkfs.ext4", devname, blockscount]
+    cmd = ["mkfs.ext4", 
+           "-O", "has_journal,extent,huge_file,flex_bg,^uninit_bg,dir_nlink,extra_isize",
+           devname, blockscount]
     cmd = [str(x) for x in cmd]
     p = subprocess.Popen(cmd)
     p.wait()
