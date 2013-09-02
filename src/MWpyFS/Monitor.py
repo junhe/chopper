@@ -203,15 +203,16 @@ class FSMonitor:
 
         max_level = 0
         df_ext = dataframe.DataFrame()
+        header = ["Level_index", "Max_level", 
+                 "Entry_index", "N_Entry",
+                 "Logical_start", "Logical_end",
+                 "Physical_start", "Physical_end",
+                 "Length", "Flag"]
+        df_ext.header = header
         for line in proc.stdout:
             #print "LLL:", line,
             if "Level" in line:
-                header = ["Level_index", "Max_level", 
-                         "Entry_index", "N_Entry",
-                         "Logical_start", "Logical_end",
-                         "Physical_start", "Physical_end",
-                         "Length", "Flag"]
-                df_ext.header = header
+                pass
             else:
                 savedline = line
                 line = re.sub(r'[/\-]', " ", line)
@@ -289,14 +290,15 @@ class FSMonitor:
                             # internal/leaf nodes
         max_level = 0
         exttable = ""
+        header = ["Level_index", "Max_level", 
+                 "Entry_index", "N_Entry",
+                 "Logical_start", "Logical_end",
+                 "Physical_start", "Physical_end",
+                 "Length", "Flag"]
         for line in proc.stdout:
             #print "LLL:", line,
             if "Level" in line:
-                header = ["Level_index", "Max_level", 
-                         "Entry_index", "N_Entry",
-                         "Logical_start", "Logical_end",
-                         "Physical_start", "Physical_end",
-                         "Length", "Flag"]
+                pass
             else:
                 savedline = line
                 line = re.sub(r'[/\-]', " ", line)

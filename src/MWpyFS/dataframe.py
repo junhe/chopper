@@ -70,8 +70,11 @@ class DataFrame:
     def addColumn(self, key, value):
         "value will be the same for each row"
         self.header.append(key)
-        for row in self.table:
-            row.append(value)
+        if len(self.table) == 0:
+            self.table.append([value])
+        else:
+            for row in self.table:
+                row.append(value)
 
     def addColumns(self, keylist, valuelist):
         "value will be the same for each row"
