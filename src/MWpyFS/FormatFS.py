@@ -108,6 +108,8 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
         if delLoopDev(devname) != 0:
             print "Failed to delete loop device"
             exit(1)
+    else:
+        print devname, "is not in use"
 
     mountTmpfs(tmpfs_mountpoint, sizeMB*1024*1024)
     imgpath = os.path.join(tmpfs_mountpoint, "disk.img")

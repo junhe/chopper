@@ -171,7 +171,6 @@ def assignFragsToZones(free_zone_sizes, frag_sizes):
             zone_frags[i].append(0)
         # it is just convenient to do it here
         random.shuffle(zone_frags[i]) 
-    
 
     print "frags of each group:"
     printwithindex(zone_frags)
