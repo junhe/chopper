@@ -9,9 +9,10 @@ def plothist(x):
     pass
 
 
-def generateFrags(alpha, beta, count, sum_lim):
+def generateFrags(alpha, beta, count, sum_lim, seed=1):
     "Using R to find proper parameters (because I am better with R..)"
     #l = np.random.beta(alpha, beta, count)
+    random.seed(seed)
     l = []
     for i in range(count):
         l.append( random.betavariate(alpha, beta) )
@@ -107,7 +108,7 @@ def applyFrags(free_zone_ranges, frags_of_zones, partition, mountpoint):
 #applyFrags([[1, 100], [200, 3000]], [[1,2,3,4,5], [33,2,11,22,3,444,3]] )
 #exit(0)
 
-def assignFragsToZones(free_zone_sizes, frag_sizes):
+def assignFragsToZones(free_zone_sizes, frag_sizes, seed=1):
     """
     input: 1. A list of sizes, each representing an existing free zone.
              A zone is very likely to be a free space of a group
@@ -119,6 +120,7 @@ def assignFragsToZones(free_zone_sizes, frag_sizes):
     them later.
     This zone is different from the zone concept in Minix.
     """
+    random.seed(seed=1)
     nzones = len(free_zone_sizes)
     nfrags = len(frag_sizes)
     # a table, row i has frag sizes for zone i
@@ -180,7 +182,7 @@ def assignFragsToZones(free_zone_sizes, frag_sizes):
     return zone_frags
 
 def makeFragmentsOnFS(partition, mountpoint, 
-                      alpha, beta, count, sumlimit):
+                      alpha, beta, count, sumlimit, seed=1):
     free_zones = getFreeZonesOfPartition(
                                 partition=partition,
                                 mountpoint=mountpoint)
@@ -191,11 +193,11 @@ def makeFragmentsOnFS(partition, mountpoint,
     printwithindex(zone_sizes)
 
     fragment_list = generateFrags(alpha, beta,
-                                  count, sumlimit)
+                                  count, sumlimit, seed)
     print "fragment_list"
     printwithindex(fragment_list)
 
-    zone_frags = assignFragsToZones(zone_sizes, fragment_list)
+    zone_frags = assignFragsToZones(zone_sizes, fragment_list, seed)
     print "zone_frags:"
     printwithindex(zone_frags)
 

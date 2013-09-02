@@ -108,7 +108,8 @@ class Walkman:
                 alpha=self.confparser.getfloat('fragment', 'alpha'),
                 beta=self.confparser.getfloat('fragment', 'beta'),
                 count=self.confparser.getint('fragment', 'count'),
-                sumlimit=self.confparser.getint('fragment', 'sum_limit'))
+                sumlimit=self.confparser.getint('fragment', 'sum_limit'),
+                seed=self.confparser.getint('fragment', 'seed'))
 
 
     #def produceWorkload_rmdir(self, rootdir):
