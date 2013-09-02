@@ -430,11 +430,12 @@ class FSMonitor:
             fs_nmetablocks += int(row[nmetaindex])
             fs_ndatablocks += int(row[ndataindex])
 
-        fsblkcount_df = dataframe.DataFrame()
         headerstr = "fs_nmetablocks fs_ndatablocks monitor_time HEADERMARKER_extstatssum jobid"
-        fsblkcount_df.addColumns(keylist = headerstr.split(),
-            valuelist = [fs_nmetablocks, fs_ndatablocks, self.monitor_time, 
-                        'DATAMARKER_extstatssum', self.jobid])
+        valuelist = [fs_nmetablocks, fs_ndatablocks, self.monitor_time, 
+                    'DATAMARKER_extstatssum', self.jobid]
+        fsblkcount_df = dataframe.DataFrame(
+                            header=headerstr.split(),
+                            table=[valuelist])
         return fsblkcount_df
 
     def widen(self, s):

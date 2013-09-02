@@ -66,22 +66,30 @@ class DataFrame:
             print "failed to add row:"
             print "rowdic:", rowdic
             print "header:", self.header
-
+    
     def addColumn(self, key, value):
-        "value will be the same for each row"
+        """
+        value will be the same for each row
+        the number of rows of the table HAS to
+        be kept the same before and after this function.
+        only column should be added, not row
+        DO NOT USE THIS TO INITIALIZE A DATA FRAME
+        """
         self.header.append(key)
-        if len(self.table) == 0:
-            self.table.append([value])
-        else:
+        if len(self.table) != 0:
             for row in self.table:
                 row.append(value)
 
     def addColumns(self, keylist, valuelist):
-        "value will be the same for each row"
+        """
+        value will be the same for each row"
+        the number of rows of the table HAS to
+        be kept the same before and after this function.
+        only column should be added, not row
+        DO NOT USE THIS TO INITIALIZE A DATA FRAME
+        """
         self.header.extend(keylist)
-        if len(self.table) == 0:
-            self.table.append(valuelist)
-        else:
+        if len(self.table) != 0:
             for row in self.table:
                 row.extend(valuelist)
 
