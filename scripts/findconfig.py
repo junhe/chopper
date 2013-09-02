@@ -60,7 +60,6 @@ def getWorkloadParameters():
 
         settingtable.append(dict)
 
-    pprint.pprint(settingtable)
-
+    return settingtable
 getWorkloadParameters()
 
