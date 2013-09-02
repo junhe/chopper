@@ -2,6 +2,7 @@
 
 import subprocess
 import os
+import re
 import getpass
 import pwd
 import grp
@@ -48,8 +49,66 @@ def mkLoopDevOnFile(devname, filepath):
 
     return proc.returncode
 
+def delLoopDev(devname):
+    cmd = ['losetup', '-d', devname]
+    cmd = [str(x) for x in cmd]
+    print " ".join(cmd), "......"
+    proc = subprocess.Popen(cmd)
+    proc.wait()
+
+    return proc.returncode
+
+def isMounted(name):
+    "only check is a name is in mounted list"
+    with open('/etc/mtab', 'r') as f:
+        for line in f:
+            line = " " + line + " " # a hack
+            if re.search(r'\s'+name+r'\s', line):
+                return True
+    return False
+
+def isLoopDevUsed(path):
+    cmd = ['losetup','-f']
+    proc = subprocess.Popen(cmd, 
+            stdout=subprocess.PIPE)
+    
+    proc.wait()
+
+    outstr = proc.communicate()[0]
+    outstr = outstr.strip()
+    print "isLoopUsed:", outstr+"END"
+    if outstr > path:
+        return True
+    else:
+        return False
+
 def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
     "size is in MB"
+    if not devname.startswith('/dev/loop'):
+        print 'you are requesting to create loop device on a non-loop device path'
+        exit(1)
+    if isMounted(devname):
+        if umountFS(devname) != 0:
+            print "unable to umount", devname
+            exit(1)
+        else:
+            print devname, 'umounted'
+    else:
+        print devname, "is not mounted"
+
+    if isMounted(tmpfs_mountpoint):
+        if umountFS(tmpfs_mountpoint) != 0:
+            print "unable to umount tmpfs at", tmpfs_mountpoint
+            exit(1)
+        print tmpfs_mountpoint, "umounted"
+    else:
+        print tmpfs_mountpoint, "is not mounted"
+
+    if isLoopDevUsed(devname):
+        if delLoopDev(devname) != 0:
+            print "Failed to delete loop device"
+            exit(1)
+
     mountTmpfs(tmpfs_mountpoint, sizeMB*1024*1024)
     imgpath = os.path.join(tmpfs_mountpoint, "disk.img")
     mkImageFile(imgpath, sizeMB)
@@ -98,18 +157,28 @@ def chDirOwner(mountpoint, username, groupname):
 def remakeExt4(partition, mountpoint, username, groupname, 
                 blockscount=16777216, blocksize=4096):
     "= format that partition"
-    ret = umountFS(mountpoint)
-    if ret != 0:
-        print "Error in umountFS: this should not happen"
-        print "Tolerated"
+    print "remaking ext4...."
+    if isMounted(mountpoint):
+        print mountpoint, "is mounted"
+        ret = umountFS(mountpoint)
+        if ret != 0:
+            print "Error in umountFS: this should not happen"
+            exit(1)
+        else:
+            print mountpoint, "is umounted"
+    else:
+        print mountpoint, "is NOT mounted."
+
     ret = makeExt4(partition, blockscount, blocksize)
     if ret != 0:
         print "Error in makeExt4: this should not happen"
-        return ret
+        exit(1)
     ret = mountExt4(partition, mountpoint)
     if ret != 0:
         print "Error in mountExt4: this should not happen"
-        return ret
+        exit(1)
+
+    # all of the above has to success except this one
     chDirOwner(mountpoint, username, groupname)
 
 def buildNewExt4(devname, mountpoint, confpath, username, groupname):
