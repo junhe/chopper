@@ -60,6 +60,7 @@ def delLoopDev(devname):
 
 def isMounted(name):
     "only check is a name is in mounted list"
+    name = name.rstrip('/')
     with open('/etc/mtab', 'r') as f:
         for line in f:
             line = " " + line + " " # a hack
