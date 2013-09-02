@@ -84,10 +84,12 @@ def isLoopDevUsed(path):
         return False
 
 def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
-    "size is in MB"
+    "size is in MB. The tmpfs for this device might be bigger than sizeMB"
     if not devname.startswith('/dev/loop'):
         print 'you are requesting to create loop device on a non-loop device path'
         exit(1)
+
+    # umount the FS mounted on loop dev
     if isMounted(devname):
         if umountFS(devname) != 0:
             print "unable to umount", devname
@@ -97,6 +99,16 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
     else:
         print devname, "is not mounted"
 
+    # delete the loop device
+    if isLoopDevUsed(devname):
+        if delLoopDev(devname) != 0:
+            print "Failed to delete loop device"
+            exit(1)
+    else:
+        print devname, "is not in use"
+
+
+    # umount the tmpfs the loop device is on
     if isMounted(tmpfs_mountpoint):
         if umountFS(tmpfs_mountpoint) != 0:
             print "unable to umount tmpfs at", tmpfs_mountpoint
@@ -105,14 +117,8 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
     else:
         print tmpfs_mountpoint, "is not mounted"
 
-    if isLoopDevUsed(devname):
-        if delLoopDev(devname) != 0:
-            print "Failed to delete loop device"
-            exit(1)
-    else:
-        print devname, "is not in use"
 
-    mountTmpfs(tmpfs_mountpoint, sizeMB*1024*1024)
+    mountTmpfs(tmpfs_mountpoint, int(sizeMB*1024*1024*1.1))
     imgpath = os.path.join(tmpfs_mountpoint, "disk.img")
     mkImageFile(imgpath, sizeMB)
     mkLoopDevOnFile(devname, imgpath) 
