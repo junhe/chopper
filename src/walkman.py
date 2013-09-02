@@ -108,7 +108,7 @@ class Walkman:
                 alpha=self.confparser.getfloat('fragment', 'alpha'),
                 beta=self.confparser.getfloat('fragment', 'beta'),
                 count=self.confparser.getint('fragment', 'count'),
-                sumlimit=self.confparser.getint('fragment', 'sumlimit'))
+                sumlimit=self.confparser.getint('fragment', 'sum_limit'))
 
 
     #def produceWorkload_rmdir(self, rootdir):
@@ -178,6 +178,9 @@ class Walkman:
         with open(fssumpath, 'w') as f:
             f.write( self.monitor.dumpfsSummary())
 
+        # Making fragments oh year~
+        print "making fragments....."
+        self.makeFragmentsOnFS()
 
         # for short
         NYEARS = self.confparser.getint('workload','nyears')
@@ -186,6 +189,13 @@ class Walkman:
         print "start looping..."
         for y in range(NYEARS):
             for s in range(NSEASONS_PER_YEAR):
+                self.monitor.display(savedata=True, 
+                                    logfile=self.getLogFilenameBySeasonYear(s,y),
+                                    monitorid=self.getYearSeasonStr(year=y, season=s),
+                                    jobid=self.confparser.get('system','jobid')
+                                    )
+
+
                 rootdir = self.getrootdirByIterIndex(s)
                 self.produceWorkload(rootdir=rootdir)
 
@@ -202,13 +212,16 @@ class Walkman:
                 except:
                     print "failed to rmtree (but should be OK):", fullpath
 
-                # Monitor at the end of each year
-                self.monitor.display(savedata=True, 
-                                    logfile=self.getLogFilenameBySeasonYear(s,y),
-                                    monitorid=self.getYearSeasonStr(year=y, season=s),
-                                    jobid=self.confparser.get('system','jobid')
-                                    )
                 print "------ End of this year, sleep 2 sec ----------"
+
+        # monitor the last
+        self.monitor.display(savedata=True, 
+                            logfile=self.getLogFilenameBySeasonYear(999,999),
+                            monitorid=self.getYearSeasonStr(year=999, season=999),
+                            jobid=self.confparser.get('system','jobid')
+                            )
+
+
 
 def product(elems):
     prd = 1
@@ -254,7 +267,7 @@ def getWorkloadParameters():
                 #wsize, "wstride:", wstride,\
                 #"aggfilesize:", product(para)
 
-        dict = {"nseasons_per_year":para[0],
+        dict = {"nseasons_per_year":para[0]+1,
                 "np":para[1],
                 "ndir_per_pid":para[2],
                 "nfile_per_dir":para[3],
@@ -271,8 +284,9 @@ def getWorkloadParameters():
     return settingtable
 
 def dict2conf(conf, section_name, dict):
-    for key,name in dict:
-        conf.set("section_name", key, str(name))
+    for key,name in dict.iteritems():
+        print key, name
+        conf.set(section_name, str(key), str(name))
 
 def main(args):
     if len(args) != 2:
@@ -293,6 +307,7 @@ def main(args):
 
         walkman = Walkman(confparser)
         walkman.walk()
+        exit(1)
 
 if __name__ == "__main__":
     main(sys.argv)
