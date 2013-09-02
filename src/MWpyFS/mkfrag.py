@@ -1,11 +1,12 @@
 import random
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import Monitor
 import FormatFS
 
 def plothist(x):
-    plt.hist(x, 1000, facecolor='g', alpha=0.75)
-    plt.show()
+    #plt.hist(x, 1000, facecolor='g', alpha=0.75)
+    #plt.show()
+    pass
 
 
 def generateFrags(alpha, beta, count, sum_lim):
