@@ -407,7 +407,9 @@ plot_physical_blocks <- function(df, nseasons)
     print (p)
 }
 
-# the input has to be only one row
+# The input has to be only one row
+# It splits a long segment to multiple
+# smaller segments.
 ddply_trans_wide <- function(df, rowsize=10000)
 {
     start.row.y = floor(df$Physical_start/rowsize)
@@ -457,13 +459,58 @@ ddply_trans_wide <- function(df, rowsize=10000)
 
 }
 
+layout_score_of_freeblocks <- function(df)
+{
+    df$count = df$end - df$start + 1
+    total = sum(df$count)
+    layout_score = (total - nrow(df))/(total - 1)
+    return (layout_score)
+}
+
+freeblock_hist <- function(df)
+{
+    n_jobs = 4
+    n_monitors = 4
+    
+    joblist = unique(df$jobid)
+    pickedjobs = head(joblist, n=n_jobs)
+
+    monitorlist = df$monitor_time
+    pickedmon = head(monitorlist, n=n_monitors)
+
+    df = subset(df, jobid %in% pickedjobs)
+    df = subset(df, monitor_time %in% pickedmon)
+
+    df$size = df$end - df$start + 1
+    p <- ggplot(df, aes(x=size)) +
+        #geom_histogram() + 
+        geom_density() +
+        facet_grid(jobid~monitor_time)
+    print(p)
+}
+
+
+layoutScoreOfAFile <- function(df)
+{
+}
+
+aggregateLayoutScoreOfFS <- function(df)
+{
+    ddply(df, .(jobid, monitor_time, filepath), layoutScoreOfAFile)
+}
 
 ss_main2 <- function() 
 {
     #list.ss2 <<- files2df("C:/Users/Jun/Dropbox/0-Research/0-metadata/datahub/h0")
    
+
+    #df = list.ss2[['_freeblocks']]
+    #freeblock_hist(df)
+    #print ( layout_score_of_freeblocks(df) )
+
     df = list.ss2[['_extlist']]
-    plot_physical_blocks(df, 1)
+    #plot_physical_blocks(df, 1)
+    aggregateLayoutScoreOfFS(df)
 
 
     #df = list.ss[['_extstats']]
@@ -631,9 +678,84 @@ sw_plot_one_yvar <- function(df, seecol, n_per_jobid=10, dotext=F)
 }
 
 
+####################
+# search for the right alpha and beta
 
+generateFrags <- function(alpha, beta, count, sum_lim)
+{
+    l = rbeta(count, alpha, beta)
+    windows()
+    p = qplot(l)+xlim(c(0,1))+
+        ggtitle( paste(alpha, beta))
+    print (p)
 
+    expl=2^(17*l)
+    windows()
+    p = qplot(expl*4096/(1024))+xlim(c(0, 2^17))+
+        ggtitle( paste(alpha, beta))
+    print (p)
+    
+    sm = sum(expl)
+    fragsz = floor(expl*sum_lim/sm)
+    fragsz = sort(fragsz)
+    windows()
+    p = qplot(fragsz*4096/1024)+
+        ggtitle( paste(alpha, beta))
+    print (p)
+}
 
+frag_main <- function()
+{
+    #generateFrags(alpha=2,
+                  #beta=5,
+                  #count=4096,
+                  #sum_lim=3*1024*1024*1024/4096)
+    print ("entering fragmain")
+    a=c(10, 2,  5, 2, 5)
+    b=c(2,  10, 2, 5, 5)
+    for (i in 1:5) {
+        tmp = generateFragsV2(alpha=a[i],
+                  beta=b[i],
+                  sum_lim=3*1024*1024*1024/4096,
+                  tolerance=0.05)
+    }
+}
 
+generateFragsV2 <- function(alpha, beta, sum_lim, tolerance)
+{
+    print("entering v2")
+    print(c(alpha, beta))
+    fragsizes = c()
+    betas = c()
+    trialslimit = 100
+    while (1) {
+        k = rbeta(1, alpha, beta)
+        betas = append(betas, k)
+        sz = floor(2^(15*k))
+        fragsizes = append(fragsizes, sz)
+        szsum = sum(fragsizes)
+        if ( szsum >= sum_lim*(1-tolerance) &&
+             szsum <= sum_lim*(1+tolerance) ) 
+        {
+            print ("NICE reach within tolerance")
+            print (paste("Sum:", szsum))
+            print (paste("target:", sum_lim))
+            print (paste("count:", length(fragsizes)))
+            print (summary(fragsizes))
+            p = qplot(betas)+xlim(c(0,1))+ggtitle(paste(alpha, beta))
+            windows()
+            print (p)
+            p = qplot(fragsizes*4096/1024, binwidth=64)+ggtitle(paste(alpha, beta))+xlab("KB")+
+                scale_x_continuous(breaks=seq(0,50000, by=5000))+
+                theme(axis.text.x=element_text(angle=45,hjust=1))
+            windows()
+            print (p)
+            return (fragsizes)
+        } else if ( szsum > sum_lim*(1+tolerance) ) {
+            print ("Damn.................. failed to reach target within tolerance")
+            return (NULL)
+        }
+    }
+}
 
 
