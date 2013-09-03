@@ -1,11 +1,19 @@
 import random
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    print "This machine does not have matplotlib, skipped importing."
+
+
 import Monitor
 import FormatFS
 
 def plothist(x):
-    plt.hist(x, 1000, facecolor='g', alpha=0.75)
-    plt.show()
+    try:
+        plt.hist(x, 1000, facecolor='g', alpha=0.75)
+        plt.show()
+    except:
+        print "Trivial operation skipped"
 
 def generateFragsV2(alpha, beta, sum_target, maxfragexp=15, tolerance=0.5, seed=1):
     """
