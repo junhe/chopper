@@ -36,6 +36,7 @@ def gethist(dirpath, filenamekey):
         entries = ""
         trans={"B":1,"K":1024,"M":1024*1024,"G":1024*1024*1024}
         for fn in files:
+            print "Doing", fn, "....."
             with open(fn, 'r') as f:
                 for line in f:
                     if "DATAMARKER"+linekey in line:
@@ -56,13 +57,13 @@ def gethist(dirpath, filenamekey):
                         items = [str(x) for x in items]
                         entry = " ".join(items) + '\n'
                         entry = prettyline(entry)
-                        print entry,
+                        #print entry,
                         tablefile.write(entry)
 
                     elif "HEADERMARKER"+linekey in line and header == "":
                         header = line.lstrip().rstrip('\n') + " start_num start_unit\n"
                         header = prettyline(header)
-                        print header,
+                        #print header,
                         tablefile.write(header)
                     else:
                         pass
@@ -103,18 +104,19 @@ def gettable(dirpath, filenamekey, linekey):
         header = ""
         entries = ""
         for fn in files:
+            print "Doing", fn, "....."
             with open(fn, 'r') as f:
                 for line in f:
                     if isDataline(linekey, line):
                         line = prettyline(line)
-                        print line,
+                        #print line,
                         tablefile.write(line)
 
                     elif isHeaderline(linekey, line) \
                             and header == "":
                         header = "gotit" 
                         line = prettyline(line)
-                        print line,
+                        #print line,
                         tablefile.write(line)
                     else:
                         pass
