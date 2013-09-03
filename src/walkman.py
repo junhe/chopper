@@ -107,10 +107,9 @@ class Walkman:
                 mountpoint=self.confparser.get('system', 'mountpoint'),
                 alpha=self.confparser.getfloat('fragment', 'alpha'),
                 beta=self.confparser.getfloat('fragment', 'beta'),
-                count=self.confparser.getint('fragment', 'count'),
                 sumlimit=self.confparser.getint('fragment', 'sum_limit'),
-                seed=self.confparser.getint('fragment', 'seed'))
-
+                seed=self.confparser.getint('fragment', 'seed'),
+                tolerance=self.confparser.getfloat('fragment', 'tolerance'))
 
     #def produceWorkload_rmdir(self, rootdir):
         #self.wl_producer.produce_rmdir(np=self.confparser.get('system','np'),

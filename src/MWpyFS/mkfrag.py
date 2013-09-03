@@ -1,12 +1,44 @@
 import random
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import Monitor
 import FormatFS
 
 def plothist(x):
-    #plt.hist(x, 1000, facecolor='g', alpha=0.75)
-    #plt.show()
-    pass
+    plt.hist(x, 1000, facecolor='g', alpha=0.75)
+    plt.show()
+
+def generateFragsV2(alpha, beta, sum_target, maxfragexp=15, tolerance=0.5, seed=1):
+    """
+    TODO: need to try permutation when it is not able to reach sum_target
+    Return: fragment sizes in number of blocks
+    maxfragexp: 2**maxfragexp is the larget size of fragment in number of blocks
+        128MB is 32768 blocks, which is 2^15 blocks
+    sum_target: it should be in bytes.
+    """
+    random.seed(seed)
+    blocks_of_frags = []
+    betas = []
+    print "alpha:", alpha, "beta", beta
+
+    while True:
+        k = random.betavariate(alpha, beta)
+        betas.append(k)
+        sz = int(2**(maxfragexp*k)) 
+        blocks_of_frags.append(sz)
+        szsum = sum(blocks_of_frags) 
+        if szsum >= sum_target * (1 - tolerance) and\
+           szsum <= sum_target * (1 + tolerance):
+               print "NICE :):):) reach within tolerance"
+               print "sum:", szsum
+               print "target:", sum_target
+               print "count:", len(blocks_of_frags)
+               print "max:", max(blocks_of_frags)
+               plothist(betas)
+               plothist(blocks_of_frags)
+               return blocks_of_frags
+        elif szsum > sum_target * ( 1 + tolerance ):
+            print "Damn....  failed to reach within tolerance!!!!! :( "
+            exit(1)
 
 
 def generateFrags(alpha, beta, count, sum_lim, seed=1):
@@ -17,9 +49,10 @@ def generateFrags(alpha, beta, count, sum_lim, seed=1):
     for i in range(count):
         l.append( random.betavariate(alpha, beta) )
 
+    plothist(l)
     expl = []
     for x in l:
-        expl.append( 2**(10*x) )
+        expl.append( 2**(17*x) )
     sm = 0
     for x in expl:
         sm += x
@@ -35,9 +68,31 @@ def generateFrags(alpha, beta, count, sum_lim, seed=1):
     for i,x in enumerate(fragsz):
         fragsz[i] = int(x)
 
+    print sorted(fragsz)
     plothist(fragsz)
     return fragsz
-        
+
+##############
+#  for test
+#
+#def test_main():
+    #sum_target = 3*1024*1024*1024/4096 # sum of fragments is 3G
+    #seed = 1
+    #para = [
+            #[10,2],
+            #[5,2],
+            #[2,5],
+            #[5,5],
+            #[1,1],
+            #[2,10]
+            #]
+    
+    #for a, b in para:
+        #generateFragsV2(a, b, sum_target, tolerance=0.1, seed=1)
+
+#test_main()
+
+
 def _getSizeFromRange(zone_ranges):
     sizes = []
     for row in zone_ranges:
@@ -79,6 +134,9 @@ def applyFrags(free_zone_ranges, frags_of_zones, partition, mountpoint):
         zend = zone[1]
         for fragsize in frags_of_zones[zi]:
             toset = zfirst_avail+fragsize 
+            if toset > zend:
+                print "what you want to set is beyond this zone"
+                exit(1)
             
             # try not to set wrong blocks, very dangerous
             if toset > zend:
@@ -182,18 +240,21 @@ def assignFragsToZones(free_zone_sizes, frag_sizes, seed=1):
     return zone_frags
 
 def makeFragmentsOnFS(partition, mountpoint, 
-                      alpha, beta, count, sumlimit, seed=1):
+                      alpha, beta, sumlimit, seed=1, tolerance=0.1):
+    # zones are described by the unit of block
     free_zones = getFreeZonesOfPartition(
                                 partition=partition,
-                                mountpoint=mountpoint)
+                                mountpoint=mountpoint) 
+    # unit: block
     zone_sizes = _getSizeFromRange(free_zones)
     print "free_zones"
     printwithindex(free_zones)
     print "free_zones sizes"
     printwithindex(zone_sizes)
 
-    fragment_list = generateFrags(alpha, beta,
-                                  count, sumlimit, seed)
+    fragment_list = generateFragsV2(alpha=alpha, beta=beta, sum_target=sumlimit, 
+            maxfragexp=15, tolerance=tolerance, seed=seed)
+
     print "fragment_list"
     printwithindex(fragment_list)
 
