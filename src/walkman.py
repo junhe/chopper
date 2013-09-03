@@ -19,6 +19,8 @@ import os
 import socket
 import sys
 from ConfigParser import SafeConfigParser
+import itertools
+import pprint
 
 class Walkman:
     def __init__(self, confparser):
@@ -82,12 +84,32 @@ class Walkman:
                 groupname=self.confparser.get('system','groupname'))
 
     def remakeExt4(self):
+        blockscount = self.confparser.getint('system', 'blockscount')
+        blocksize = self.confparser.getint('system', 'blocksize')
+            
+        loodevsizeMB = blockscount*blocksize/(1024*1024)
+
+        if self.confparser.get('system', 'makeloopdevice') == 'yes':
+            MWpyFS.FormatFS.makeLoopDevice(
+                    devname=self.confparser.get('system', 'partition'),
+                    tmpfs_mountpoint=self.confparser.get('system', 'tmpfs_mountpoint'),
+                    sizeMB=loodevsizeMB)
+
         MWpyFS.FormatFS.remakeExt4(partition  =self.confparser.get('system','partition'),
                                    mountpoint =self.confparser.get('system','mountpoint'),
                                    username   =self.confparser.get('system','username'),
                                    groupname   =self.confparser.get('system','groupname'),
-                                   blockscount=self.confparser.get('system','blockscount'))
-
+                                   blockscount=blockscount,
+                                   blocksize=blocksize)
+    def makeFragmentsOnFS(self):
+        MWpyFS.mkfrag.makeFragmentsOnFS(
+                partition=self.confparser.get('system', 'partition'),
+                mountpoint=self.confparser.get('system', 'mountpoint'),
+                alpha=self.confparser.getfloat('fragment', 'alpha'),
+                beta=self.confparser.getfloat('fragment', 'beta'),
+                sumlimit=self.confparser.getint('fragment', 'sum_limit'),
+                seed=self.confparser.getint('fragment', 'seed'),
+                tolerance=self.confparser.getfloat('fragment', 'tolerance'))
 
     #def produceWorkload_rmdir(self, rootdir):
         #self.wl_producer.produce_rmdir(np=self.confparser.get('system','np'),
@@ -139,12 +161,16 @@ class Walkman:
         to make it do different things, making walkman a better module.
         """
         self.displayandsaveConfig()
-        
+
+        if self.confparser.get('system', 'makeloopdevice') == 'yes'\
+                and self.confparser.get('system', 'formatfs') != 'yes':
+            print "you asked to make loop device without formatting FS. i cannot do this"
+            exit(1)
+
         if self.confparser.get('system', 'formatfs').lower() == "yes":
             self.remakeExt4()
         else:
             print "skipped formating fs"
-
 
         # save the fs summary so I can traceback if needed
         fssumpath = os.path.join(self.confparser.get('system', 'resultdir'),
@@ -152,6 +178,9 @@ class Walkman:
         with open(fssumpath, 'w') as f:
             f.write( self.monitor.dumpfsSummary())
 
+        # Making fragments oh year~
+        print "making fragments....."
+        self.makeFragmentsOnFS()
 
         # for short
         NYEARS = self.confparser.getint('workload','nyears')
@@ -160,6 +189,13 @@ class Walkman:
         print "start looping..."
         for y in range(NYEARS):
             for s in range(NSEASONS_PER_YEAR):
+                self.monitor.display(savedata=True, 
+                                    logfile=self.getLogFilenameBySeasonYear(s,y),
+                                    monitorid=self.getYearSeasonStr(year=y, season=s),
+                                    jobid=self.confparser.get('system','jobid')
+                                    )
+
+
                 rootdir = self.getrootdirByIterIndex(s)
                 self.produceWorkload(rootdir=rootdir)
 
@@ -176,14 +212,81 @@ class Walkman:
                 except:
                     print "failed to rmtree (but should be OK):", fullpath
 
-
-                # Monitor at the end of each year
-                self.monitor.display(savedata=True, 
-                                    logfile=self.getLogFilenameBySeasonYear(s,y),
-                                    monitorid=self.getYearSeasonStr(year=y, season=s),
-                                    jobid=self.confparser.get('system','jobid')
-                                    )
                 print "------ End of this year, sleep 2 sec ----------"
+
+        # monitor the last
+        self.monitor.display(savedata=True, 
+                            logfile=self.getLogFilenameBySeasonYear(999,999),
+                            monitorid=self.getYearSeasonStr(year=999, season=999),
+                            jobid=self.confparser.get('system','jobid')
+                            )
+
+
+
+def product(elems):
+    prd = 1
+    for x in elems:
+        prd *= x
+    return prd
+
+def getWorkloadParameters():
+    targetsize = 1*1024*1024*1024
+    nseasons=[4]
+    np = [1,4,8]
+    ndir_per_pid = [1,4,8]
+    nfiles_per_dir = [1,4,16]
+    nwrites_per_file = [1024, 4096]
+    wstride_factors = ["contigous", "onewritehole"]
+    #wsize = 
+    #wstride = 
+
+
+    parameters = [nseasons, np, ndir_per_pid, 
+                  nfiles_per_dir, nwrites_per_file, wstride_factors]
+    paralist = list(itertools.product(*parameters))
+
+    settingtable = [] # each row is a dictionary
+    cnt = 0
+    for para in paralist:
+        print cnt
+        cnt += 1
+        para = list(para)
+        totaldirs = product(para[0:3])
+        totalfiles = product(para[0:4])
+        totalwrites = product(para[0:5])
+
+        wsize = targetsize/totalwrites
+        if para[5] == "contigous":
+            wstride = wsize
+        else:
+            wstride = wsize*2
+        para[5] = wstride
+        
+        #print para, "totaldirs:", totaldirs, "totalfiles:", \
+                #totalfiles, "totalwrites:", totalwrites, "wsize:", \
+                #wsize, "wstride:", wstride,\
+                #"aggfilesize:", product(para)
+
+        dict = {"nseasons_per_year":para[0]+1,
+                "np":para[1],
+                "ndir_per_pid":para[2],
+                "nfile_per_dir":para[3],
+                "nwrites_per_file":para[4],
+                "wsize":wsize,
+                "wstride":wstride}
+        # trim several unrealistic bad ones
+        #if wsize > 1*1024*1024:
+            #print "Skip this...."
+            #continue
+
+        settingtable.append(dict)
+
+    return settingtable
+
+def dict2conf(conf, section_name, dict):
+    for key,name in dict.iteritems():
+        print key, name
+        conf.set(section_name, str(key), str(name))
 
 def main(args):
     if len(args) != 2:
@@ -196,19 +299,28 @@ def main(args):
         confparser.readfp(open(confpath, 'r'))
     except:
         print "unable to read config file:", confpath
+        exit(1)
+    
+    settingtable = getWorkloadParameters()
+    betadist_parameters = [
+            [10,2],
+            [5,2],
+            [2,5],
+            [5,5],
+            [1,1],
+            [2,10]
+            ]
+    for para in settingtable:
+        for alpha, beta in betadist_parameters:
+            confparser.set('fragment', 'alpha', str(alpha))
+            confparser.set('fragment', 'beta', str(beta))
+            dict2conf(confparser, "workload", para)
 
-    stride_space = [4097, 4098, 4097*2, 4097*3, 4097*4]
-    for istride in stride_space:
-        confparser.set("workload", "wstride", str(istride))
-
-        walkman = Walkman(confparser)
-        walkman.walk()
+            walkman = Walkman(confparser)
+            walkman.walk()
+            exit(1)
 
 if __name__ == "__main__":
     main(sys.argv)
-
-
-
-
 
 
