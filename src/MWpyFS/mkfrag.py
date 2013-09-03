@@ -185,7 +185,7 @@ def assignFragsToZones(free_zone_sizes, frag_sizes, seed=1):
     them later.
     This zone is different from the zone concept in Minix.
     """
-    random.seed(seed=1)
+    random.seed(seed)
     nzones = len(free_zone_sizes)
     nfrags = len(frag_sizes)
     # a table, row i has frag sizes for zone i
