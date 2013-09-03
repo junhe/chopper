@@ -302,12 +302,23 @@ def main(args):
         exit(1)
     
     settingtable = getWorkloadParameters()
+    betadist_parameters = [
+            [10,2],
+            [5,2],
+            [2,5],
+            [5,5],
+            [1,1],
+            [2,10]
+            ]
     for para in settingtable:
-        dict2conf(confparser, "workload", para)
+        for alpha, beta in betadist_parameters:
+            confparser.set('fragment', 'alpha', str(alpha))
+            confparser.set('fragment', 'beta', str(beta))
+            dict2conf(confparser, "workload", para)
 
-        walkman = Walkman(confparser)
-        walkman.walk()
-        exit(1)
+            walkman = Walkman(confparser)
+            walkman.walk()
+            exit(1)
 
 if __name__ == "__main__":
     main(sys.argv)

@@ -101,7 +101,6 @@ def _getSizeFromRange(zone_ranges):
     return sizes
 
 
-
 def getFreeZonesOfPartition(partition, mountpoint):
     "Note that the index of zone here may not match the group index"
     mo = Monitor.FSMonitor(dn=partition, 
