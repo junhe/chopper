@@ -151,22 +151,22 @@ def applyFrags(free_zone_ranges, frags_of_zones, partition, mountpoint):
                 exit(1)
 
             ret = setter.setBlock(toset, 1)
-            print toset, 1
-            print "testing if blocks are in use...."
+            #print toset, 1
+            #print "testing if blocks are in use...."
             if not setter.isAllBlocksInUse(toset, 1):
                 print "you failed to set some blocks as in used"
                 exit(1)
-            print "setter return:", ret
+            #print "setter return:", ret
             zfirst_avail = toset + 1
         if zfirst_avail <= zend:
             cnt = zend - zfirst_avail + 1
             ret = setter.setBlock(zfirst_avail, cnt)
-            print zfirst_avail, cnt
-            print "testing if blocks are in use...."
+            #print zfirst_avail, cnt
+            #print "testing if blocks are in use...."
             if not setter.isAllBlocksInUse(zfirst_avail, cnt):
                 print "you failed to set some blocks as in used"
                 exit(1)
-            print "setter return:", ret
+            #print "setter return:", ret
 
 
 # test applyFrags
@@ -240,10 +240,10 @@ def assignFragsToZones(free_zone_sizes, frag_sizes, seed=1):
         # it is just convenient to do it here
         random.shuffle(zone_frags[i]) 
 
-    print "frags of each group:"
-    printwithindex(zone_frags)
-    print "free zone of each group:"
-    printwithindex(free_zone_spaces)
+    #print "frags of each group:"
+    #printwithindex(zone_frags)
+    #print "free zone of each group:"
+    #printwithindex(free_zone_spaces)
     return zone_frags
 
 def makeFragmentsOnFS(partition, mountpoint, 
@@ -254,20 +254,20 @@ def makeFragmentsOnFS(partition, mountpoint,
                                 mountpoint=mountpoint) 
     # unit: block
     zone_sizes = _getSizeFromRange(free_zones)
-    print "free_zones"
-    printwithindex(free_zones)
-    print "free_zones sizes"
-    printwithindex(zone_sizes)
+    #print "free_zones"
+    #printwithindex(free_zones)
+    #print "free_zones sizes"
+    #printwithindex(zone_sizes)
 
     fragment_list = generateFragsV2(alpha=alpha, beta=beta, sum_target=sumlimit, 
             maxfragexp=15, tolerance=tolerance, seed=seed)
 
-    print "fragment_list"
-    printwithindex(fragment_list)
+    #print "fragment_list"
+    #printwithindex(fragment_list)
 
     zone_frags = assignFragsToZones(zone_sizes, fragment_list, seed)
-    print "zone_frags:"
-    printwithindex(zone_frags)
+    #print "zone_frags:"
+    #printwithindex(zone_frags)
 
     applyFrags(free_zones, zone_frags, partition, mountpoint)
 
@@ -277,8 +277,8 @@ def makeFragmentsOnFS(partition, mountpoint,
                                 mountpoint=mountpoint)
     zone_sizes = _getSizeFromRange(free_zones)
     
-    for i, zone in enumerate(free_zones):
-        print i, zone, zone_sizes[i]
+    #for i, zone in enumerate(free_zones):
+    #    print i, zone, zone_sizes[i]
 
 def printwithindex( l ):
     for i, x in enumerate(l):
