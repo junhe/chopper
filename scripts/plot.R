@@ -1,3 +1,5 @@
+require(ggplot2)
+require(reshape)
 rdmine <- function() 
 {
 	a = read.table("C:/Users/Jun/Dropbox/0-Research/0-PLFS/exp/indexexp.txt", header=T)
@@ -193,23 +195,32 @@ plot_all <- function(df)
 
 files2df <- function(dirpath)
 {
+    #require(sqldf)
     dflist = list()
     files = list.files(dirpath)
+    print(files)
+    dfvec=NULL
     for (f in files) {
         fpath = paste(dirpath, f, sep="/")
+        print(fpath)
         fidx = sub("^.*\\.", "", f)
+        dfvec = append(dfvec, fidx)
         dflist[[fidx]] = read.table(fpath, header=T)
     }
     #print (str(dflist))
     # put walkman config to all other df
 
-    dfvec = c("_extlist", "_extstats", "_extstatssum", "_freefrag_sum",
-              "_freefrag_hist", "_freeblocks", "_freeinodes",
-              "_walkman_config")
-    conf = dflist[['_walkman_config']][,c("hostname", "jobid", "nyears", "nseasons_per_year",
-                                          "np", "ndir_per_pid", "nfile_per_dir", "nwrites_per_file",
-                                          "wsize", "wstride", "startoff")]
+    #dfvec = c("_extlist", "_extstats", "_extstatssum", "_freefrag_sum",
+              #"_freefrag_hist", "_freeblocks", "_freeinodes",
+              #"_walkman_config")
+    #conf = dflist[['_walkman_config']][,c("hostname", "jobid", "nyears", "nseasons_per_year",
+                                          #"np", "ndir_per_pid", "nfile_per_dir", "nwrites_per_file",
+                                          #"wsize", "wstride", "startoff")]
+    
+    conf = dflist[['_walkman_config']]
+
     for ( dfname in dfvec[ dfvec!='_walkman_config'] ) {
+        print( paste( "Merging", "......." ) )
         dflist[[dfname]] = merge(dflist[[dfname]], conf, by=c("jobid")) 
     }
 
@@ -459,6 +470,8 @@ ddply_trans_wide <- function(df, rowsize=10000)
 
 }
 
+# The input df is the free blocks of a whole
+# file system got from dumpe2fs
 layout_score_of_freeblocks <- function(df)
 {
     df$count = df$end - df$start + 1
@@ -757,5 +770,139 @@ generateFragsV2 <- function(alpha, beta, sum_lim, tolerance)
         }
     }
 }
+
+#######################################
+## With fragment distribution
+##
+
+pick_by_stride <- function(keys, stride) 
+{
+    n = length(keys)
+    selects = seq(1,n,by=stride)
+    keys = sort(keys)
+    return (keys[selects])
+}
+
+fdist_free_space_hist <- function(df)
+{
+    df$Free_Space_Dist_ID = paste("alpha:", df$alpha, ",", "beta:", df$beta, sep="")
+    df$Free_Space.Dist_ID = factor(df$Free_Space_Dist_ID)
+    df$Workload_ID = paste("np:", df$np, ",",
+                           "ndir_per_pid:", df$ndir_per_pid, ",",
+                           "nfile_per_dir:", df$nfile_per_dir, ",",
+                           "nwrites_per_file:", df$nwrites_per_file, ",",
+                           "wsize:", df$wsize, ",",
+                           "wstride:", df$wstride, ",",
+                           "startoff:", df$startoff,
+                           sep="")
+    df$Workload_ID = factor(df$Workload_ID)
+
+    # pick free spaces
+    nFree_Space_Dist_ID = 3 
+    distids = unique(df$Free_Space_Dist_ID)
+    print(distids)
+    picked_distids = head(distids, n=nFree_Space_Dist_ID)
+    #df = subset(df, Free_Space_Dist_ID %in% picked_distids)
+    df = subset(df, Free_Space_Dist_ID %in% c("alpha:2,beta:5", "alpha:5,beta:2"))
+
+    # pick workloads
+    nWorkload_ID = 10 
+    wlids = unique(df$Workload_ID)
+    print(wlids)
+    picked_wlids = head(wlids, n=nWorkload_ID)
+    df = subset(df, Workload_ID %in% picked_wlids)
+
+    # pick monitors
+    pickedMons = pick_by_stride(unique(df$monitor_time), stride=5)
+    df = subset(df, monitor_time %in% pickedMons)
+
+    df$Fragment_Block_Count = df$end - df$start + 1
+    df$Fragment_Log2Size = log(df$Fragment_Block_Count*4096, 2)
+    
+    print(head(df))
+    
+    p = ggplot(df, aes(
+                       x=Fragment_Log2Size,
+                       #x=Fragment_Block_Count, 
+                       color=monitor_time
+                       )) +
+        #geom_histogram(position='dodge') +
+        geom_density()+
+        facet_grid(Free_Space_Dist_ID~Workload_ID)+
+        scale_x_continuous(breaks=seq(12, 27, by=2),
+                           labels=(2^seq(12, 27, by=2)/1024))+
+        xlab("Fragment Size(KB)")
+    print(p)
+}
+
+fdist_meta_data_blocks <- function(df)
+{
+    df$Free_Space_Dist_ID = paste("alpha:", df$alpha, ",", "beta:", df$beta, sep="")
+    df$Free_Space.Dist_ID = factor(df$Free_Space_Dist_ID)
+    df$Workload_ID = paste("np", df$np, ",",
+                           "nd", df$ndir_per_pid, ",",
+                           "nf", df$nfile_per_dir, ",",
+                           "nw", df$nwrites_per_file, ",",
+                           "ws", df$wsize, ",",
+                           "wst", df$wstride, ",",
+                           "so", df$startoff,
+                           sep="")
+    df$Workload_ID = factor(df$Workload_ID)
+    print("before ggplot")
+    p = ggplot(df, aes(
+                       x=monitor_time,
+                       #y=fs_nmetablocks,
+                       y=fs_ndatablocks,
+                       color=monitor_time,
+                       fill=monitor_time
+                       )) +
+        #geom_histogram(position='dodge') +
+        geom_bar(stat="identity", position='dodge')+
+        facet_grid(Free_Space_Dist_ID~Workload_ID)+
+        xlab("Time")
+    print("after ggplot")
+    print(p)
+}
+
+# This set of data is generated on h6.metawalker.plfs.
+# It has uses differnt beta distributions to generate
+# fragmentations and it has various workloads.
+fdist_main <- function()
+{
+    #list.fdist <<- files2df("C:/Users/Jun/Documents/Workdir/h6.tar/h6")
+    #print(str(list.fdist))
+
+    #df = list.fdist[['_freeblocks']]
+    #fdist_free_space_hist(df)
+
+    df = list.fdist[['_extstatssum']]
+    #head(df)
+    fdist_meta_data_blocks(df)
+    print(df$fs_nmetablocks)
+}
+
+##########################################
+## h6 checkpoint 00
+##
+h6ck00_main <- function()
+{
+    #list.h6ck00 <<- files2df("C:/Users/Jun/Documents/Workdir/h6.chkpoint00")
+    #print(str(list.h6ck00))
+    #save(list.h6ck00, file="list.h6ck00._freeblocks.Rdata")
+
+    df = list.h6ck00[['_freeblocks']]
+    fdist_free_space_hist(df)
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
