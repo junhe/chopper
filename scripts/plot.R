@@ -1,3 +1,5 @@
+require(ggplot2)
+require(reshape)
 rdmine <- function() 
 {
 	a = read.table("C:/Users/Jun/Dropbox/0-Research/0-PLFS/exp/indexexp.txt", header=T)
@@ -193,23 +195,32 @@ plot_all <- function(df)
 
 files2df <- function(dirpath)
 {
+    #require(sqldf)
     dflist = list()
     files = list.files(dirpath)
+    print(files)
+    dfvec=NULL
     for (f in files) {
         fpath = paste(dirpath, f, sep="/")
+        print(fpath)
         fidx = sub("^.*\\.", "", f)
+        dfvec = append(dfvec, fidx)
         dflist[[fidx]] = read.table(fpath, header=T)
     }
     #print (str(dflist))
     # put walkman config to all other df
 
-    dfvec = c("_extlist", "_extstats", "_extstatssum", "_freefrag_sum",
-              "_freefrag_hist", "_freeblocks", "_freeinodes",
-              "_walkman_config")
-    conf = dflist[['_walkman_config']][,c("hostname", "jobid", "nyears", "nseasons_per_year",
-                                          "np", "ndir_per_pid", "nfile_per_dir", "nwrites_per_file",
-                                          "wsize", "wstride", "startoff")]
+    #dfvec = c("_extlist", "_extstats", "_extstatssum", "_freefrag_sum",
+              #"_freefrag_hist", "_freeblocks", "_freeinodes",
+              #"_walkman_config")
+    #conf = dflist[['_walkman_config']][,c("hostname", "jobid", "nyears", "nseasons_per_year",
+                                          #"np", "ndir_per_pid", "nfile_per_dir", "nwrites_per_file",
+                                          #"wsize", "wstride", "startoff")]
+    
+    conf = dflist[['_walkman_config']]
+
     for ( dfname in dfvec[ dfvec!='_walkman_config'] ) {
+        print( paste( "Merging", "......." ) )
         dflist[[dfname]] = merge(dflist[[dfname]], conf, by=c("jobid")) 
     }
 
@@ -407,7 +418,9 @@ plot_physical_blocks <- function(df, nseasons)
     print (p)
 }
 
-# the input has to be only one row
+# The input has to be only one row
+# It splits a long segment to multiple
+# smaller segments.
 ddply_trans_wide <- function(df, rowsize=10000)
 {
     start.row.y = floor(df$Physical_start/rowsize)
@@ -457,13 +470,60 @@ ddply_trans_wide <- function(df, rowsize=10000)
 
 }
 
+# The input df is the free blocks of a whole
+# file system got from dumpe2fs
+layout_score_of_freeblocks <- function(df)
+{
+    df$count = df$end - df$start + 1
+    total = sum(df$count)
+    layout_score = (total - nrow(df))/(total - 1)
+    return (layout_score)
+}
+
+freeblock_hist <- function(df)
+{
+    n_jobs = 4
+    n_monitors = 4
+    
+    joblist = unique(df$jobid)
+    pickedjobs = head(joblist, n=n_jobs)
+
+    monitorlist = df$monitor_time
+    pickedmon = head(monitorlist, n=n_monitors)
+
+    df = subset(df, jobid %in% pickedjobs)
+    df = subset(df, monitor_time %in% pickedmon)
+
+    df$size = df$end - df$start + 1
+    p <- ggplot(df, aes(x=size)) +
+        #geom_histogram() + 
+        geom_density() +
+        facet_grid(jobid~monitor_time)
+    print(p)
+}
+
+
+layoutScoreOfAFile <- function(df)
+{
+}
+
+aggregateLayoutScoreOfFS <- function(df)
+{
+    ddply(df, .(jobid, monitor_time, filepath), layoutScoreOfAFile)
+}
 
 ss_main2 <- function() 
 {
     #list.ss2 <<- files2df("C:/Users/Jun/Dropbox/0-Research/0-metadata/datahub/h0")
    
+
+    #df = list.ss2[['_freeblocks']]
+    #freeblock_hist(df)
+    #print ( layout_score_of_freeblocks(df) )
+
     df = list.ss2[['_extlist']]
-    plot_physical_blocks(df, 1)
+    #plot_physical_blocks(df, 1)
+    aggregateLayoutScoreOfFS(df)
 
 
     #df = list.ss[['_extstats']]
@@ -629,6 +689,215 @@ sw_plot_one_yvar <- function(df, seecol, n_per_jobid=10, dotext=F)
     }
     print(p)
 }
+
+
+####################
+# search for the right alpha and beta
+
+generateFrags <- function(alpha, beta, count, sum_lim)
+{
+    l = rbeta(count, alpha, beta)
+    windows()
+    p = qplot(l)+xlim(c(0,1))+
+        ggtitle( paste(alpha, beta))
+    print (p)
+
+    expl=2^(17*l)
+    windows()
+    p = qplot(expl*4096/(1024))+xlim(c(0, 2^17))+
+        ggtitle( paste(alpha, beta))
+    print (p)
+    
+    sm = sum(expl)
+    fragsz = floor(expl*sum_lim/sm)
+    fragsz = sort(fragsz)
+    windows()
+    p = qplot(fragsz*4096/1024)+
+        ggtitle( paste(alpha, beta))
+    print (p)
+}
+
+frag_main <- function()
+{
+    #generateFrags(alpha=2,
+                  #beta=5,
+                  #count=4096,
+                  #sum_lim=3*1024*1024*1024/4096)
+    print ("entering fragmain")
+    a=c(10, 2,  5, 2, 5)
+    b=c(2,  10, 2, 5, 5)
+    for (i in 1:5) {
+        tmp = generateFragsV2(alpha=a[i],
+                  beta=b[i],
+                  sum_lim=3*1024*1024*1024/4096,
+                  tolerance=0.05)
+    }
+}
+
+generateFragsV2 <- function(alpha, beta, sum_lim, tolerance)
+{
+    print("entering v2")
+    print(c(alpha, beta))
+    fragsizes = c()
+    betas = c()
+    trialslimit = 100
+    while (1) {
+        k = rbeta(1, alpha, beta)
+        betas = append(betas, k)
+        sz = floor(2^(15*k))
+        fragsizes = append(fragsizes, sz)
+        szsum = sum(fragsizes)
+        if ( szsum >= sum_lim*(1-tolerance) &&
+             szsum <= sum_lim*(1+tolerance) ) 
+        {
+            print ("NICE reach within tolerance")
+            print (paste("Sum:", szsum))
+            print (paste("target:", sum_lim))
+            print (paste("count:", length(fragsizes)))
+            print (summary(fragsizes))
+            p = qplot(betas)+xlim(c(0,1))+ggtitle(paste(alpha, beta))
+            windows()
+            print (p)
+            p = qplot(fragsizes*4096/1024, binwidth=64)+ggtitle(paste(alpha, beta))+xlab("KB")+
+                scale_x_continuous(breaks=seq(0,50000, by=5000))+
+                theme(axis.text.x=element_text(angle=45,hjust=1))
+            windows()
+            print (p)
+            return (fragsizes)
+        } else if ( szsum > sum_lim*(1+tolerance) ) {
+            print ("Damn.................. failed to reach target within tolerance")
+            return (NULL)
+        }
+    }
+}
+
+#######################################
+## With fragment distribution
+##
+
+pick_by_stride <- function(keys, stride) 
+{
+    n = length(keys)
+    selects = seq(1,n,by=stride)
+    keys = sort(keys)
+    return (keys[selects])
+}
+
+fdist_free_space_hist <- function(df)
+{
+    df$Free_Space_Dist_ID = paste("alpha:", df$alpha, ",", "beta:", df$beta, sep="")
+    df$Free_Space.Dist_ID = factor(df$Free_Space_Dist_ID)
+    df$Workload_ID = paste("np:", df$np, ",",
+                           "ndir_per_pid:", df$ndir_per_pid, ",",
+                           "nfile_per_dir:", df$nfile_per_dir, ",",
+                           "nwrites_per_file:", df$nwrites_per_file, ",",
+                           "wsize:", df$wsize, ",",
+                           "wstride:", df$wstride, ",",
+                           "startoff:", df$startoff,
+                           sep="")
+    df$Workload_ID = factor(df$Workload_ID)
+
+    # pick free spaces
+    nFree_Space_Dist_ID = 3 
+    distids = unique(df$Free_Space_Dist_ID)
+    print(distids)
+    picked_distids = head(distids, n=nFree_Space_Dist_ID)
+    #df = subset(df, Free_Space_Dist_ID %in% picked_distids)
+    df = subset(df, Free_Space_Dist_ID %in% c("alpha:2,beta:5", "alpha:5,beta:2"))
+
+    # pick workloads
+    nWorkload_ID = 10 
+    wlids = unique(df$Workload_ID)
+    print(wlids)
+    picked_wlids = head(wlids, n=nWorkload_ID)
+    df = subset(df, Workload_ID %in% picked_wlids)
+
+    # pick monitors
+    pickedMons = pick_by_stride(unique(df$monitor_time), stride=5)
+    df = subset(df, monitor_time %in% pickedMons)
+
+    df$Fragment_Block_Count = df$end - df$start + 1
+    df$Fragment_Log2Size = log(df$Fragment_Block_Count*4096, 2)
+    
+    print(head(df))
+    
+    p = ggplot(df, aes(
+                       x=Fragment_Log2Size,
+                       #x=Fragment_Block_Count, 
+                       color=monitor_time
+                       )) +
+        #geom_histogram(position='dodge') +
+        geom_density()+
+        facet_grid(Free_Space_Dist_ID~Workload_ID)+
+        scale_x_continuous(breaks=seq(12, 27, by=2),
+                           labels=(2^seq(12, 27, by=2)/1024))+
+        xlab("Fragment Size(KB)")
+    print(p)
+}
+
+fdist_meta_data_blocks <- function(df)
+{
+    df$Free_Space_Dist_ID = paste("alpha:", df$alpha, ",", "beta:", df$beta, sep="")
+    df$Free_Space.Dist_ID = factor(df$Free_Space_Dist_ID)
+    df$Workload_ID = paste("np", df$np, ",",
+                           "nd", df$ndir_per_pid, ",",
+                           "nf", df$nfile_per_dir, ",",
+                           "nw", df$nwrites_per_file, ",",
+                           "ws", df$wsize, ",",
+                           "wst", df$wstride, ",",
+                           "so", df$startoff,
+                           sep="")
+    df$Workload_ID = factor(df$Workload_ID)
+    print("before ggplot")
+    p = ggplot(df, aes(
+                       x=monitor_time,
+                       #y=fs_nmetablocks,
+                       y=fs_ndatablocks,
+                       color=monitor_time,
+                       fill=monitor_time
+                       )) +
+        #geom_histogram(position='dodge') +
+        geom_bar(stat="identity", position='dodge')+
+        facet_grid(Free_Space_Dist_ID~Workload_ID)+
+        xlab("Time")
+    print("after ggplot")
+    print(p)
+}
+
+# This set of data is generated on h6.metawalker.plfs.
+# It has uses differnt beta distributions to generate
+# fragmentations and it has various workloads.
+fdist_main <- function()
+{
+    #list.fdist <<- files2df("C:/Users/Jun/Documents/Workdir/h6.tar/h6")
+    #print(str(list.fdist))
+
+    #df = list.fdist[['_freeblocks']]
+    #fdist_free_space_hist(df)
+
+    df = list.fdist[['_extstatssum']]
+    #head(df)
+    fdist_meta_data_blocks(df)
+    print(df$fs_nmetablocks)
+}
+
+##########################################
+## h6 checkpoint 00
+##
+h6ck00_main <- function()
+{
+    #list.h6ck00 <<- files2df("C:/Users/Jun/Documents/Workdir/h6.chkpoint00")
+    #print(str(list.h6ck00))
+    #save(list.h6ck00, file="list.h6ck00._freeblocks.Rdata")
+
+    df = list.h6ck00[['_freeblocks']]
+    fdist_free_space_hist(df)
+}
+
+
+
+
+
 
 
 

@@ -191,12 +191,11 @@ class FSMonitor:
     
     def dump_extents_of_a_file(self, filepath):
         "This function only gets ext list for this file"
-        print filepath
         
         cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
+        print cmd, '......'
         cmd = shlex.split(cmd)
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
-        proc.wait()
 
         ext_list = [] # Use list here in case I want to extract data in Python
         header = []
@@ -239,6 +238,8 @@ class FSMonitor:
                 
                 df_ext.addRowByDict(d)
 
+        proc.wait()
+
         df_ext.addColumn(key = "filepath",
                          value = filepath)
         df_ext.addColumn(key = "HEADERMARKER_extlist",
@@ -279,10 +280,10 @@ class FSMonitor:
     def dumpextents_sum(self, filepath):
         "TODO: merge this with dump_extents_of_a_file()"
         cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
+        print cmd, "........."
         cmd = shlex.split(cmd)
 
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
-        proc.wait()
 
         header = []
         n_entries = [0] * 3 # n_entries[k] is the number of entries at level k
@@ -326,6 +327,7 @@ class FSMonitor:
                 n_entries[ int(d["Level_index"]) ] = int( d["N_Entry"] )
                 max_level = int( d["Max_level"] )
                 
+        proc.wait()
         # calculate number of meatadata blocks
         # only 1st and 2nd levels takes space. 
         # How to calculate:
@@ -380,10 +382,10 @@ class FSMonitor:
         with cd(rootpath):
             cmd = ['find', rootdir]
             proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
-            proc.wait()
 
             for line in proc.stdout:
                 paths.append(line.replace("\n", ""))
+            proc.wait()
             
         return paths
 
