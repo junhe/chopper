@@ -64,6 +64,11 @@ def main(args):
     with cd(dirpath):
         files = glob.glob("*"+filenamekey+"*")
         files = sorted(files)
+
+        # clean up
+        zfiles = glob.glob("z*")
+        for f in zfiles:
+            os.remove(f)
     
     for f in files:
         parsefile(f)
