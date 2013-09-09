@@ -23,6 +23,7 @@ def prettyline(line):
     return line
 
 def parsefile(filepath):
+    print "doing", filepath
     keys = ['_extstats', '_extstatssum', '_freefrag_sum',
             '_freefrag_hist', '_freeblocks', '_freeinodes',
             '_walkman_config', '_extlist']
