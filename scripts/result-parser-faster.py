@@ -22,17 +22,14 @@ def prettyline(line):
     line = " ".join(items) + '\n'
     return line
 
+keys = ['_extstats', '_extstatssum', '_freefrag_sum',
+        '_freefrag_hist', '_freeblocks', '_freeinodes',
+        '_walkman_config', '_extlist']
+headerwritten = {}
+tablefiles = {}
+
 def parsefile(filepath):
     print "doing", filepath
-    keys = ['_extstats', '_extstatssum', '_freefrag_sum',
-            '_freefrag_hist', '_freeblocks', '_freeinodes',
-            '_walkman_config', '_extlist']
-    
-    tablefiles = {}
-    headerwritten = {}
-    for key in keys:
-        tablefiles[key] = open('zparsed.'+key, 'a')
-        headerwritten[key] = False
    
     rawfile = open(filepath, 'r')
     
@@ -50,8 +47,7 @@ def parsefile(filepath):
             if type == 'DATAMARKER':
                 tablefiles[linekey].write(line)
 
-    for key in keys:
-        tablefiles[key].close()
+    rawfile.close()
 
 def main(args):
     if len(args) != 3:
@@ -69,9 +65,18 @@ def main(args):
         zfiles = glob.glob("z*")
         for f in zfiles:
             os.remove(f)
-    
+
+    for key in keys:
+        headerwritten[key] = False
+
+    for key in keys:
+        tablefiles[key] = open('zparsed.'+key, 'a')
+
     for f in files:
         parsefile(f)
+
+    for key in keys:
+        tablefiles[key].close()
 
 if __name__ == "__main__":
     """
