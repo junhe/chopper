@@ -180,7 +180,8 @@ class Walkman:
 
         # Making fragments oh year~
         print "making fragments....."
-        self.makeFragmentsOnFS()
+        if self.confparser.get('fragment', 'createfragment').lower() == 'yes':
+            self.makeFragmentsOnFS()
 
         # for short
         NYEARS = self.confparser.getint('workload','nyears')
