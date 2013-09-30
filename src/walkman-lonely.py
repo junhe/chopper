@@ -35,7 +35,7 @@ class Walkman:
 
     One walkman should just have just one run.
     """
-    def __init__(self, confparser):
+    def __init__(self, confparser, jobcomment=""):
         "confparser must be ready to use get()"
         self.confparser = confparser
        
@@ -43,10 +43,12 @@ class Walkman:
         # Setup Env of Walkman
 
         # Set jobid
+        self.jobcomment = jobcomment
         self.confparser.set('system','hostname', socket.gethostname())
         self.confparser.set('system','jobid', 
             self.confparser.get('system','hostname') + "-" +
-            time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()))
+            time.strftime("%Y-%m-%d-%H-%M-%S" + "-" +
+            self.jobcomment, time.localtime()))
 
         # Set resultdir and make the dir
         self.confparser.set('system','resultdir', 
@@ -163,34 +165,90 @@ class Walkman:
         workload.Run()
         RecordStatus()
         """
+        if self.jobcomment == 'test001':
+            self.wrapper_test001()
+        elif self.jobcomment == 'test002':
+            self.wrapper_test002()
+
+    def wrapper_test001(self):
         self.RecordWalkmanConfig()
+ 
+        nwrites_per_file = range(60,70)
+        for year in range(len(nwrites_per_file)):
+            self.SetupEnv()
+            self.RecordStatus(year=year,season=0)
+            
+            # Run workload
+            self.play_test001(nwrites_per_file=nwrites_per_file[year])
 
-        self.SetupEnv()
-        self.RecordStatus(0,0)
-        
-        # Run workload
+            self.RecordStatus(year=year,season=1)
 
-        self.RecordStatus(0,1)
+    def play_test001(self, nwrites_per_file):
+        wl_producer = pyWorkload.producer.Producer()
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+
+        wl_producer.produce(np=1,
+            startOff=0,
+            nwrites_per_file = nwrites_per_file,
+            nfile_per_dir=1,
+            ndir_per_pid=1,
+            wsize=1024,
+            wstride=1024,
+            rootdir=os.path.join(self.confparser.get('system','mountpoint')),
+            tofile=self.confparser.get('system','workloadbufpath'),
+            fsync_per_write=True)
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+    def wrapper_test002(self):
+        self.RecordWalkmanConfig()
+ 
+        fsync_per_write = [False, True]
+        for year in range(len(nwrites_per_file)):
+            self.SetupEnv()
+            self.RecordStatus(year=year,season=0)
+            
+            # Run workload
+            self.play_test001(nwrites_per_file=nwrites_per_file[year])
+
+            self.RecordStatus(year=year,season=1)
+
+    def play_test002(self, nwrites_per_file):
+        wl_producer = pyWorkload.producer.Producer()
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+
+        wl_producer.produce(np=1,
+            startOff=0,
+            nwrites_per_file = nwrites_per_file,
+            nfile_per_dir=1,
+            ndir_per_pid=1,
+            wsize=1024,
+            wstride=1024,
+            rootdir=os.path.join(self.confparser.get('system','mountpoint')),
+            tofile=self.confparser.get('system','workloadbufpath'),
+            fsync_per_write=True)
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
 
 
-def test0001_parameters():
-    settingtable = [] # each row is a dictionary
-    dict = {"nyears":1,
-            "nseasons_per_year":1,
-            "np":1,
-            "ndir_per_pid":1,
-            "nfile_per_dir":1,
-            "nwrites_per_file":1024,
-            "wsize":1024,
-            "wstride":1024,
-            "fsync_per_write":True}
-    settingtable.append(dict)
-    return settingtable
-
-def dict2conf(conf, section_name, dict):
-    for key,name in dict.iteritems():
-        print key, name
-        conf.set(section_name, str(key), str(name))
 
 def main(args):
     if len(args) != 2:
@@ -205,20 +263,8 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
     
-    #settingtable = getWorkloadParameters()
-    settingtable = test0001_parameters()
-    betadist_parameters = [
-            [-1,-1]
-            ]
-    for para in settingtable:
-        for alpha, beta in betadist_parameters:
-            confparser.set('fragment', 'alpha', str(alpha))
-            confparser.set('fragment', 'beta', str(beta))
-            dict2conf(confparser, "workload", para)
-
-            walkman = Walkman(confparser)
-            walkman.wrapper()
-            exit(1)
+    walkman = Walkman(confparser, 'test001')
+    walkman.wrapper()
 
 if __name__ == "__main__":
     main(sys.argv)
