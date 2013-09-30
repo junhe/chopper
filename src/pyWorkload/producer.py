@@ -25,7 +25,7 @@ class Producer:
         return workload
 
     def produce (self, np, startOff, nwrites_per_file, nfile_per_dir, ndir_per_pid,
-              wsize, wstride, rootdir, tofile=""):
+              wsize, wstride, rootdir, tofile="", fsync_per_write=False):
         self.np = np
         self.startOff = startOff
 
@@ -36,6 +36,7 @@ class Producer:
 
         self.wsize = wsize
         self.wstride = wstride
+        self.fsync_per_write = fsync_per_write
 
         self.rootdir = rootdir
 
@@ -74,7 +75,6 @@ class Producer:
                     entry = str(p)+";"+path+";"+"open"+"\n";
                     workload += entry
 
-
         #cur_off[pid][dir][fid]
         cur_off = [[[self.startOff for x in xrange(self.nfile_per_dir)] for x in xrange(self.ndir_per_pid)] for x in xrange(self.np)]
         for w_index in range(self.nwrites_per_file):
@@ -88,6 +88,11 @@ class Producer:
                         cur_off[p][dir][fid] += self.wstride
 
                         workload += entry
+
+                        if self.fsync_per_write:
+                            entry = str(p)+";"+path+";"+"fsync"+"\n";
+                        workload += entry
+
         # fsync file
         for fid in range(self.nfile_per_dir):
             for dir in range(self.ndir_per_pid):
@@ -107,14 +112,26 @@ class Producer:
 
         return workload
 
-#print prd.produce(np=2, startOff=0, 
-                #nwrites_per_file = 1000, 
-                #nfile_per_dir=3, 
-                #ndir_per_pid=2,
-                #wsize=3331, 
-                #wstride=3331, 
-                #rootdir="/mnt/scratch/", 
-                #tofile="tmp.workload"),
 
+#prd = Producer()
+##print prd.produce(np=1, startOff=0, 
+                ##nwrites_per_file = 64, 
+                ##nfile_per_dir=1, 
+                ##ndir_per_pid=1,
+                ##wsize=16, 
+                ##wstride=16, 
+                ##rootdir="/mnt/scratch/", 
+                ##tofile="tmp.workload",
+                ##fsync_per_write=True),
+
+#print prd.produce(np=1, startOff=0, 
+                #nwrites_per_file = 1024*1024, 
+                #nfile_per_dir=1, 
+                #ndir_per_pid=1,
+                #wsize=1, 
+                #wstride=1, 
+                #rootdir="/mnt/scratch/", 
+                #tofile="tmp.workload",
+                #fsync_per_write=True),
 
 
