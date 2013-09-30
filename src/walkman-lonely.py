@@ -62,9 +62,6 @@ class Walkman:
                                                  self.confparser.get('system','mountpoint'),
                                                  ld = self.confparser.get('system','resultdir')) # logdir
 
-
-
-
     def RecordWalkmanConfig(self):
         colwidth = 30
         conflogpath = os.path.join(self.confparser.get('system','resultdir'),
@@ -92,18 +89,12 @@ class Walkman:
         with open(conflogpath+".cols", 'w') as f:
             f.write(header+datas)
 
-    def rebuildFS(self):
-        MWpyFS.FormatFS.buildNewExt4(self.confparser.get('system','devname'),
-                mountpoint=self.confparser.get('system','mountpoint'), 
-                confpath=self.confparser.get('system','diskconf'), 
-                username=self.confparser.get('system','username'),
-                groupname=self.confparser.get('system','groupname'))
-
     def remakeExt4(self):
         blockscount = self.confparser.getint('system', 'blockscount')
         blocksize = self.confparser.getint('system', 'blocksize')
             
         loodevsizeMB = blockscount*blocksize/(1024*1024)
+
 
         if self.confparser.get('system', 'makeloopdevice') == 'yes':
             MWpyFS.FormatFS.makeLoopDevice(
@@ -111,12 +102,17 @@ class Walkman:
                     tmpfs_mountpoint=self.confparser.get('system', 'tmpfs_mountpoint'),
                     sizeMB=loodevsizeMB)
 
+
+        if not os.path.exists(self.confparser.get('system','mountpoint')):
+            os.makedirs(self.confparser.get('system','mountpoint'))
+
         MWpyFS.FormatFS.remakeExt4(partition  =self.confparser.get('system','partition'),
                                    mountpoint =self.confparser.get('system','mountpoint'),
                                    username   =self.confparser.get('system','username'),
                                    groupname   =self.confparser.get('system','groupname'),
                                    blockscount=blockscount,
                                    blocksize=blocksize)
+
     def makeFragmentsOnFS(self):
         MWpyFS.mkfrag.makeFragmentsOnFS(
                 partition=self.confparser.get('system', 'partition'),
@@ -126,6 +122,10 @@ class Walkman:
                 sumlimit=self.confparser.getint('fragment', 'sum_limit'),
                 seed=self.confparser.getint('fragment', 'seed'),
                 tolerance=self.confparser.getfloat('fragment', 'tolerance'))
+
+    def getYearSeasonStr(self, year, season):
+        return "year"+str(year).zfill(5)+\
+                    ".season"+str(season).zfill(5)
 
     def getLogFilenameBySeasonYear(self, season, year):
         return "walkmanJOB-"+self.confparser.get('system','jobid')+\
@@ -151,8 +151,8 @@ class Walkman:
             print "skipped formating fs"
 
         # Making fragments
-        print "making fragments....."
         if self.confparser.get('fragment', 'createfragment').lower() == 'yes':
+            print "making fragments....."
             self.makeFragmentsOnFS()
 
 
@@ -166,16 +166,16 @@ class Walkman:
         self.RecordWalkmanConfig()
 
         self.SetupEnv()
-        self.RecordStatus()
+        self.RecordStatus(0,0)
         
         # Run workload
 
-        self.RecordStatus()
+        self.RecordStatus(0,1)
 
 
 def test0001_parameters():
     settingtable = [] # each row is a dictionary
-    dict = {"nyears":1
+    dict = {"nyears":1,
             "nseasons_per_year":1,
             "np":1,
             "ndir_per_pid":1,
@@ -217,7 +217,7 @@ def main(args):
             dict2conf(confparser, "workload", para)
 
             walkman = Walkman(confparser)
-            walkman.walk()
+            walkman.wrapper()
             exit(1)
 
 if __name__ == "__main__":

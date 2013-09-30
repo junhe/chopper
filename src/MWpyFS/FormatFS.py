@@ -61,11 +61,15 @@ def delLoopDev(devname):
 def isMounted(name):
     "only check is a name is in mounted list"
     name = name.rstrip('/')
+    print "isMounted: name:", name
     with open('/etc/mtab', 'r') as f:
         for line in f:
+            print "line:", line,
             line = " " + line + " " # a hack
             if re.search(r'\s'+name+r'\s', line):
+                print " YES"
                 return True
+            print " NO"
     return False
 
 def isLoopDevUsed(path):
