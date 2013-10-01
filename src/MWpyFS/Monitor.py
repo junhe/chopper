@@ -21,7 +21,7 @@
 #       JUST LIKE THE ORIGINAL OUTPUT BUT FORMAT IT A LITTLE BIT
 
 import subprocess
-from time import strftime, localtime
+from time import strftime, localtime, sleep
 import re
 import shlex
 import os
@@ -209,7 +209,7 @@ class FSMonitor:
                  "Length", "Flag"]
         df_ext.header = header
         for line in proc.stdout:
-            #print "LLL:", line,
+            print "LLL:", line,
             if "Level" in line:
                 pass
             else:
@@ -297,7 +297,7 @@ class FSMonitor:
                  "Physical_start", "Physical_end",
                  "Length", "Flag"]
         for line in proc.stdout:
-            #print "LLL:", line,
+            print "LLL:", line,
             if "Level" in line:
                 pass
             else:
@@ -327,7 +327,12 @@ class FSMonitor:
                 n_entries[ int(d["Level_index"]) ] = int( d["N_Entry"] )
                 max_level = int( d["Max_level"] )
                 
-        proc.wait()
+        print "..... finished stdout parsing .... "
+        proc.terminate()
+        print "..... after terminating .... "
+
+
+
         # calculate number of meatadata blocks
         # only 1st and 2nd levels takes space. 
         # How to calculate:
@@ -351,13 +356,14 @@ class FSMonitor:
         dumpdict["n_datablock"] = others["nblocks"]
         dumpdict["filebytes"] = others["nbytes"]
     
+        print "Reached end of debugfs...."
         return dumpdict
 
     def filefrag(self, filepath):
         fullpath = os.path.join(self.mountpoint, filepath)  
         cmd = ["filefrag", "-sv", fullpath]
+        print cmd
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        proc.wait()
 
         mydict = {}
         for line in proc.stdout:
@@ -372,6 +378,7 @@ class FSMonitor:
                 mydict["nbytes"] = nums[0]
                 mydict["nblocks"] = nums[1]
                 mydict["blocksize"] = nums[2]
+
         return mydict
 
     def getAllInodePaths(self, rootdir="."):
