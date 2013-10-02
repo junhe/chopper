@@ -16,7 +16,7 @@ class cd:
 
 def prettyline(line):
     "line is string with items separated by white space"
-    return line
+    #return line
     items = line.strip()
     items = items.split()
     items = [str(x).ljust(40) for x in items]
