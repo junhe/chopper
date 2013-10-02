@@ -93,6 +93,9 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
         print 'you are requesting to create loop device on a non-loop device path'
         exit(1)
 
+    if not os.path.exists(tmpfs_mountpoint):
+        os.makedirs(tmpfs_mountpoint)
+
     # umount the FS mounted on loop dev
     if isMounted(devname):
         if umountFS(devname) != 0:
