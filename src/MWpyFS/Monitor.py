@@ -209,7 +209,7 @@ class FSMonitor:
                  "Length", "Flag"]
         df_ext.header = header
         for line in proc.stdout:
-            print "LLL:", line,
+            #print "LLL:", line,
             if "Level" in line:
                 pass
             else:
@@ -297,7 +297,7 @@ class FSMonitor:
                  "Physical_start", "Physical_end",
                  "Length", "Flag"]
         for line in proc.stdout:
-            print "LLL:", line,
+            #print "LLL:", line,
             if "Level" in line:
                 pass
             else:
