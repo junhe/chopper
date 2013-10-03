@@ -183,6 +183,18 @@ class Walkman:
             self.wrapper_test005()
         elif self.jobcomment == 'test006':
             self.wrapper_test006()
+        elif self.jobcomment == 'test006a':
+            self.wrapper_test006a()
+        elif self.jobcomment == 'test006b':
+            self.wrapper_test006b()
+        elif self.jobcomment == 'test007':
+            self.wrapper_test007()
+        elif self.jobcomment == 'test007a':
+            self.wrapper_test007a()
+        elif self.jobcomment == 'test007b':
+            self.wrapper_test007b()
+        elif self.jobcomment == 'test007c':
+            self.wrapper_test007c()
 
     def wrapper_test001(self):
         self.RecordWalkmanConfig()
@@ -479,6 +491,289 @@ class Walkman:
         proc = subprocess.Popen(cmd) 
         proc.wait()
 
+    def wrapper_test006a(self):
+        "write backwards"
+        self.RecordWalkmanConfig()
+        self.RecordFSSummary()
+ 
+        # Run workload
+        strides = [4096, 2*4096]
+        doflushs = [0, 1]
+        parameters = [strides, doflushs]
+        paralist = list(itertools.product(*parameters))
+
+        for yr in range(len(paralist)):
+            para = list(paralist[yr])
+            self.SetupEnv()
+            self.RecordStatus(year=yr,season=0)
+
+            self.play_test006a(para[0], para[1] )
+
+            self.RecordStatus(year=yr,season=1)
+
+    def play_test006a(self, stride, doflush):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        off = 4096*31 
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+        while off < 4096*64:
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+            off += stride
+            if doflush == 1:
+                prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+        #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+    def wrapper_test006b(self):
+        "write backwards"
+        self.RecordWalkmanConfig()
+        self.RecordFSSummary()
+ 
+        # Run workload
+        strides = [4096]
+        doflushs = [0, 1]
+        parameters = [strides, doflushs]
+        paralist = list(itertools.product(*parameters))
+
+        for yr in range(len(paralist)):
+            para = list(paralist[yr])
+            self.SetupEnv()
+            self.RecordStatus(year=yr,season=0)
+
+            self.play_test006b(para[0], para[1] )
+
+            self.RecordStatus(year=yr,season=1)
+
+    def play_test006b(self, stride, doflush):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        off = 4096*31 
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+        while off < 4096*64:
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+            off += stride
+
+        if doflush == 1:
+            prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+        #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+
+    def wrapper_test007(self):
+        "write backwards"
+        self.RecordWalkmanConfig()
+        self.RecordFSSummary()
+ 
+        # Run workload
+        offsets = [4096*((2**x)-1) for x in range(11)]
+        offsets = [0] + offsets
+        doflushs = [1]
+
+        parameters = [offsets, doflushs]
+        paralist = list(itertools.product(*parameters))
+
+        for yr in range(len(paralist)):
+            para = list(paralist[yr])
+            self.SetupEnv()
+            self.RecordStatus(year=yr,season=0)
+
+            self.play_test007(para[0], para[1])
+
+            self.RecordStatus(year=yr,season=1)
+
+        print paralist
+
+    def play_test007(self, off, doflush):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+        #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        #time.sleep(2)
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+    def wrapper_test007a(self):
+        "write backwards"
+        self.RecordWalkmanConfig()
+        self.RecordFSSummary()
+ 
+        # Run workload
+        offsets = [4096*x for x in range(18)]
+        doflushs = [0, 1]
+
+        parameters = [offsets, doflushs]
+        paralist = list(itertools.product(*parameters))
+
+        for yr in range(len(paralist)):
+            para = list(paralist[yr])
+            self.SetupEnv()
+            self.RecordStatus(year=yr,season=0)
+
+            self.play_test007a(para[0], para[1])
+
+            self.RecordStatus(year=yr,season=1)
+
+        print paralist
+
+    def play_test007a(self, off, doflush):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+        
+        if doflush == 1:
+            prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+        #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        #time.sleep(2)
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+    def wrapper_test007c(self):
+        "write backwards"
+        self.RecordWalkmanConfig()
+        self.RecordFSSummary()
+ 
+        # Run workload
+        syssyncs = [0,1]
+        for yr in range(len(syssyncs)):
+            self.SetupEnv()
+            self.RecordStatus(year=yr,season=0)
+            
+            offs = range(35)
+            offs = [4096*x for x in offs]
+            for off in offs:
+                self.play_test007c(off, syssyncs[yr])
+
+            self.RecordStatus(year=yr,season=1)
+
+    def play_test007c(self, off, syssync):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        prd.addReadOrWrite('write', pid=0, dirid=0,
+               fileid=0, off=off, len=4096)
+
+        blockn = off / 4096
+
+        if blockn % 2 == 0:
+            prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+
+        if syssync == 1:
+            print "calling system sync"
+            psync = subprocess.Popen(['sync'])
+            psync.wait()
+        else:
+            print "no sync is called"
+
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
 
 
 def main(args):
@@ -494,7 +789,7 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
     
-    walkman = Walkman(confparser, 'test006')
+    walkman = Walkman(confparser, 'test007c')
     walkman.wrapper()
 
 if __name__ == "__main__":
