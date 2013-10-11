@@ -206,12 +206,9 @@ class FSMonitor:
                 imapdict['inode_number'] = nums[0] 
                 imapdict['group_number'] = nums[1]
             elif 'located at block' in line:
-                nums = re.findall(r'\d+', line)
-                if len(nums) != 3:
-                    print "Error parsing imap block number"
-                    exit(1)
-                imapdict['block_number'] = nums[0] 
-                imapdict['offset_in_block'] = nums[2] 
+                items = line.split()
+                imapdict['block_number'] = items[3].rstrip(',')
+                imapdict['offset_in_block'] = items[5]
 
         proc.wait()
         #print imapdict
@@ -572,7 +569,7 @@ class FSMonitor:
 
 
 # Testing
-#m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
+m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
 #m.imap_of_a_file('./pid00000.dir00000/pid.00000.file.00000')
-#print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
+print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
 

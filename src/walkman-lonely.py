@@ -1612,7 +1612,7 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
     
-    walkman = Walkman(confparser, 'test012')
+    walkman = Walkman(confparser, 'test010')
     walkman.wrapper()
 
 if __name__ == "__main__":
