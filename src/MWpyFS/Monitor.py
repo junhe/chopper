@@ -188,7 +188,36 @@ class FSMonitor:
                  
         return {"FragSummary":sums_df, "ExtSizeHistogram":hist_df}
 
-    
+   
+    def imap_of_a_file(self, filepath):
+        cmd = "debugfs " + self.devname + " -R 'imap " + filepath + "'"
+        print cmd, '......'
+        cmd = shlex.split(cmd)
+        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+
+        imapdict = {}
+        for line in proc.stdout:
+            #print line
+            if "block group" in line:
+                nums = re.findall(r'\d+', line)
+                if len(nums) != 2:
+                    print "Error parsing imap"
+                    exit(1)
+                imapdict['inode_number'] = nums[0] 
+                imapdict['group_number'] = nums[1]
+            elif 'located at block' in line:
+                nums = re.findall(r'\d+', line)
+                if len(nums) != 3:
+                    print "Error parsing imap block number"
+                    exit(1)
+                imapdict['block_number'] = nums[0] 
+                imapdict['offset_in_block'] = nums[2] 
+
+        proc.wait()
+        #print imapdict
+        return imapdict
+
+
     def dump_extents_of_a_file(self, filepath):
         "This function only gets ext list for this file"
         
@@ -239,6 +268,25 @@ class FSMonitor:
                 df_ext.addRowByDict(d)
 
         proc.wait()
+
+
+        # Put the location of the inode the df_ext, level_index as -1 to
+        # indicate that it is a inode
+
+        imapdict = self.imap_of_a_file(filepath)
+        d = {}
+        d['Level_index'] = '-1'
+        d['Max_level'] = '-1'
+        d['Entry_index'] = 'NA'
+        d['N_Entry'] = 'NA'
+        d['Logical_start'] = 'NA'
+        d['Logical_end'] = 'NA'
+        d['Physical_start'] = imapdict['block_number']
+        d['Physical_end'] = imapdict['block_number']
+        d['Length'] = '1'
+        d['Flag'] = 'NA'
+
+        df_ext.addRowByDict(d)
 
         df_ext.addColumn(key = "filepath",
                          value = filepath)
@@ -521,4 +569,10 @@ class FSMonitor:
             f.flush()
             f.close()
         return
+
+
+# Testing
+#m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
+#m.imap_of_a_file('./pid00000.dir00000/pid.00000.file.00000')
+#print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
 
