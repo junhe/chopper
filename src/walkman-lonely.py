@@ -179,6 +179,10 @@ class Walkman:
             self.wrapper_test003()
         elif self.jobcomment == 'test004':
             self.wrapper_test004()
+        elif self.jobcomment == 'test004a':
+            self.wrapper_test004a()
+        elif self.jobcomment == 'test004b':
+            self.wrapper_test004b()
         elif self.jobcomment == 'test005':
             self.wrapper_test005()
         elif self.jobcomment == 'test006':
@@ -390,6 +394,82 @@ class Walkman:
                         size_per_op=4096, do_fsync=doflush, do_write=1, do_read=0, 
                         topdir=self.confparser.get("system", "mountpoint"),
                         do_append=1, cpu=cur_cpu)
+
+    def wrapper_test004a(self):
+        self.RecordWalkmanConfig()
+        self.RecordFSSummary()
+ 
+        # Run workload
+
+        switchcpus = ["no", "yes", "fixed"]
+        doflushs = [0,1]
+        
+        parameters = [switchcpus, doflushs]
+        paralist = list(itertools.product(*parameters))
+
+        for yr in range(len(paralist)):
+            para = list(paralist[yr])
+            self.SetupEnv()
+            subprocess.Popen("echo 65536 > /sys/fs/ext4/loop0/mb_stream_req", 
+                    shell=True)
+            time.sleep(3)
+
+            self.RecordStatus(year=yr,season=0)
+            self.play_test004a(para[0], para[1])
+            self.RecordStatus(year=yr,season=1)
+        print paralist
+    
+    def play_test004a(self, switchcpu, doflush):
+        for i in range(32):
+            if switchcpu == "yes":
+                cur_cpu = ((i%2)+1)
+            elif switchcpu == "no":
+                cur_cpu = ""
+            elif switchcpu == "fixed":
+                cur_cpu = "1"
+            self.run_fsbench(ndir=1,nfile_per_dir=1,nops_per_file=1,
+                        size_per_op=4096, do_fsync=doflush, do_write=1, do_read=0, 
+                        topdir=self.confparser.get("system", "mountpoint"),
+                        do_append=1, cpu=cur_cpu)
+
+    def wrapper_test004b(self):
+        self.RecordWalkmanConfig()
+        self.RecordFSSummary()
+ 
+        # Run workload
+
+        switchcpus = ["no", "yes", "fixed"]
+        doflushs = [0,1]
+        
+        parameters = [switchcpus, doflushs]
+        paralist = list(itertools.product(*parameters))
+
+        for yr in range(len(paralist)):
+            para = list(paralist[yr])
+            self.SetupEnv()
+            subprocess.Popen("echo 65536 > /sys/fs/ext4/loop0/mb_stream_req", 
+                    shell=True)
+            time.sleep(3)
+
+            self.RecordStatus(year=yr,season=0)
+            self.play_test004b(para[0], para[1])
+            self.RecordStatus(year=yr,season=1)
+        print paralist
+    
+    def play_test004b(self, switchcpu, doflush):
+        for i in range(2048):
+            if switchcpu == "yes":
+                cur_cpu = ((i%2)+1)
+            elif switchcpu == "no":
+                cur_cpu = ""
+            elif switchcpu == "fixed":
+                cur_cpu = "1"
+            self.run_fsbench(ndir=1,nfile_per_dir=1,nops_per_file=1,
+                        size_per_op=4096, do_fsync=doflush, do_write=1, do_read=0, 
+                        topdir=self.confparser.get("system", "mountpoint"),
+                        do_append=1, cpu=cur_cpu)
+
+
 
     def wrapper_test005(self):
         self.RecordWalkmanConfig()
@@ -1011,7 +1091,7 @@ class Walkman:
         self.RecordFSSummary()
  
         # Run workload
-        for yr in range(4):
+        for yr in range(7):
             self.SetupEnv()
             self.RecordStatus(year=yr,season=0)
 
@@ -1025,6 +1105,10 @@ class Walkman:
                 self.play_test012_3_remount()
             elif yr == 4:
                 self.play_test012_4_remount_onemorefile()
+            elif yr == 5:
+                self.play_test012_5_remount_onemorefile_onefsync()
+            elif yr == 6:
+                self.play_test012_6_noremount_onemorefile()
 
             self.RecordStatus(year=yr,season=1)
 
@@ -1043,7 +1127,7 @@ class Walkman:
         prd.addUniOp('open', pid=0, dirid=0, fileid=0)
 
         off = 0 
-        for i in range(16):
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=0, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1080,7 +1164,7 @@ class Walkman:
 
         # write with holes
         off = 0 
-        for i in range(16):
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=0, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1091,7 +1175,7 @@ class Walkman:
 
         # filling holes
         off = 4096 
-        for i in range(16):
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=0, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1129,7 +1213,7 @@ class Walkman:
 
         # write with holes
         off = 0 
-        for i in range(16):
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=0, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1160,7 +1244,7 @@ class Walkman:
 
         # filling holes
         off = 4096 
-        for i in range(16):
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=0, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1198,7 +1282,7 @@ class Walkman:
 
         # write with holes
         off = 0 
-        for i in range(16):
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=0, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1232,7 +1316,7 @@ class Walkman:
 
         # filling holes
         off = 4096 
-        for i in range(16):
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=0, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1270,7 +1354,7 @@ class Walkman:
 
         # write with holes
         off = 0 
-        for i in range(16):
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=0, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1302,9 +1386,9 @@ class Walkman:
                     "workloadbufpath"))
         prd.addUniOp('open', pid=0, dirid=0, fileid=1)
 
-        # filling holes
-        off = 4096 
-        for i in range(16):
+        # new file
+        off = 0
+        for i in range(17):
             prd.addReadOrWrite('write', pid=0, dirid=0,
                    fileid=1, off=off, len=4096)
             #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
@@ -1314,6 +1398,21 @@ class Walkman:
 
         prd.addUniOp('fsync', pid=0, dirid=0, fileid=1)
         prd.addUniOp('close', pid=0, dirid=0, fileid=1)
+
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        # filling holes 
+        off = 4096 
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+
+            off += 8*1024 # 8KB stride
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+
 
         prd.display()
         prd.saveWorkloadToFile()
@@ -1325,6 +1424,179 @@ class Walkman:
         cmd = [str(x) for x in cmd]
         proc = subprocess.Popen(cmd) 
         proc.wait()
+
+    def play_test012_5_remount_onemorefile_onefsync(self):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+
+        # Big file
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        # write with holes
+        off = 0 
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+            #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+            off += 8*1024 # 8KB stride
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+        MWpyFS.FormatFS.umountFS(self.confparser.get('system', 'mountpoint'))
+        MWpyFS.FormatFS.mountExt4(self.confparser.get('system', 'partition'), 
+                        self.confparser.get('system', 'mountpoint'))
+
+        # open the file again 
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addUniOp('open', pid=0, dirid=0, fileid=1)
+
+        # new file
+        off = 0
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=1, off=off, len=4096)
+            #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+            off += 8*1024 # 8KB stride
+           
+
+        #prd.addUniOp('fsync', pid=0, dirid=0, fileid=1)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=1)
+
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        # filling holes 
+        off = 4096 
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+
+            off += 8*1024 # 8KB stride
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+    def play_test012_6_noremount_onemorefile(self):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+
+        # Big file
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        # write with holes
+        off = 0 
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+            #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+            off += 8*1024 # 8KB stride
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+        #MWpyFS.FormatFS.umountFS(self.confparser.get('system', 'mountpoint'))
+        #MWpyFS.FormatFS.mountExt4(self.confparser.get('system', 'partition'), 
+                        #self.confparser.get('system', 'mountpoint'))
+
+        # open a new file
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addUniOp('open', pid=0, dirid=0, fileid=1)
+
+        # new file
+        off = 0
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=1, off=off, len=4096)
+            #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+            off += 8*1024 # 8KB stride
+           
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=1)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=1)
+
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        # filling holes 
+        off = 4096 
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+
+            off += 8*1024 # 8KB stride
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
 
 
 def main(args):
