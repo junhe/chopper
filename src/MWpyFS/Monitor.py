@@ -569,7 +569,7 @@ class FSMonitor:
 
 
 # Testing
-m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
+#m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
 #m.imap_of_a_file('./pid00000.dir00000/pid.00000.file.00000')
-print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
+#print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
 

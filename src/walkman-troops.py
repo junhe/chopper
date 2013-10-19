@@ -51,8 +51,10 @@ class Walkman:
             self.jobcomment, time.localtime()))
 
         # Set resultdir and make the dir
-        self.confparser.set('system','resultdir', 
-                "./results." + self.confparser.get('system','hostname') + '/')
+        resultdir_prefix = self.confparser.get('system', 'resultdir_prefix')
+        resultdir = "results." + self.confparser.get('system','hostname') 
+        self.confparser.set('system', 'resultdir', 
+                os.path.join(resultdir_prefix, resultdir) )
         if not os.path.exists(self.confparser.get('system','resultdir')):
             os.makedirs(self.confparser.get('system','resultdir'))
 
@@ -61,17 +63,17 @@ class Walkman:
         # We need it fast.
         # We need hostname to make it unique.
         self.confparser.set('system','workloadbufpath', 
-                   os.path.join(self.confparser.get('system', 'workloaddir')
-                                + "_workload.buf." 
-                                + self.confparser.get('system', 'hostname')))
+               os.path.join(self.confparser.get('system', 'workloaddir'),
+                 "_workload.buf." + self.confparser.get('system', 'hostname')))
 
         ############################
         # Setup Monitor
 
         # monitor
-        self.monitor = MWpyFS.Monitor.FSMonitor(self.confparser.get('system','partition'), 
-                                                 self.confparser.get('system','mountpoint'),
-                                                 ld = self.confparser.get('system','resultdir')) # logdir
+        self.monitor = MWpyFS.Monitor.FSMonitor(
+                 self.confparser.get('system','partition'), 
+                 self.confparser.get('system','mountpoint'),
+                 ld = self.confparser.get('system','resultdir')) # logdir
 
 
 
@@ -185,8 +187,8 @@ class Walkman:
         """
         self._RecordWalkmanConfig()
 
-        nyear = self.confparser.get('workload', 'nyears')
-        nseasons_per_year = self.confparser.get('workload', 'nseasons_per_year')
+        nyear = self.confparser.getint('workload', 'nyears')
+        nseasons_per_year = self.confparser.getint('workload', 'nseasons_per_year')
         for year in range(nyear):
             for season in range(nseasons_per_year):
                 self._SetupEnv()
@@ -204,16 +206,17 @@ class Walkman:
         wl_producer = pyWorkload.producer.Producer()
 
         wl_producer.produce(
-            np              = self.confparser.get('workload', 'np'),
-            startOff        = self.confparser.get('workload', 'startOff'),
-            nwrites_per_file= self.confparser.get('workload', 'nwrites_per_file'),
-            nfile_per_dir   = self.confparser.get('workload', 'nfile_per_dir'),
-            ndir_per_pid    = self.confparser.get('workload', 'ndir_per_pid'),
-            wsize           = self.confparser.get('workload', 'wsize'),
-            wstride         = self.confparser.get('workload', 'wstride'),
+            np              = self.confparser.getint('workload', 'np'),
+            startOff        = self.confparser.getint('workload', 'startOff'),
+            nwrites_per_file= self.confparser.getint('workload', 'nwrites_per_file'),
+            nfile_per_dir   = self.confparser.getint('workload', 'nfile_per_dir'),
+            ndir_per_pid    = self.confparser.getint('workload', 'ndir_per_pid'),
+            wsize           = self.confparser.getint('workload', 'wsize'),
+            wstride         = self.confparser.getint('workload', 'wstride'),
             rootdir         = os.path.join(self.confparser.get('system','mountpoint')),
             tofile          = self.confparser.get('system','workloadbufpath'),
             fsync_per_write = self.confparser.get('workload', 'fsync_per_write')
+            )
 
         cmd = [self.confparser.get('system','mpirunpath'), "-np", 
                 self.confparser.get('workload','np'), 
