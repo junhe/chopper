@@ -226,6 +226,27 @@ class Walkman:
         proc = subprocess.Popen(cmd) 
         proc.wait()
 
+class Troops:
+    def __init__(self, confparser):
+        """
+        Note that the config parser in Troops
+        is mostly for system config, the workload config
+        is very likely to be changed in Troops (and
+        that's what Troops is designed for.
+        """
+        self.confparser = confparser 
+
+    def _walkman_walk(self, cf):
+        walkman = Walkman(cf, 'fromTroops')
+        walkman.walk()
+
+    def march(self):
+        "change self.confparser here"
+        cparser = self.confparser
+        for nwrites_per_file in range (1, 3):
+            cparser.set('nwrites_per_file', nwrites_per_file)
+            _walkman_walk(cparser)
+            
 def main(args):
     if len(args) != 2:
         print 'usage:', args[0], 'config-file'
