@@ -1091,7 +1091,7 @@ class Walkman:
         self.RecordFSSummary()
  
         # Run workload
-        for yr in range(7):
+        for yr in range(8):
             self.SetupEnv()
             self.RecordStatus(year=yr,season=0)
 
@@ -1109,6 +1109,8 @@ class Walkman:
                 self.play_test012_5_remount_onemorefile_onefsync()
             elif yr == 6:
                 self.play_test012_6_noremount_onemorefile()
+            elif yr == 7:
+                self.play_test012_7_noremount_twomorefile()
 
             self.RecordStatus(year=yr,season=1)
 
@@ -1597,7 +1599,104 @@ class Walkman:
         proc = subprocess.Popen(cmd) 
         proc.wait()
 
+    def play_test012_7_noremount_twomorefile(self):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
 
+        # Big file
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        # write with holes
+        off = 0 
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+            #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+            off += 8*1024 # 8KB stride
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+        ##################################
+        # new file 1
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addUniOp('open', pid=0, dirid=0, fileid=1)
+
+        # new file 1
+        off = 0
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=1, off=off, len=4096)
+            #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+            off += 8*1024 # 8KB stride
+           
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=1)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=1)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+        ##################################
+        # new file 2 
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/loopmount/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addUniOp('open', pid=0, dirid=0, fileid=2)
+
+        # new file 2 
+        off = 0
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=2, off=off, len=4096)
+            off += 8*1024 # 8KB stride
+           
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=2)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=2)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
 
 def main(args):
     if len(args) != 2:
@@ -1612,7 +1711,7 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
     
-    walkman = Walkman(confparser, 'test010')
+    walkman = Walkman(confparser, 'test012')
     walkman.wrapper()
 
 if __name__ == "__main__":
