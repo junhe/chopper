@@ -244,8 +244,8 @@ class Troops:
         "change self.confparser here"
         cparser = self.confparser
         for nwrites_per_file in range (1, 3):
-            cparser.set('nwrites_per_file', nwrites_per_file)
-            _walkman_walk(cparser)
+            cparser.set('workload', 'nwrites_per_file', str(nwrites_per_file))
+            self._walkman_walk(cparser)
             
 def main(args):
     if len(args) != 2:
@@ -260,8 +260,10 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
     
-    walkman = Walkman(confparser, 'trial')
-    walkman.walk()
+    #walkman = Walkman(confparser, 'trial')
+    #walkman.walk()
+    troops = Troops(confparser)
+    troops.march()
 
 if __name__ == "__main__":
     main(sys.argv)
