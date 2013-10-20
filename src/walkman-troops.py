@@ -289,15 +289,17 @@ class Troops:
 
     def _march_parameter_table(self):
         paradict = {
-                'nwrites_per_file': [1],
-                'hole'            : [1, 2],
-                'wsize'           : [1]
+                'nwrites_per_file': [1, 128],
+                'w_hole'          : [1, 4096],
+                'wsize'           : [4096, 4097],
+                'fsync_per_write' : [0, 1]
                 }
+
         paralist = ParameterCominations(paradict)
 
         # Translate to list of dictionary
         for para in paralist:
-            stride = para['hole'] + para['wsize']
+            stride = para['w_hole'] + para['wsize']
             para['wstride'] = stride
 
         pprint.pprint( paralist )
@@ -313,9 +315,12 @@ class Troops:
         unchanged in the near future. 
         """
         cparser = self.confparser
+        paralist = self._march_parameter_table()
 
-        for nwrites_per_file in range (1, 3):
-            cparser.set('workload', 'nwrites_per_file', str(nwrites_per_file))
+        for para in paralist:
+            for k,v in para.items():
+                cparser.set( 'workload', str(k), str(v) )
+            
             self._walkman_walk(cparser)
             
 def main(args):
@@ -332,8 +337,8 @@ def main(args):
         exit(1)
    
     troops = Troops(confparser)
-    #troops.march()
-    troops._march_parameter_table()
+    troops.march()
+    #troops._march_parameter_table()
 
 if __name__ == "__main__":
     main(sys.argv)
