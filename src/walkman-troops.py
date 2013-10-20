@@ -21,6 +21,26 @@ import sys
 from ConfigParser import SafeConfigParser
 import itertools
 import pprint
+import itertools
+
+def ParameterCominations(parameter_dict):
+    """
+    Get all the cominbation of the values from each key
+    http://tinyurl.com/nnglcs9
+
+    Input: parameter_dict={
+                    p0:[x, y, z, ..],
+                    p1:[a, b, c, ..],
+                    ...}
+    Output: [
+             {p0:x, p1:a, ..},
+             {..},
+             ...
+            ]
+    """
+    d = parameter_dict
+    return [dict(zip(d, v)) for v in itertools.product(*d.values())]
+
 
 class Walkman:
     """
@@ -189,14 +209,15 @@ class Walkman:
 
         nyear = self.confparser.getint('workload', 'nyears')
         nseasons_per_year = self.confparser.getint('workload', 'nseasons_per_year')
+
+        self._SetupEnv()
+        self._RecordStatus(year=0, season=0) # always record the inital status
+
         for year in range(nyear):
             for season in range(nseasons_per_year):
-                self._SetupEnv()
-                
                 # Run workload
                 self._play_test()
-
-                self._RecordStatus(year=year,season=season)
+                self._RecordStatus(year=year,season=season+1)
 
     def _play_test(self):
         """
@@ -266,6 +287,23 @@ class Troops:
         walkman = Walkman(cf, 'fromTroops')
         walkman.walk()
 
+    def _march_parameter_table(self):
+        paradict = {
+                'nwrites_per_file': [1],
+                'hole'            : [1, 2],
+                'wsize'           : [1]
+                }
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            stride = para['hole'] + para['wsize']
+            para['wstride'] = stride
+
+        pprint.pprint( paralist )
+
+        return paralist
+
     def march(self):
         """
         change self.confparser here
@@ -275,6 +313,7 @@ class Troops:
         unchanged in the near future. 
         """
         cparser = self.confparser
+
         for nwrites_per_file in range (1, 3):
             cparser.set('workload', 'nwrites_per_file', str(nwrites_per_file))
             self._walkman_walk(cparser)
@@ -291,11 +330,10 @@ def main(args):
     except:
         print "unable to read config file:", confpath
         exit(1)
-    
-    #walkman = Walkman(confparser, 'trial')
-    #walkman.walk()
+   
     troops = Troops(confparser)
-    troops.march()
+    #troops.march()
+    troops._march_parameter_table()
 
 if __name__ == "__main__":
     main(sys.argv)
