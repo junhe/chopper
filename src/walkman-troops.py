@@ -236,7 +236,7 @@ class Walkman:
             wstride         = self.confparser.getint('workload', 'wstride'),
             rootdir         = os.path.join(self.confparser.get('system','mountpoint')),
             tofile          = self.confparser.get('system','workloadbufpath'),
-            fsync_per_write = self.confparser.get('workload', 'fsync_per_write')
+            fsync_per_write = self.confparser.getint('workload', 'fsync_per_write')
             )
 
         cmd = [self.confparser.get('system','mpirunpath'), "-np", 
@@ -287,11 +287,38 @@ class Troops:
         walkman = Walkman(cf, 'fromTroops')
         walkman.walk()
 
-    def _march_parameter_table(self):
+    def _test006(self):
         paradict = {
-                'nwrites_per_file': [1, 128],
-                'w_hole'          : [1, 4096],
-                'wsize'           : [4096, 4097],
+                'nwrites_per_file': [1, 3, 1024],
+                'w_hole'          : [0, 1, 4096, 1024*1024 ],
+                'wsize'           : [1, 1024, 
+                                     4096-1, 4096, 4096+1
+                                    ],
+                'fsync_per_write' : [0, 1]
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+        #pprint.pprint( paralist )
+
+        return paralist
+
+    def _test007(self):
+        # 4KB, 8KB, 16KB, ...16MB 
+        exps = range(0, 15)
+        sizes = [4096*(2**x) for x in exps]
+
+        paradict = {
+                'nwrites_per_file': [1, 3, 256, 512, 1024],
+                'w_hole'          : [0, 1] + sizes,
+                'wsize'           : [1, 1024, 
+                                     4096-1, 4096, 4096+1, 8*1024
+                                    ],
                 'fsync_per_write' : [0, 1]
                 }
 
@@ -305,6 +332,10 @@ class Troops:
         pprint.pprint( paralist )
 
         return paralist
+
+
+    def _march_parameter_table(self):
+        return self._test007()
 
     def march(self):
         """
