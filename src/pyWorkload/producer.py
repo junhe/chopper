@@ -7,10 +7,10 @@ class Producer:
     """
     def __init__ (self, np=1, startOff=0, nwrites_per_file=1, nfile_per_dir=1, 
               ndir_per_pid=1, wsize=1, wstride=1, rootdir="", tofile="", 
-              fsync_per_write=False):
+              fsync_per_write=False, fsync_before_close=True):
         self.setParameters(
               np, startOff, nwrites_per_file, nfile_per_dir, ndir_per_pid,
-              wsize, wstride, rootdir, tofile, fsync_per_write)
+              wsize, wstride, rootdir, tofile, fsync_per_write, fsync_before_close)
         self.workload = ""
 
     def addReadOrWrite(self, op, pid, dirid, fileid, off, len):
@@ -36,7 +36,7 @@ class Producer:
 
     def setParameters(self, 
               np, startOff, nwrites_per_file, nfile_per_dir, ndir_per_pid,
-              wsize, wstride, rootdir, tofile, fsync_per_write):
+              wsize, wstride, rootdir, tofile, fsync_per_write, fsync_before_close):
         self.np = np
         self.startOff = startOff
 
@@ -51,6 +51,7 @@ class Producer:
         self.tofile = tofile
 
         self.fsync_per_write = fsync_per_write
+        self.fsync_before_close = fsync_before_close
 
     def saveWorkloadToFile(self):
          self.save2file(self.workload, self.tofile)
@@ -76,7 +77,9 @@ class Producer:
 
     def produce (self, 
               np, startOff, nwrites_per_file, nfile_per_dir, ndir_per_pid,
-              wsize, wstride, rootdir, tofile="", fsync_per_write=False):
+              wsize, wstride, rootdir, tofile="", 
+              fsync_per_write=False, 
+              fsync_before_close=True):
         self.np = np
         self.startOff = startOff
 
@@ -88,6 +91,7 @@ class Producer:
         self.wsize = wsize
         self.wstride = wstride
         self.fsync_per_write = fsync_per_write
+        self.fsync_before_close = fsync_before_close
 
         self.rootdir = rootdir
 
@@ -147,12 +151,13 @@ class Producer:
                         workload += entry
 
         # fsync file
-        for fid in range(self.nfile_per_dir):
-            for dir in range(self.ndir_per_pid):
-                for p in range(self.np):
-                    path = self.getFilepath(dir, p, fid)
-                    entry = str(p)+";"+path+";"+"fsync"+"\n";
-                    workload += entry
+        if self.fsync_before_close:
+            for fid in range(self.nfile_per_dir):
+                for dir in range(self.ndir_per_pid):
+                    for p in range(self.np):
+                        path = self.getFilepath(dir, p, fid)
+                        entry = str(p)+";"+path+";"+"fsync"+"\n";
+                        workload += entry
 
 
         # close file

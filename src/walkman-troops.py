@@ -236,7 +236,9 @@ class Walkman:
             wstride         = self.confparser.getint('workload', 'wstride'),
             rootdir         = os.path.join(self.confparser.get('system','mountpoint')),
             tofile          = self.confparser.get('system','workloadbufpath'),
-            fsync_per_write = self.confparser.getint('workload', 'fsync_per_write')
+            fsync_per_write = self.confparser.getint('workload', 'fsync_per_write'),
+            fsync_before_close
+                            = self.confparser.getint('workload', 'fsync_before_close')
             )
 
         cmd = [self.confparser.get('system','mpirunpath'), "-np", 
@@ -304,6 +306,7 @@ class Troops:
             stride = para['w_hole'] + para['wsize']
             para['wstride'] = stride
 
+            para['fsync_before_close'] = 1 # to maintain compatibility
         #pprint.pprint( paralist )
 
         return paralist
@@ -329,13 +332,124 @@ class Troops:
             stride = para['w_hole'] + para['wsize']
             para['wstride'] = stride
 
+            para['fsync_before_close'] = 1 # to maintain compatibility
+
+        pprint.pprint( paralist )
+
+        return paralist
+
+    def _test008(self):
+        # 4KB, 8KB, 16KB, ...16MB 
+        exps = range(0, 15)
+        sizes = [4096*(2**x) for x in exps]
+
+        paradict = {
+                'nwrites_per_file': [1, 3, 64, 256, 1024],
+                'w_hole'          : [0, 1, 512, 1024, 2048] + sizes,
+                'wsize'           : [1, 256, 1024, 
+                                     4096-1, 4096, 4096+1, 8*1024
+                                    ],
+                'fsync_per_write' : [0, 1]
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            para['fsync_before_close'] = 1 # to maintain compatibility
+
+        pprint.pprint( paralist )
+
+        return paralist
+
+    def _test009(self):
+        # 4KB, 8KB, 16KB, ...16MB 
+        exps = range(0, 15)
+        sizes = [4096*(2**x) for x in exps]
+
+        paradict = {
+                'nwrites_per_file': [1, 3, 64, 1024],
+                'w_hole'          : [0, 1, 512, 1024, 2048] + sizes,
+                'wsize'           : [1, 256, 1024, 4096],
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [0, 1, 2] 
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            # Calc stride
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            #Calc fsync
+            if para['fsync'] == 0:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 1
+            elif para['fsync'] == 1:
+                para['fsync_per_write'] = 1
+                para['fsync_before_close'] = 0
+            elif para['fsync'] == 2:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 0
+            else:
+                print "invalid fsync"
+                exit(0)
+
+        pprint.pprint( paralist )
+
+        return paralist
+
+    def _test010(self):
+        "Test larger write sizes"
+        exps = range(0, 15)
+        sizes = [4096*(4**x) for x in exps]
+
+        paradict = {
+                'nwrites_per_file': [1, 3, 64, 1024],
+                'w_hole'          : [0, 1, 512, 1024, 2048] + sizes,
+                'wsize'           : sizes,
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [0, 1, 2] 
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            # Calc stride
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            #Calc fsync
+            if para['fsync'] == 0:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 1
+            elif para['fsync'] == 1:
+                para['fsync_per_write'] = 1
+                para['fsync_before_close'] = 0
+            elif para['fsync'] == 2:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 0
+            else:
+                print "invalid fsync"
+                exit(0)
+
         pprint.pprint( paralist )
 
         return paralist
 
 
     def _march_parameter_table(self):
-        return self._test007()
+        return self._test010()
 
     def march(self):
         """
