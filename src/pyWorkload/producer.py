@@ -143,13 +143,14 @@ class Producer:
                         path = self.getFilepath(dir, p, fid)
 
                         entry = str(p)+";"+path+";"+"write"+";"+str(cur_off[p][dir][fid])+";"+str(size)+"\n"
+
                         cur_off[p][dir][fid] += self.wstride
 
                         workload += entry
 
                         if self.fsync_per_write:
                             entry = str(p)+";"+path+";"+"fsync"+"\n";
-                        workload += entry
+                            workload += entry
 
         # fsync file
         if self.fsync_before_close:
