@@ -94,13 +94,14 @@ class Producer:
         self.fsync_before_close = fsync_before_close
 
         self.rootdir = rootdir
+        self.tofile = tofile
 
-        workload = self._produce()
+        self.workload = self._produce()
         
         if tofile != "":
-            self.save2file(workload, tofile=tofile)
+            self.saveWorkloadToFile()
         
-        return workload
+        return self.workload
 
     
     def getFilepath(self, dir, pid, file_id ):
