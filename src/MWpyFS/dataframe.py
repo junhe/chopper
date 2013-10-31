@@ -17,7 +17,7 @@ class DataFrame:
             table = []
         self.header = header
         self.table = table
-        self.colwidth = 0
+        self.colwidth = 15
 
     def toStr(self):
         return self.headerStr() + self.tableStr() 
