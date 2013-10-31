@@ -568,8 +568,30 @@ class FSMonitor:
         return
 
 
+    def xfs_convert_ino_to_fsb(self, ino):
+        "convert inode number to fs block number"
+        lines = self.xfs_db_commands(['convert ino '+str(ino)+' fsblock'])
+        print lines
+
+
+    def xfs_db_commands(self, commandlist):
+        #print "xfs_db..."
+        cmdlist = ["-c "+cmd for cmd in commandlist ]
+        #print cmdlist
+        cmd = ["xfs_db", "-r"] + cmdlist + [self.devname]
+        #print cmd
+        #cmd = ["xfs_db", "-r", "-c convert ino 131 fsblock", "/dev/loop0"]
+        proc = subprocess.Popen(cmd, 
+                                stdout=subprocess.PIPE)
+        output = proc.communicate()[0] # communicate() uses buffer. Don't use it
+                                       # when the data is large
+        return output
+
+
 # Testing
-#m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
+m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
+#print m.xfs_db_commands(['convert ino 4194432 fsblock'])
+m.xfs_convert_ino_to_fsb(131)
 #m.imap_of_a_file('./pid00000.dir00000/pid.00000.file.00000')
 #print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
 
