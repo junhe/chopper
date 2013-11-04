@@ -53,11 +53,12 @@ def xfs_lines_to_dict(lines):
 
             key = items[0]
             key = key.strip()
-            key = re.sub(r'\[.*\]', "", key)
+            key = re.sub(r'\[.*\]$', "", key, re.M)
 
             value = items[1]
             value = value.strip()
 
+            print key
             assert not line_dict.has_key(key)
             line_dict[key] = value
 
@@ -110,7 +111,7 @@ def xfs_convert_ino_to_fsb(ino, devname):
     assert len(lines)==1, "# of lines not right"
     
     for line in lines:
-        print line,
+        #print line,
         mo = re.search( r'\((\d+)\)', line, re.M)
         if mo:
             fsb = mo.group(1)
@@ -160,6 +161,7 @@ def _dataframe_add_ext_tuple(df, level_index, max_level, ext):
 def xfs_get_extent_tree(inode_number, devname):
     inode_lines = xfs_db_commands(["inode "+str(inode_number), "print u"], 
                                   devname)
+    print inode_lines
     inode_dict = xfs_lines_to_dict(inode_lines)
     pprint.pprint(inode_dict)
 
@@ -180,14 +182,11 @@ def xfs_get_extent_tree(inode_number, devname):
                                 Physical_start=inode_fsb, Physical_end=inode_fsb,
                                 Length='1', Flag='NA')
 
-    if xfs_empty_u(inode_dict):
-        print "The file has no extents. It is empty"
-        return df_ext
         
     if inode_dict.has_key('u.bmx'):
         print "All extents pointers are in inode"
         exts = xfs_parse_type03(inode_dict['u.bmx'])
-        print "exts",exts
+        #print "exts",exts
         for ext in exts:
             df_ext = _dataframe_add_ext_tuple(df_ext, level_index=0, max_level=0, ext=ext)
         return df_ext
@@ -204,7 +203,7 @@ def xfs_get_extent_tree(inode_number, devname):
         for p in ptrs:
             ptr_queue.put_nowait(p)
             df_ext = _dataframe_add_an_extent(df_ext, 
-                            Level_index=cur_xfs_level, Max_level=max_level,
+                            Level_index=max_level-cur_xfs_level, Max_level=max_level,
                             Entry_index="NA", N_Entry="NA",
                             Logical_start="NA", Logical_end="NA",
                             Physical_start=p, Physical_end=p,
@@ -214,8 +213,8 @@ def xfs_get_extent_tree(inode_number, devname):
             cur_blk = ptr_queue.get_nowait()
             block_lines = xfs_db_commands(["fsb "+str(cur_blk), "type bmapbta", "p"], 
                                   devname)
-            print "********* block_lines  *******"
-            print block_lines
+            #print "********* block_lines  *******"
+            #print block_lines
             block_attrs = xfs_lines_to_dict(block_lines)
 
             cur_xfs_level = int(block_attrs['level'])
@@ -227,7 +226,7 @@ def xfs_get_extent_tree(inode_number, devname):
                 for p in ptrs:
                     ptr_queue.put_nowait(p)
                     df_ext = _dataframe_add_an_extent(df_ext, 
-                                    Level_index=cur_xfs_level, Max_level=max_level,
+                                    Level_index=max_level-cur_xfs_level, Max_level=max_level,
                                     Entry_index="NA", N_Entry="NA",
                                     Logical_start="NA", Logical_end="NA",
                                     Physical_start=p, Physical_end=p,
@@ -239,12 +238,13 @@ def xfs_get_extent_tree(inode_number, devname):
                 #print exts
                 for ext in exts:
                     df_ext = _dataframe_add_ext_tuple(df_ext, 
-                                        level_index=cur_xfs_level,
+                                        level_index=max_level-cur_xfs_level,
                                         max_level=max_level, 
                                         ext=ext)
 
         return df_ext
-
+    # It is empty
+    return df_ext
 
 def main():
     #d = xfs_parse_lines(lines04)
