@@ -537,8 +537,60 @@ class Troops:
 
         return paralist
 
+    def _test014(self):
+
+        paradict = {
+                'nwrites_per_file': [1024],
+                'w_hole'          : [4096],
+                'wsize'           : [4096],
+                'nfile_per_dir'   : [2],
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [1] 
+                }
+
+        #paradict = {
+                #'nwrites_per_file': [3],
+                #'w_hole'          : [1024],
+                #'wsize'           : [4096],
+                #'nfile_per_dir'   : [2],
+                ## 0: only fsync() before closing
+                ## 1: fsync() after each write
+                ## 2: no fynsc() during open-close
+                #'fsync' : [2] 
+                #}
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            # Calc stride
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            #Calc fsync
+            if para['fsync'] == 0:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 1
+            elif para['fsync'] == 1:
+                para['fsync_per_write'] = 1
+                para['fsync_before_close'] = 0
+            elif para['fsync'] == 2:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 0
+            else:
+                print "invalid fsync"
+                exit(0)
+
+        pprint.pprint( paralist )
+
+        return paralist
+
+
+
     def _march_parameter_table(self):
-        return self._test013()
+        return self._test014()
 
     def march(self):
         """
