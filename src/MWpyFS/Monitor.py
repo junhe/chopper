@@ -27,6 +27,7 @@ import shlex
 import os
 import pprint
 
+import xfs_db_parser
 import dataframe
 
 class cd:
@@ -46,7 +47,7 @@ class FSMonitor:
     This monitor probes the ext4 file system and return information I 
     want in a nice format.
     """
-    def __init__(self, dn, mp, ld="/tmp", cw=20):
+    def __init__(self, dn, mp, ld="/tmp", cw=20, filesystem='ext4'):
         self.devname = dn   # this should be the device name of the partition 
         self.mountpoint = mp # please only provide path without mountpoint
                              # when using this class.
@@ -54,6 +55,7 @@ class FSMonitor:
         self.logdir = ld
         self.resetMonitorTime()
         self.resetJobID()
+        self.filesystem = filesystem # the file system this monitor monitors
     
     def resetMonitorTime(self, monitorid=""):
         "monitor_time is used to identify each data retrieval"
@@ -523,145 +525,56 @@ class FSMonitor:
             fullpath = os.path.join(self.logdir, filename)
             f = open(fullpath, 'w')
 
+        if self.filesystem == 'ext4':
+            ######################
+            # get per file block count
+            df_bcounts = self.getPerFileBlockCounts()
+            if savedata:
+                extstats_header = "----------- per file block counts  -------------\n"
+                f.write(extstats_header + df_bcounts.toStr())
 
-        ######################
-        # get per file block count
-        df_bcounts = self.getPerFileBlockCounts()
-        if savedata:
-            extstats_header = "----------- per file block counts  -------------\n"
-            f.write(extstats_header + df_bcounts.toStr())
+            # FS block count
+            df_fscounts = self.getFSBlockCount(df_bcounts)
+            if savedata:
+                h = "------------- FS block counts ---------------\n"
+                f.write(h+df_fscounts.toStr())
+            
+            ######################
+            # get extents of all files
+            extlist = self.getExtentList_of_a_dir()
+            if savedata:
+                h = "---------------- extent list -------------------\n"
+                f.write(h+extlist.toStr())
 
-        # FS block count
-        df_fscounts = self.getFSBlockCount(df_bcounts)
-        if savedata:
-            h = "------------- FS block counts ---------------\n"
-            f.write(h+df_fscounts.toStr())
-        
-        ######################
-        # get extents of all files
-        extlist = self.getExtentList_of_a_dir()
-        if savedata:
-            h = "---------------- extent list -------------------\n"
-            f.write(h+extlist.toStr())
+            ######################
+            # e2freefrag
+            frag = self.e2freefrag()
+            if savedata:
+                frag0_header    = "-----------  Extent summary  -------------\n"
+                frag1_header    = "----------- Extent Histogram   -------------\n"
+                f.write(frag0_header + frag["FragSummary"].toStr())
+                f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
 
-        ######################
-        # e2freefrag
-        frag = self.e2freefrag()
-        if savedata:
-            frag0_header    = "-----------  Extent summary  -------------\n"
-            frag1_header    = "----------- Extent Histogram   -------------\n"
-            f.write(frag0_header + frag["FragSummary"].toStr())
-            f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
-
-        ######################
-        # dumpfs
-        freespaces = self.dumpfs()
-        if savedata:
-            dumpfs_header   = "----------- Dumpfs Header ------------\n"
-            f.write(dumpfs_header + freespaces['freeblocks'].toStr())
-            f.write(dumpfs_header + freespaces['freeinodes'].toStr())
-
+            ######################
+            # dumpfs
+            freespaces = self.dumpfs()
+            if savedata:
+                dumpfs_header   = "----------- Dumpfs Header ------------\n"
+                f.write(dumpfs_header + freespaces['freeblocks'].toStr())
+                f.write(dumpfs_header + freespaces['freeinodes'].toStr())
+        elif self.filesystem == 'zfs':
+            df_ext = self.xfs_getExtentList_of_a_dir()
+            df_ext.addColumns(keylist=["HEADERMARKER_extlist",
+                                     "monitor_time",
+                                     "jobid"],
+                            valuelist=["DATAMARKER_extlist",
+                                     self.monitor_time,
+                                     self.jobid])
         
         if savedata:
             f.flush()
             f.close()
         return
-
-
-    def xfs_extents_of_a_file (self, filepath):
-        "find all extents of a file in xfs by inode number"
-        cmd = 'xfs_bmap -v ' + filepath 
-        cmd = shlex.split(cmd)
-
-        print cmd
-        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
-        
-        lines = proc.communicate()[0]
-        lines = lines.strip()
-        lines = lines.split('\n')
-
-        #print "------------------------"
-        #print lines
-        df_ext = dataframe.DataFrame()
-        header = ["Level_index", "Max_level", 
-                 "Entry_index", "N_Entry",
-                 "Logical_start", "Logical_end",
-                 "Physical_start", "Physical_end",
-                 "Length", "Flag"]       
-        df_ext.header = header
-
-        for i, line in enumerate(lines):
-            #print line
-            if i < 2:
-                # skip the header line
-                continue
-            nums = re.findall(r'\d+', line, re.M)
-            assert len(nums) == 9, "xfs_bmap, number parsing failed"
-
-            d = {
-                    "Level_index":"NA",
-                    "Max_level"  :"NA",
-                    "Entry_index":"NA",
-                    "N_Entry"    :"NA",
-                    # this output of xfs_bmap is in 512 byte block
-                    # we convert it to use 4096 byte block by
-                    # blocknumber * 512/4096=blocknumber/8
-                    "Logical_start": int(nums[1])/8,
-                    "Logical_end": int(nums[2])/8,
-                    "Physical_start": int(nums[3])/8,
-                    "Physical_end": int(nums[4])/8,
-                    "Length": int(nums[8])/8,
-                    "Flag": "NA"
-                    }
-            df_ext.addRowByDict(d)
-        #print df_ext.toStr()
-
-        inode_number = self.stat_a_file(filepath)['inode_number']
-        inode_fsb = self.xfs_convert_ino_to_fsb(int(inode_number))
-        d = {}
-        d['Level_index'] = '-1'
-        d['Max_level'] = '-1'
-        d['Entry_index'] = 'NA'
-        d['N_Entry'] = 'NA'
-        d['Logical_start'] = 'NA'
-        d['Logical_end'] = 'NA'
-        d['Physical_start'] = inode_fsb
-        d['Physical_end'] = inode_fsb
-        d['Length'] = '1'
-        d['Flag'] = 'NA'
-
-        df_ext.addRowByDict(d)
-
-        df_ext.addColumn(key = "filepath",
-                         value = filepath)
-        df_ext.addColumn(key = "HEADERMARKER_extlist",
-                         value = "DATAMARKER_extlist")
-        df_ext.addColumn(key = "jobid",
-                         value = self.jobid)
-        df_ext.addColumn(key = "monitor_time",
-                         value = self.monitor_time)
-
-
-
-        return df_ext
-
-
-    def xfs_convert_ino_to_fsb(self, ino):
-        "convert inode number to fs block number"
-        lines = self.xfs_db_commands(['convert ino '+str(ino)+' fsblock'])
-        lines = lines.strip()
-        lines = lines.split('\n')
-
-        assert len(lines)==1, "# of lines not right"
-        
-        for line in lines:
-            print line,
-            mo = re.search( r'\((\d+)\)', line, re.M)
-            if mo:
-                fsb = mo.group(1)
-                return fsb
-
-        assert False, "Failed to convert inode number"
 
     def stat_a_file(self, filepath):
         cmd = "stat " + filepath
@@ -685,39 +598,34 @@ class FSMonitor:
                 stat_dict['inode_number'] = inode_number
         return stat_dict
 
-    def xfs_db_commands(self, commandlist):
-        #print "xfs_db..."
-        cmdlist = ["-c "+cmd for cmd in commandlist ]
-        #print cmdlist
-        cmd = ["xfs_db", "-r"] + cmdlist + [self.devname]
-        #print cmd
-        #cmd = ["xfs_db", "-r", "-c convert ino 131 fsblock", "/dev/loop0"]
-        proc = subprocess.Popen(cmd, 
-                                stdout=subprocess.PIPE)
-        output = proc.communicate()[0] # communicate() uses buffer. Don't use it
-                                       # when the data is large
-        return output
+    def xfs_get_extentlist_of_a_file(self, filepath):
+        inode_number = self.stat_a_file(filepath)['inode_number']
+        df = xfs_db_parser.xfs_get_extent_tree(inode_number, self.devname)
+        df.addColumn(key = "filepath",
+                         value = filepath)
+        return df
 
     def xfs_getExtentList_of_a_dir(self, rootdir="."):
+        "rootdir is actually relative to mountpoint. Seems bad"
         files = self.getAllInodePaths(rootdir)
         print files
         df = dataframe.DataFrame()
         for f in files:
             #print "UU____UU"
             if len(df.header) == 0:
-                df = self.xfs_extents_of_a_file(f)
+                df = self.xfs_get_extentlist_of_a_file(f)
             else:
-                df.table.extend( self.xfs_extents_of_a_file(f).table )
+                df.table.extend( self.xfs_get_extentlist_of_a_file(f).table )
         return df
 
 
 # Testing
-#m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
+m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
 #print m.xfs_db_commands(['convert ino 4194432 fsblock'])
 #m.xfs_convert_ino_to_fsb(131)
 #m.xfs_extents_of_a_file('/mnt/scratch/initrd.img-3.2.16emulab1')
 #m.stat_a_file("/mnt/scratch")
-#print m.xfs_getExtentList_of_a_dir("/mnt/scratch").toStr()
+print m.xfs_getExtentList_of_a_dir("/mnt/scratch").toStr()
 #m.imap_of_a_file('./pid00000.dir00000/pid.00000.file.00000')
 #print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
 
