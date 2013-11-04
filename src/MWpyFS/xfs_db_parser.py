@@ -58,7 +58,6 @@ def xfs_lines_to_dict(lines):
             value = items[1]
             value = value.strip()
 
-            print key
             assert not line_dict.has_key(key)
             line_dict[key] = value
 
@@ -245,6 +244,85 @@ def xfs_get_extent_tree(inode_number, devname):
         return df_ext
     # It is empty
     return df_ext
+
+def xfs_bmap_of_a_file (self, filepath):
+    "find all extents of a file in xfs by inode number"
+    cmd = 'xfs_bmap -v ' + filepath 
+    cmd = shlex.split(cmd)
+
+    print cmd
+    proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+    
+    lines = proc.communicate()[0]
+    lines = lines.strip()
+    lines = lines.split('\n')
+
+    #print "------------------------"
+    #print lines
+    df_ext = dataframe.DataFrame()
+    header = ["Level_index", "Max_level", 
+             "Entry_index", "N_Entry",
+             "Logical_start", "Logical_end",
+             "Physical_start", "Physical_end",
+             "Length", "Flag"]       
+    df_ext.header = header
+
+    for i, line in enumerate(lines):
+        #print line
+        if i < 2:
+            # skip the header line
+            continue
+        nums = re.findall(r'\d+', line, re.M)
+        assert len(nums) == 9, "xfs_bmap, number parsing failed"
+
+        d = {
+                "Level_index":"NA",
+                "Max_level"  :"NA",
+                "Entry_index":"NA",
+                "N_Entry"    :"NA",
+                # this output of xfs_bmap is in 512 byte block
+                # we convert it to use 4096 byte block by
+                # blocknumber * 512/4096=blocknumber/8
+                "Logical_start": int(nums[1])/8,
+                "Logical_end": int(nums[2])/8,
+                "Physical_start": int(nums[3])/8,
+                "Physical_end": int(nums[4])/8,
+                "Length": int(nums[8])/8,
+                "Flag": "NA"
+                }
+        df_ext.addRowByDict(d)
+    #print df_ext.toStr()
+
+    inode_number = self.stat_a_file(filepath)['inode_number']
+    inode_fsb = self.xfs_convert_ino_to_fsb(int(inode_number))
+    d = {}
+    d['Level_index'] = '-1'
+    d['Max_level'] = '-1'
+    d['Entry_index'] = 'NA'
+    d['N_Entry'] = 'NA'
+    d['Logical_start'] = 'NA'
+    d['Logical_end'] = 'NA'
+    d['Physical_start'] = inode_fsb
+    d['Physical_end'] = inode_fsb
+    d['Length'] = '1'
+    d['Flag'] = 'NA'
+
+    df_ext.addRowByDict(d)
+
+    df_ext.addColumn(key = "filepath",
+                     value = filepath)
+    df_ext.addColumn(key = "HEADERMARKER_extlist",
+                     value = "DATAMARKER_extlist")
+    df_ext.addColumn(key = "jobid",
+                     value = self.jobid)
+    df_ext.addColumn(key = "monitor_time",
+                     value = self.monitor_time)
+
+
+
+    return df_ext
+
+
 
 def main():
     #d = xfs_parse_lines(lines04)
