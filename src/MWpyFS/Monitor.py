@@ -455,9 +455,6 @@ class FSMonitor:
 
     def getAllInodePaths(self, rootdir="."):
         "it returns paths of all files and diretories"
-        if self.filesystem != 'ext4':
-            return 
-
         rootpath = os.path.join(self.mountpoint, rootdir)
 
         paths = []
@@ -600,14 +597,20 @@ class FSMonitor:
                 f.write(dumpfs_header + freespaces['freeblocks'].toStr())
                 f.write(dumpfs_header + freespaces['freeinodes'].toStr())
 
-        elif self.filesystem == 'zfs':
+        elif self.filesystem == 'xfs':
             df_ext = self.xfs_getExtentList_of_a_dir()
-            df_ext.addColumns(keylist=["HEADERMARKER_extlist",
-                                     "monitor_time",
-                                     "jobid"],
-                            valuelist=["DATAMARKER_extlist",
-                                     self.monitor_time,
-                                     self.jobid])
+            if savedata and df_ext != None:
+                df_ext.addColumns(keylist=["HEADERMARKER_extlist",
+                                         "monitor_time",
+                                         "jobid"],
+                                  valuelist=["DATAMARKER_extlist",
+                                         self.monitor_time,
+                                         self.jobid])
+                h = "---------------- extent list -------------------\n"
+                f.write( h + df_ext.toStr() )
+        else:
+            print "Unsupported file system."
+            exit(1)
         
         if savedata:
             f.flush()
@@ -615,6 +618,7 @@ class FSMonitor:
         return
 
     def stat_a_file(self, filepath):
+        filepath = os.path.join(self.mountpoint, filepath)
         cmd = "stat " + filepath
         cmd = cmd.split()
 
@@ -658,12 +662,12 @@ class FSMonitor:
 
 
 # Testing
-m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
+#m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
 #print m.xfs_db_commands(['convert ino 4194432 fsblock'])
 #m.xfs_convert_ino_to_fsb(131)
 #m.xfs_extents_of_a_file('/mnt/scratch/initrd.img-3.2.16emulab1')
 #m.stat_a_file("/mnt/scratch")
-print m.xfs_getExtentList_of_a_dir("/mnt/scratch").toStr()
+#print m.xfs_getExtentList_of_a_dir("/mnt/scratch").toStr()
 #m.imap_of_a_file('./pid00000.dir00000/pid.00000.file.00000')
 #print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
 

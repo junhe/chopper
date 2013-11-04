@@ -130,6 +130,19 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
     mkImageFile(imgpath, sizeMB)
     mkLoopDevOnFile(devname, imgpath) 
 
+def makeXFS(devname, blocksize=4096):
+    "TODO: blockscount is not used"
+    cmd = ["mkfs.xfs", 
+           "-f",
+           "-b", 'size='+str(blocksize),
+           devname]
+    cmd = [str(x) for x in cmd]
+    p = subprocess.Popen(cmd)
+    p.wait()
+    print "makeXFS:", p.returncode
+    return p.returncode
+
+
 def makeExt4(devname, blockscount=16777216, blocksize=4096):
     cmd = ["mkfs.ext4", 
            "-b", blocksize,
@@ -158,6 +171,20 @@ def mountExt4(devname, mountpoint):
     print "mountExt4:", p.returncode
     return p.returncode
 
+def remountFS(devname, mountpoint):
+    umountFS(mountpoint)
+    mountFS(devname, mountpoint)
+
+def mountFS(devname, mountpoint):
+    if not os.path.exists(mountpoint):
+        os.makedirs(mountpoint)
+
+    cmd = ["mount", devname, mountpoint]
+    p = subprocess.Popen(cmd)
+    p.wait()
+    print "mountFS", p.returncode
+    return p.returncode
+
 def chDirOwner(mountpoint, username, groupname):
     try:
         uid = pwd.getpwnam(username).pw_uid
@@ -169,6 +196,34 @@ def chDirOwner(mountpoint, username, groupname):
         print "cannot chown", username, ":", groupname, "in system"
 
     return 0
+
+def remakeXFS(partition, mountpoint, username, groupname, 
+                blocksize=4096):
+    "= format that partition"
+    print "remaking ext4...."
+    if isMounted(mountpoint):
+        print mountpoint, "is mounted"
+        ret = umountFS(mountpoint)
+        if ret != 0:
+            print "Error in umountFS: this should not happen"
+            exit(1)
+        else:
+            print mountpoint, "is umounted"
+    else:
+        print mountpoint, "is NOT mounted."
+
+    ret = makeXFS(partition, blocksize=blocksize)
+    if ret != 0:
+        print "Error in makeXFS: this should not happen"
+        exit(1)
+    ret = mountFS(partition, mountpoint)
+    if ret != 0:
+        print "Error in mountFS: this should not happen"
+        exit(1)
+
+    # all of the above has to success except this one
+    chDirOwner(mountpoint, username, groupname)
+
 
 def remakeExt4(partition, mountpoint, username, groupname, 
                 blockscount=16777216, blocksize=4096):
@@ -214,3 +269,7 @@ def buildNewExt4(devname, mountpoint, confpath, username, groupname):
 
 #buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 
+#makeXFS(devname='/dev/loop0', blockscount=16777216, blocksize=4096)
+
+#remakeXFS('/dev/loop0', '/mnt/scratch', 'jhe', 'plfs', 
+                #blocksize=4096)

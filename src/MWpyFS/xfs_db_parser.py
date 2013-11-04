@@ -318,8 +318,6 @@ def xfs_bmap_of_a_file (self, filepath):
     df_ext.addColumn(key = "monitor_time",
                      value = self.monitor_time)
 
-
-
     return df_ext
 
 def main():

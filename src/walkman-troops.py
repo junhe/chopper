@@ -93,9 +93,36 @@ class Walkman:
         self.monitor = MWpyFS.Monitor.FSMonitor(
                  self.confparser.get('system','partition'), 
                  self.confparser.get('system','mountpoint'),
-                 ld = self.confparser.get('system','resultdir')) # logdir
+                 ld = self.confparser.get('system','resultdir'),
+                 filesystem = self.confparser.get('system', 'filesystem')) # logdir
 
+    def _remake_fs(self):
+        fs = self.confparser.get('system', 'filesystem')
+        if fs == 'ext4':
+            self._remakeExt4()
+        elif fs == 'xfs':
+            self._remakeXFS()
 
+    def _remakeXFS(self):
+        blockscount = self.confparser.getint('system', 'blockscount')
+        blocksize = self.confparser.getint('system', 'blocksize')
+            
+        loodevsizeMB = blockscount*blocksize/(1024*1024)
+
+        if self.confparser.get('system', 'makeloopdevice') == 'yes':
+            MWpyFS.FormatFS.makeLoopDevice(
+                    devname=self.confparser.get('system', 'partition'),
+                    tmpfs_mountpoint=self.confparser.get('system', 'tmpfs_mountpoint'),
+                    sizeMB=loodevsizeMB)
+
+        if not os.path.exists(self.confparser.get('system','mountpoint')):
+            os.makedirs(self.confparser.get('system','mountpoint'))
+
+        MWpyFS.FormatFS.remakeXFS(partition  =self.confparser.get('system','partition'),
+                                   mountpoint =self.confparser.get('system','mountpoint'),
+                                   username   =self.confparser.get('system','username'),
+                                   groupname   =self.confparser.get('system','groupname'),
+                                   blocksize=blocksize)
 
     def _remakeExt4(self):
         blockscount = self.confparser.getint('system', 'blockscount')
@@ -122,6 +149,7 @@ class Walkman:
                                    blocksize=blocksize)
 
     def _makeFragmentsOnFS(self):
+        assert self.confparser.get('system', 'filesystem') == 'ext4'
         MWpyFS.mkfrag.makeFragmentsOnFS(
                 partition=self.confparser.get('system', 'partition'),
                 mountpoint=self.confparser.get('system', 'mountpoint'),
@@ -167,6 +195,8 @@ class Walkman:
             f.write(header+datas)
 
     def _RecordStatus(self, year, season):
+        MWpyFS.FormatFS.remountFS(devname=self.confparser.get('system', 'partition'),
+                                  mountpoint=self.confparser.get('system', 'mountpoint'))
         self.monitor.display(savedata=True, 
                     logfile=self._getLogFilenameBySeasonYear(season,year),
                     monitorid=self._getYearSeasonStr(year=year, season=season),
@@ -187,7 +217,7 @@ class Walkman:
 
         # Format file system
         if self.confparser.get('system', 'formatfs').lower() == "yes":
-            self._remakeExt4()
+            self._remake_fs()
         else:
             print "skipped formating fs"
 
