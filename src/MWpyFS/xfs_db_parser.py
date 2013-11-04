@@ -322,8 +322,6 @@ def xfs_bmap_of_a_file (self, filepath):
 
     return df_ext
 
-
-
 def main():
     #d = xfs_parse_lines(lines04)
     #xfs_parse_keys(d['keys'])
@@ -336,5 +334,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    #main()
+    pass
 

@@ -177,7 +177,7 @@ class Walkman:
         fssumpath = os.path.join(self.confparser.get('system', 'resultdir'),
                         "walkmanJOB-"+self.confparser.get('system','jobid')+".FS-summary")
         with open(fssumpath, 'w') as f:
-            f.write( self.monitor.dumpfsSummary())
+            f.write( str(self.monitor.dumpfsSummary() ))
 
     def _SetupEnv(self):
         # Make loop device

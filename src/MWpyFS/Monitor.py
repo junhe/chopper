@@ -87,6 +87,8 @@ class FSMonitor:
         return new_elems
 
     def dumpfsSummary(self):
+        if self.filesystem != 'ext4':
+            return 
         print "dumpfs..."
         cmd = ["dumpe2fs", "-h", self.devname]
         proc = subprocess.Popen(cmd, 
@@ -97,6 +99,9 @@ class FSMonitor:
         return proc.communicate()[0]
 
     def dumpfs(self):
+        if self.filesystem != 'ext4':
+            return 
+
         print "dumpfs..."
         cmd = ["dumpe2fs", self.devname]
         proc = subprocess.Popen(cmd, 
@@ -138,6 +143,9 @@ class FSMonitor:
         return {"freeblocks":freeblocks_df, "freeinodes":freeinodes_df}
 
     def e2freefrag(self):
+        if self.filesystem != 'ext4':
+            return 
+
         cmd = ["e2freefrag", self.devname]
         proc = subprocess.Popen(cmd,
                            stdout=subprocess.PIPE)
@@ -192,6 +200,8 @@ class FSMonitor:
 
    
     def imap_of_a_file(self, filepath):
+        if self.filesystem != 'ext4':
+            return 
         cmd = "debugfs " + self.devname + " -R 'imap " + filepath + "'"
         print cmd, '......'
         cmd = shlex.split(cmd)
@@ -219,6 +229,8 @@ class FSMonitor:
 
     def dump_extents_of_a_file(self, filepath):
         "This function only gets ext list for this file"
+        if self.filesystem != 'ext4':
+            return 
         
         cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         print cmd, '......'
@@ -299,6 +311,9 @@ class FSMonitor:
         return df_ext
 
     def setBlock(self, blockn, count):
+        if self.filesystem != 'ext4':
+            return 
+
         cmd = "debugfs " + self.devname + \
                 " -w -R 'setb " + str(blockn) + " " + str(count) + "'"
         cmd = shlex.split(cmd)
@@ -309,6 +324,9 @@ class FSMonitor:
 
     def isAllBlocksInUse(self, blockn, count):
         "if any of the blocks is not in use, return false. return true otherwise"
+        if self.filesystem != 'ext4':
+            return 
+
         cmd = "debugfs " + self.devname + \
                 " -w -R 'testb " + str(blockn) + " " + str(count) + "'"
         cmd = shlex.split(cmd)
@@ -326,6 +344,10 @@ class FSMonitor:
 
     def dumpextents_sum(self, filepath):
         "TODO: merge this with dump_extents_of_a_file()"
+
+        if self.filesystem != 'ext4':
+            return 
+
         cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         print cmd, "........."
         cmd = shlex.split(cmd)
@@ -407,6 +429,9 @@ class FSMonitor:
         return dumpdict
 
     def filefrag(self, filepath):
+        if self.filesystem != 'ext4':
+            return 
+
         fullpath = os.path.join(self.mountpoint, filepath)  
         cmd = ["filefrag", "-sv", fullpath]
         print cmd
@@ -430,6 +455,9 @@ class FSMonitor:
 
     def getAllInodePaths(self, rootdir="."):
         "it returns paths of all files and diretories"
+        if self.filesystem != 'ext4':
+            return 
+
         rootpath = os.path.join(self.mountpoint, rootdir)
 
         paths = []
@@ -444,6 +472,9 @@ class FSMonitor:
         return paths
 
     def getExtentList_of_a_dir(self, rootdir="."):
+        if self.filesystem != 'ext4':
+            return 
+
         files = self.getAllInodePaths(rootdir)
         df = dataframe.DataFrame()
         for f in files:
@@ -455,6 +486,9 @@ class FSMonitor:
 
 
     def getPerFileBlockCounts(self, rootdir="."):
+        if self.filesystem != 'ext4':
+            return 
+
         files = self.getAllInodePaths(rootdir)
         counts_df = dataframe.DataFrame()
         for f in files:
@@ -474,6 +508,9 @@ class FSMonitor:
         
     def getFSBlockCount(self, df_files):
         "df_files has number of metablocks datablocks of each file"
+        if self.filesystem != 'ext4':
+            return 
+
         if len(df_files.table) == 0:
             return ""
 
@@ -529,27 +566,27 @@ class FSMonitor:
             ######################
             # get per file block count
             df_bcounts = self.getPerFileBlockCounts()
-            if savedata:
+            if savedata and df_bcounts != None:
                 extstats_header = "----------- per file block counts  -------------\n"
                 f.write(extstats_header + df_bcounts.toStr())
 
             # FS block count
             df_fscounts = self.getFSBlockCount(df_bcounts)
-            if savedata:
+            if savedata and df_fscounts != None:
                 h = "------------- FS block counts ---------------\n"
                 f.write(h+df_fscounts.toStr())
             
             ######################
             # get extents of all files
             extlist = self.getExtentList_of_a_dir()
-            if savedata:
+            if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
                 f.write(h+extlist.toStr())
 
             ######################
             # e2freefrag
             frag = self.e2freefrag()
-            if savedata:
+            if savedata and frag != None:
                 frag0_header    = "-----------  Extent summary  -------------\n"
                 frag1_header    = "----------- Extent Histogram   -------------\n"
                 f.write(frag0_header + frag["FragSummary"].toStr())
@@ -558,10 +595,11 @@ class FSMonitor:
             ######################
             # dumpfs
             freespaces = self.dumpfs()
-            if savedata:
+            if savedata and frag != None:
                 dumpfs_header   = "----------- Dumpfs Header ------------\n"
                 f.write(dumpfs_header + freespaces['freeblocks'].toStr())
                 f.write(dumpfs_header + freespaces['freeinodes'].toStr())
+
         elif self.filesystem == 'zfs':
             df_ext = self.xfs_getExtentList_of_a_dir()
             df_ext.addColumns(keylist=["HEADERMARKER_extlist",
