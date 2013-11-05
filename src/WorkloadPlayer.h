@@ -10,11 +10,15 @@ class WorkloadPlayer {
     public:
         void play( const WorkloadEntry &wl_entry );
 
-        WorkloadPlayer(){}
-
-
+        WorkloadPlayer();
+        ~WorkloadPlayer();
+        
+        ofstream _logfile;
+        
         // member vars
         std::map<std::string, int> _path2fd_dict; // hole opened file's fd
+    private:
+        void logwrite(std::string msg);
 };
 
 #endif

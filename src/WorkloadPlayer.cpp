@@ -9,11 +9,51 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <ctime>
+#include <locale>
+
+
 #include "WorkloadFetcher.h"
 #include "WorkloadPlayer.h"
 #include "Util.h"
 
 using namespace std;
+
+WorkloadPlayer::WorkloadPlayer()
+{
+    _logfile.open("/tmp/WorkloadPlayer.log", ios::app);
+    if ( ! _logfile.is_open() ) {
+        // Something may be seriously wrong if you cannot simply
+        // open this log file. Treat it seriously.
+        cerr << "Cannot Open /tmp/WorkloadPlayer.log" << endl;
+        exit(1);
+    }
+}
+
+WorkloadPlayer::~WorkloadPlayer()
+{
+    if ( _logfile.is_open() ) {
+        _logfile.close();
+    }
+}
+
+
+void
+WorkloadPlayer::logwrite(std::string msg)
+{
+    if ( ! _logfile.is_open() ) {
+        return;
+    }
+
+    std::locale::global(std::locale());
+    std::time_t t = std::time(NULL);
+    char mbstr[100];
+    std::strftime(mbstr, 100, "%A %c", std::localtime(&t))) 
+
+    _logfile << mbstr << msg << endl;
+    _logfile.sync();
+}
+
 
 void
 WorkloadPlayer::play( const WorkloadEntry &wl_entry )
