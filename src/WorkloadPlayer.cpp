@@ -122,15 +122,24 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
             logwrite( wl_entry._entry_str + " Failed to allocate mem buf.");
             exit(1);
         }
-
-        int ret = pwrite(fd, buf, length, offset);
-        //logwrite( wl_entry._entry_str + "Testing message");
-        if ( ret != int(length) ) {
-            ostringstream oss;
-            oss << "ret=" << ret << ", Length=" << length << ", offset=" << offset;
-            oss << "error msg:" << strerror(errno);
-            logwrite( wl_entry._entry_str + 
-                    " Size written is less than requested (Warning). " + oss.str());
+        
+        size_t remain = length;
+        off_t  cur_off = offset;
+        while ( remain > 0 ) {
+            int ret = pwrite(fd, buf, remain, cur_off);
+            if ( ret != int(remain) ) {
+                ostringstream oss;
+                oss << "ret=" << ret << ", remain=" << remain << ", cur_off=" << cur_off;
+                if ( ret == -1 ) {
+                    oss << "error msg:" << strerror(errno);
+                }
+                logwrite( wl_entry._entry_str + " " + oss.str());
+                if ( ret == -1 ) {
+                    exit(1);
+                }
+            }
+            remain -= ret;
+            cur_off += ret;
         }
         free(buf);
     } else if ( wl_entry._operation == "read" ) {
@@ -157,13 +166,29 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
             exit(1);
         }
 
-        int ret = pread(fd, buf, length, offset);
-        if ( ret != int(length) ) {
-            ostringstream oss;
-            oss << "ret=" << ret << ", Length=" << length << ", offset=" << offset;
-            oss << "error msg:" << strerror(errno);
-            logwrite( wl_entry._entry_str + 
-                    " Size read is less than requested (Warning). " + oss.str());
+        size_t remain = length;
+        off_t  cur_off = offset;
+        while ( remain > 0 ) {
+            int ret = pread(fd, buf, remain, cur_off);
+            if ( ret != int(length) ) {
+                ostringstream oss;
+                oss << "ret=" << ret << ", remain=" << remain << ", cur_off=" << cur_off;
+                if ( ret == -1 ) {
+                    oss << "error msg:" << strerror(errno);
+                }
+                logwrite( wl_entry._entry_str + " " + oss.str());
+                if ( ret == -1 ) {
+                    exit(1);
+                }
+            }
+            remain -= ret;
+            cur_off += ret;
+
+            if ( ret == 0 ) {
+                // the read reached the end of file.
+                // we break here to avoid infinite loop
+                break;
+            }
         }
         free(buf);
     } else if ( wl_entry._operation == "fsync" ) {
