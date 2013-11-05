@@ -202,7 +202,13 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         }
         // Now it is safe
         int fd = it->second; // for short
-        fsync(fd);
+        int ret = fsync(fd);
+        if ( ret == -1 ) {
+            ostringstream oss;
+            oss << wl_entry._entry_str << " error msg:" << strerror(errno);
+            logwrite(oss.str());
+            exit(1); // so serious?
+        }
     } else if ( wl_entry._operation == "rm" ) {
         string cmd = "rm -rf ";
         cmd += wl_entry._path;
