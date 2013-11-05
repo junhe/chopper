@@ -21,7 +21,7 @@
 #       JUST LIKE THE ORIGINAL OUTPUT BUT FORMAT IT A LITTLE BIT
 
 import subprocess
-from time import strftime, localtime
+from time import strftime, localtime, sleep
 import re
 import shlex
 import os
@@ -188,7 +188,33 @@ class FSMonitor:
                  
         return {"FragSummary":sums_df, "ExtSizeHistogram":hist_df}
 
-    
+   
+    def imap_of_a_file(self, filepath):
+        cmd = "debugfs " + self.devname + " -R 'imap " + filepath + "'"
+        print cmd, '......'
+        cmd = shlex.split(cmd)
+        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+
+        imapdict = {}
+        for line in proc.stdout:
+            #print line
+            if "block group" in line:
+                nums = re.findall(r'\d+', line)
+                if len(nums) != 2:
+                    print "Error parsing imap"
+                    exit(1)
+                imapdict['inode_number'] = nums[0] 
+                imapdict['group_number'] = nums[1]
+            elif 'located at block' in line:
+                items = line.split()
+                imapdict['block_number'] = items[3].rstrip(',')
+                imapdict['offset_in_block'] = items[5]
+
+        proc.wait()
+        #print imapdict
+        return imapdict
+
+
     def dump_extents_of_a_file(self, filepath):
         "This function only gets ext list for this file"
         
@@ -239,6 +265,25 @@ class FSMonitor:
                 df_ext.addRowByDict(d)
 
         proc.wait()
+
+
+        # Put the location of the inode the df_ext, level_index as -1 to
+        # indicate that it is a inode
+
+        imapdict = self.imap_of_a_file(filepath)
+        d = {}
+        d['Level_index'] = '-1'
+        d['Max_level'] = '-1'
+        d['Entry_index'] = 'NA'
+        d['N_Entry'] = 'NA'
+        d['Logical_start'] = 'NA'
+        d['Logical_end'] = 'NA'
+        d['Physical_start'] = imapdict['block_number']
+        d['Physical_end'] = imapdict['block_number']
+        d['Length'] = '1'
+        d['Flag'] = 'NA'
+
+        df_ext.addRowByDict(d)
 
         df_ext.addColumn(key = "filepath",
                          value = filepath)
@@ -327,7 +372,12 @@ class FSMonitor:
                 n_entries[ int(d["Level_index"]) ] = int( d["N_Entry"] )
                 max_level = int( d["Max_level"] )
                 
-        proc.wait()
+        print "..... finished stdout parsing .... "
+        proc.terminate()
+        print "..... after terminating .... "
+
+
+
         # calculate number of meatadata blocks
         # only 1st and 2nd levels takes space. 
         # How to calculate:
@@ -351,13 +401,14 @@ class FSMonitor:
         dumpdict["n_datablock"] = others["nblocks"]
         dumpdict["filebytes"] = others["nbytes"]
     
+        print "Reached end of debugfs...."
         return dumpdict
 
     def filefrag(self, filepath):
         fullpath = os.path.join(self.mountpoint, filepath)  
         cmd = ["filefrag", "-sv", fullpath]
+        print cmd
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        proc.wait()
 
         mydict = {}
         for line in proc.stdout:
@@ -372,6 +423,7 @@ class FSMonitor:
                 mydict["nbytes"] = nums[0]
                 mydict["nblocks"] = nums[1]
                 mydict["blocksize"] = nums[2]
+
         return mydict
 
     def getAllInodePaths(self, rootdir="."):
@@ -514,4 +566,32 @@ class FSMonitor:
             f.flush()
             f.close()
         return
+
+
+    def xfs_convert_ino_to_fsb(self, ino):
+        "convert inode number to fs block number"
+        lines = self.xfs_db_commands(['convert ino '+str(ino)+' fsblock'])
+        print lines
+
+
+    def xfs_db_commands(self, commandlist):
+        #print "xfs_db..."
+        cmdlist = ["-c "+cmd for cmd in commandlist ]
+        #print cmdlist
+        cmd = ["xfs_db", "-r"] + cmdlist + [self.devname]
+        #print cmd
+        #cmd = ["xfs_db", "-r", "-c convert ino 131 fsblock", "/dev/loop0"]
+        proc = subprocess.Popen(cmd, 
+                                stdout=subprocess.PIPE)
+        output = proc.communicate()[0] # communicate() uses buffer. Don't use it
+                                       # when the data is large
+        return output
+
+
+# Testing
+#m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
+#print m.xfs_db_commands(['convert ino 4194432 fsblock'])
+#m.xfs_convert_ino_to_fsb(131)
+#m.imap_of_a_file('./pid00000.dir00000/pid.00000.file.00000')
+#print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
 

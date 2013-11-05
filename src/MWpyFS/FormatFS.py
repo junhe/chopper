@@ -61,11 +61,15 @@ def delLoopDev(devname):
 def isMounted(name):
     "only check is a name is in mounted list"
     name = name.rstrip('/')
+    print "isMounted: name:", name
     with open('/etc/mtab', 'r') as f:
         for line in f:
+            #print "line:", line,
             line = " " + line + " " # a hack
             if re.search(r'\s'+name+r'\s', line):
+                #print " YES"
                 return True
+            #print " NO"
     return False
 
 def isLoopDevUsed(path):
@@ -88,6 +92,9 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
     if not devname.startswith('/dev/loop'):
         print 'you are requesting to create loop device on a non-loop device path'
         exit(1)
+
+    if not os.path.exists(tmpfs_mountpoint):
+        os.makedirs(tmpfs_mountpoint)
 
     # umount the FS mounted on loop dev
     if isMounted(devname):
