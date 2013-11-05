@@ -22,9 +22,12 @@ def prettyline(line):
     line = " ".join(items) + '\n'
     return line
 
-keys = ['_extstats', '_extstatssum', '_freefrag_sum',
-        '_freefrag_hist', '_freeblocks', '_freeinodes',
-        '_walkman_config', '_extlist']
+keys = ['_walkman_config']
+
+#keys = ['_extstats', '_extstatssum', '_freefrag_sum',
+        #'_freefrag_hist', '_freeblocks', '_freeinodes',
+        #'_walkman_config', '_extlist']
+
 headerwritten = {}
 tablefiles = {}
 
@@ -34,12 +37,15 @@ def parsefile(filepath):
     rawfile = open(filepath, 'r')
     
     for line in rawfile:
-        mo = re.search(r'(HEADERMARKER|DATAMARKER)(_\w+)', line)
+        mo = re.search(r'(HEADERMARKER|DATAMARKER)(_\w+)', line.upper())
         if mo:
             groups = mo.groups()
             #print groups 
             type = groups[0]
+            type = type.upper()
             linekey = groups[1]
+            linekey = linekey.lower()
+            #print 'type:', type, 'linekey:', linekey
 
             if type == 'HEADERMARKER' and headerwritten[linekey] == False:
                 tablefiles[linekey].write(line)
@@ -75,6 +81,8 @@ def main(args):
         print "Opened table file for", key
 
     for f in files:
+        if f.endswith(".rows"): # this files are for human readers only
+            continue
         parsefile(f)
 
     for key in keys:
