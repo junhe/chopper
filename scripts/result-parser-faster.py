@@ -65,18 +65,21 @@ def main(args):
         zfiles = glob.glob("z*")
         for f in zfiles:
             os.remove(f)
+            print "Removed", f
 
     for key in keys:
         headerwritten[key] = False
 
     for key in keys:
         tablefiles[key] = open('zparsed.'+key, 'a')
+        print "Opened table file for", key
 
     for f in files:
         parsefile(f)
 
     for key in keys:
         tablefiles[key].close()
+        print "Closed table file for", key
 
 if __name__ == "__main__":
     """
