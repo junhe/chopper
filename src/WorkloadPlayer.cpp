@@ -8,6 +8,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 #include <ctime>
 #include <locale>
@@ -72,7 +73,10 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         // open file
         int fd = open( wl_entry._path.c_str(), O_CREAT|O_RDWR, 0666);
         if ( fd == -1 ) {
-            perror(wl_entry._path.c_str());
+            ostringstream oss;
+            oss << wl_entry._entry_str << " Failed to open file.";
+            oss << "error msg:" << strerror(errno);
+            logwrite(oss.str());
             exit(1);
         } else {
             //cout << wl_entry._path << " opened" << endl;
@@ -123,7 +127,8 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         //logwrite( wl_entry._entry_str + "Testing message");
         if ( ret != int(length) ) {
             ostringstream oss;
-            oss << "ret=" << ret << ", Length=" << length;
+            oss << "ret=" << ret << ", Length=" << length << ", offset=" << offset;
+            oss << "error msg:" << strerror(errno);
             logwrite( wl_entry._entry_str + 
                     " Size written is less than requested (Warning). " + oss.str());
         }
@@ -145,8 +150,6 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         istringstream( wl_entry._tokens[3] ) >> offset;
         istringstream( wl_entry._tokens[4] ) >> length;
 
-        //cout << fd << "PWRITE: " << offset << " " << length << endl;
-
         // allocate buffer
         char * buf = (char *)malloc(length);
         if ( buf == NULL ) {
@@ -157,7 +160,8 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         int ret = pread(fd, buf, length, offset);
         if ( ret != int(length) ) {
             ostringstream oss;
-            oss << "ret=" << ret << ", Length=" << length;
+            oss << "ret=" << ret << ", Length=" << length << ", offset=" << offset;
+            oss << "error msg:" << strerror(errno);
             logwrite( wl_entry._entry_str + 
                     " Size read is less than requested (Warning). " + oss.str());
         }
