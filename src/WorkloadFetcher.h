@@ -36,6 +36,5 @@ class WorkloadFetcher
         int fillBuffer();
 };
 
-
 #endif
 

@@ -569,27 +569,27 @@ class Troops:
 
     def _test014(self):
 
-        paradict = {
-                'nwrites_per_file': [1024],
-                'w_hole'          : [4096],
-                'wsize'           : [4096],
-                'nfile_per_dir'   : [2],
-                # 0: only fsync() before closing
-                # 1: fsync() after each write
-                # 2: no fynsc() during open-close
-                'fsync' : [1] 
-                }
-
         #paradict = {
-                #'nwrites_per_file': [3],
-                #'w_hole'          : [1024],
+                #'nwrites_per_file': [10240],
+                #'w_hole'          : [4096],
                 #'wsize'           : [4096],
                 #'nfile_per_dir'   : [2],
                 ## 0: only fsync() before closing
                 ## 1: fsync() after each write
                 ## 2: no fynsc() during open-close
-                #'fsync' : [2] 
+                #'fsync' : [1] 
                 #}
+
+        paradict = {
+                'nwrites_per_file': [1, 3, 64, 1024, 4096, 1024*512],
+                'w_hole'          : [1024, 4096],
+                'wsize'           : [1, 4096],
+                'nfile_per_dir'   : [1],
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [0, 1, 2] 
+                }
 
         paralist = ParameterCominations(paradict)
 
@@ -620,7 +620,7 @@ class Troops:
 
 
     def _march_parameter_table(self):
-        return self._test014()
+        return self._test010()
 
     def march(self):
         """

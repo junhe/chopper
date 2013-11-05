@@ -122,8 +122,10 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         int ret = pwrite(fd, buf, length, offset);
         //logwrite( wl_entry._entry_str + "Testing message");
         if ( ret != int(length) ) {
+            ostringstream oss;
+            oss << "ret=" << ret << ", Length=" << length;
             logwrite( wl_entry._entry_str + 
-                    " Size written is less than requested (Warning).");
+                    " Size written is less than requested (Warning). " + oss.str());
         }
         free(buf);
     } else if ( wl_entry._operation == "read" ) {
@@ -154,8 +156,10 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
 
         int ret = pread(fd, buf, length, offset);
         if ( ret != int(length) ) {
+            ostringstream oss;
+            oss << "ret=" << ret << ", Length=" << length;
             logwrite( wl_entry._entry_str + 
-                    " Size read is less than requested (Warning).");
+                    " Size read is less than requested (Warning). " + oss.str());
         }
         free(buf);
     } else if ( wl_entry._operation == "fsync" ) {
