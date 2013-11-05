@@ -48,10 +48,10 @@ WorkloadPlayer::logwrite(std::string msg)
     std::locale::global(std::locale());
     std::time_t t = std::time(NULL);
     char mbstr[100];
-    std::strftime(mbstr, 100, "%A %c", std::localtime(&t))) 
+    std::strftime(mbstr, 100, "%x-%X-%S ", std::localtime(&t));
 
     _logfile << mbstr << msg << endl;
-    _logfile.sync();
+    _logfile.flush();
 }
 
 
@@ -83,12 +83,14 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         //cout << "closing...." << endl;
         if ( _path2fd_dict.count(wl_entry._path) == 0 ) {
             cerr << "File to be closed is not open" << endl;
+            logwrite( wl_entry._entry_str + " File to be closed is not open.");
             exit(1);
         }
         int fd = _path2fd_dict[wl_entry._path];
         int ret = close(fd);
         if (ret == -1) {
             perror(wl_entry._path.c_str());
+            logwrite( wl_entry._entry_str + " Failed to close file.");
             exit(1);
         }
     } else if ( wl_entry._operation == "write" ) {
@@ -97,6 +99,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         it = _path2fd_dict.find( wl_entry._path );
         if ( it == _path2fd_dict.end() ) { 
             cerr << "File to be written is not open" << endl;
+            logwrite( wl_entry._entry_str + " File to be written is not open.");
             exit(1);
         }
         assert( wl_entry._tokens.size() == 5 );
@@ -111,17 +114,25 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
 
         // allocate buffer
         char * buf = (char *)malloc(length);
-        assert( buf != NULL );
+        if ( buf == NULL ) {
+            logwrite( wl_entry._entry_str + " Failed to allocate mem buf.");
+            exit(1);
+        }
 
         int ret = pwrite(fd, buf, length, offset);
+        //logwrite( wl_entry._entry_str + "Testing message");
+        if ( ret != int(length) ) {
+            logwrite( wl_entry._entry_str + 
+                    " Size written is less than requested (Warning).");
+        }
         free(buf);
-        assert(ret == (int)length);
     } else if ( wl_entry._operation == "read" ) {
         //cout << "reading..." << endl;
         map<string, int>::const_iterator it;
         it = _path2fd_dict.find( wl_entry._path );
         if ( it == _path2fd_dict.end() ) { 
             cerr << "File to be read is not open" << endl;
+            logwrite( wl_entry._entry_str + " File to be read is not open.");
             exit(1);
         }
         assert( wl_entry._tokens.size() == 5 );
@@ -136,17 +147,24 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
 
         // allocate buffer
         char * buf = (char *)malloc(length);
-        assert( buf != NULL );
+        if ( buf == NULL ) {
+            logwrite( wl_entry._entry_str + " Failed to allocate mem buf.");
+            exit(1);
+        }
 
         int ret = pread(fd, buf, length, offset);
+        if ( ret != int(length) ) {
+            logwrite( wl_entry._entry_str + 
+                    " Size read is less than requested (Warning).");
+        }
         free(buf);
-        assert(ret == (int)length);
     } else if ( wl_entry._operation == "fsync" ) {
         //cout << "fsyncing..." << endl;
         map<string, int>::const_iterator it;
         it = _path2fd_dict.find( wl_entry._path );
         if ( it == _path2fd_dict.end() ) { 
             cerr << "File to be fsync is not open" << endl;
+            logwrite( wl_entry._entry_str + " File to be fsync is not open.");
             exit(1);
         }
         // Now it is safe
@@ -156,6 +174,10 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         string cmd = "rm -rf ";
         cmd += wl_entry._path;
         string ret = Util::exec(cmd.c_str());
+        if ( ret == "ERROR" ) {
+            logwrite( wl_entry._entry_str + " File to remove file.");
+            exit(1);
+        }
         //cout << ret;
     } else {
         cerr << "Unrecognized Operation in play()" << endl;

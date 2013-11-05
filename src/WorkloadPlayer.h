@@ -2,6 +2,7 @@
 #define __WorkloadPlayer_H__
 
 #include <map>
+#include <fstream>
 
 class WorkloadEntry;
 
@@ -13,7 +14,7 @@ class WorkloadPlayer {
         WorkloadPlayer();
         ~WorkloadPlayer();
         
-        ofstream _logfile;
+        std::ofstream _logfile;
         
         // member vars
         std::map<std::string, int> _path2fd_dict; // hole opened file's fd
