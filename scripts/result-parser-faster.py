@@ -22,11 +22,9 @@ def prettyline(line):
     line = " ".join(items) + '\n'
     return line
 
-keys = ['_walkman_config']
-
-#keys = ['_extstats', '_extstatssum', '_freefrag_sum',
-        #'_freefrag_hist', '_freeblocks', '_freeinodes',
-        #'_walkman_config', '_extlist']
+keys = ['_extstats', '_extstatssum', '_freefrag_sum',
+        '_freefrag_hist', '_freeblocks', '_freeinodes',
+        '_walkman_config', '_extlist']
 
 headerwritten = {}
 tablefiles = {}
