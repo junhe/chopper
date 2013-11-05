@@ -75,7 +75,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         if ( fd == -1 ) {
             ostringstream oss;
             oss << wl_entry._entry_str << " Failed to open file.";
-            oss << "error msg:" << strerror(errno);
+            oss << " error msg:" << strerror(errno);
             logwrite(oss.str());
             exit(1);
         } else {
@@ -131,7 +131,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
                 ostringstream oss;
                 oss << "ret=" << ret << ", remain=" << remain << ", cur_off=" << cur_off;
                 if ( ret == -1 ) {
-                    oss << "error msg:" << strerror(errno);
+                    oss << " error msg:" << strerror(errno);
                 }
                 logwrite( wl_entry._entry_str + " " + oss.str());
                 if ( ret == -1 ) {
@@ -174,7 +174,7 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
                 ostringstream oss;
                 oss << "ret=" << ret << ", remain=" << remain << ", cur_off=" << cur_off;
                 if ( ret == -1 ) {
-                    oss << "error msg:" << strerror(errno);
+                    oss << " error msg:" << strerror(errno);
                 }
                 logwrite( wl_entry._entry_str + " " + oss.str());
                 if ( ret == -1 ) {
