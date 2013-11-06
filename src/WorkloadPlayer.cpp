@@ -49,7 +49,7 @@ WorkloadPlayer::logwrite(std::string msg)
     std::locale::global(std::locale());
     std::time_t t = std::time(NULL);
     char mbstr[100];
-    std::strftime(mbstr, 100, "%x-%X-%S ", std::localtime(&t));
+    std::strftime(mbstr, 100, "%x-%X ", std::localtime(&t));
 
     _logfile << mbstr << msg << endl;
     _logfile.flush();
