@@ -81,7 +81,7 @@ WorkloadDispatcher::run()
                 if ( enstr.size()+1 > _bufsize ) {
                     cout << "size of " << enstr << " " << enstr.size() << "+1<" 
                         << _bufsize << endl;
-                    MPI_Finalize();
+                    //MPI_Finalize();
                     exit(1);
                 }
                 strcpy(comm_buf, enstr.c_str());
