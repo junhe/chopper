@@ -155,7 +155,7 @@ def makeExt4(devname, blockscount=16777216, blocksize=4096):
     return p.returncode
 
 def umountFS(mountpoint):
-    cmd = ["umount", "-f", mountpoint]
+    cmd = ["umount", mountpoint]
     p = subprocess.Popen(cmd)
     p.wait()
     print "umountFS:", p.returncode
@@ -180,6 +180,17 @@ def mountFS(devname, mountpoint):
         os.makedirs(mountpoint)
 
     cmd = ["mount", devname, mountpoint]
+    p = subprocess.Popen(cmd)
+    p.wait()
+    print "mountFS", p.returncode
+    return p.returncode
+
+
+def mountXFS(devname, mountpoint):
+    if not os.path.exists(mountpoint):
+        os.makedirs(mountpoint)
+
+    cmd = ["mount", "-t", "xfs", "-o", "osyncisosync", devname, mountpoint]
     p = subprocess.Popen(cmd)
     p.wait()
     print "mountFS", p.returncode
@@ -266,6 +277,18 @@ def buildNewExt4(devname, mountpoint, confpath, username, groupname):
         print "Tolerated"
 
     remakeExt4(devname_part1, mountpoint, username, groupname)
+
+def xfs_freeze(mountpoint):
+    cmd = ["xfs_freeze", "-f", mountpoint]
+    return subprocess.call(cmd)
+
+def xfs_unfreeze(mountpoint):
+    cmd = ["xfs_freeze", "-u", mountpoint]
+    return subprocess.call(cmd)
+
+def xfs_repair(devname):
+    cmd = ["xfs_repair", devname]
+    return subprocess.call(cmd)
 
 #buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 
