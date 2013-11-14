@@ -202,9 +202,10 @@ class FSMonitor:
     def imap_of_a_file(self, filepath):
         if self.filesystem != 'ext4':
             return 
-        cmd = "debugfs " + self.devname + " -R 'imap " + filepath + "'"
+        #cmd = "debugfs " + self.devname + " -R 'imap " + filepath + "'"
+        cmd = ['debugfs', self.devname, '-R', 'imap "' + filepath + '"']
         print cmd, '......'
-        cmd = shlex.split(cmd)
+        #cmd = shlex.split(cmd)
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
         imapdict = {}
@@ -231,10 +232,11 @@ class FSMonitor:
         "This function only gets ext list for this file"
         if self.filesystem != 'ext4':
             return 
-        
-        cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
+        print "filepath:", filepath 
+        #cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
+        cmd = ['debugfs', self.devname, '-R', 'dump_extents "' + filepath + '"']
         print cmd, '......'
-        cmd = shlex.split(cmd)
+        #cmd = shlex.split(cmd)
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
         ext_list = [] # Use list here in case I want to extract data in Python
@@ -348,9 +350,11 @@ class FSMonitor:
         if self.filesystem != 'ext4':
             return 
 
-        cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
+        #cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
+        #cmd = ['debugfs', self.devname, '-R', '"dump_extents ' + filepath + '"']
+        cmd = ['debugfs', self.devname, '-R', 'dump_extents "' + filepath + '"']
         print cmd, "........."
-        cmd = shlex.split(cmd)
+        #cmd = shlex.split(cmd)
 
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
@@ -422,8 +426,15 @@ class FSMonitor:
         dumpdict["filepath"] = filepath
         dumpdict["n_metablock"] = n_metablock
         others = self.filefrag(filepath)
-        dumpdict["n_datablock"] = others["nblocks"]
-        dumpdict["filebytes"] = others["nbytes"]
+        if others.has_key('nblocks'):
+            dumpdict["n_datablock"] = others["nblocks"]
+        else:
+            dumpdict["n_datablock"] = 'NA'
+
+        if others.has_key('nbytes'):
+            dumpdict["filebytes"] = others["nbytes"]
+        else:
+            dumpdict["filebytes"] = 'NA'
     
         print "Reached end of debugfs...."
         return dumpdict

@@ -255,11 +255,19 @@ class Walkman:
         for year in range(nyear):
             for season in range(nseasons_per_year):
                 # Run workload
-                ret = self._play_test(ext4debug=True)
+                #ret = self._play_test(ext4debug=True)
+                ret = self._play_ibench(year=year, season=season)
+
                 #do not record faulty status of the file system
                 #however, sometimes it is useful to record faulty ones
                 if ret == 0:
                     self._RecordStatus(year=year,season=season+1)
+
+    def _play_ibench(self, year, season):
+        ret = pyWorkload.tools.run_ibench(1, 
+                                    "{year}.{season}".format(year=year, season=season), 
+                                    self.confparser.get("system", "mountpoint"))
+        return ret
 
     def _play_test(self, ext4debug=False):
         """
@@ -842,9 +850,11 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
    
-    troops = Troops(confparser)
-    troops.march()
-    #troops._march_parameter_table()
+    #troops = Troops(confparser)
+    #troops.march()
+
+    walkman = Walkman(confparser, 'recorder')
+    walkman._RecordStatus(0, 0)
 
 if __name__ == "__main__":
     main(sys.argv)
