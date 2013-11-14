@@ -190,7 +190,7 @@ def mountXFS(devname, mountpoint):
     if not os.path.exists(mountpoint):
         os.makedirs(mountpoint)
 
-    cmd = ["mount", "-t", "xfs", "-o", "osyncisosync,allocsize=64k", devname, mountpoint]
+    cmd = ["mount", "-t", "xfs", "-o", "osyncisosync", devname, mountpoint]
     p = subprocess.Popen(cmd)
     p.wait()
     print "mountFS", p.returncode
