@@ -190,7 +190,7 @@ def mountXFS(devname, mountpoint):
     if not os.path.exists(mountpoint):
         os.makedirs(mountpoint)
 
-    cmd = ["mount", "-t", "xfs", "-o", "osyncisosync", devname, mountpoint]
+    cmd = ["mount", "-t", "xfs", "-o", "osyncisosync,allocsize=64k", devname, mountpoint]
     p = subprocess.Popen(cmd)
     p.wait()
     print "mountFS", p.returncode
@@ -211,7 +211,7 @@ def chDirOwner(mountpoint, username, groupname):
 def remakeXFS(partition, mountpoint, username, groupname, 
                 blocksize=4096):
     "= format that partition"
-    print "remaking ext4...."
+    print "remaking XFS...."
     if isMounted(mountpoint):
         print mountpoint, "is mounted"
         ret = umountFS(mountpoint)
@@ -227,7 +227,7 @@ def remakeXFS(partition, mountpoint, username, groupname,
     if ret != 0:
         print "Error in makeXFS: this should not happen"
         exit(1)
-    ret = mountFS(partition, mountpoint)
+    ret = mountXFS(partition, mountpoint)
     if ret != 0:
         print "Error in mountFS: this should not happen"
         exit(1)
@@ -277,6 +277,18 @@ def buildNewExt4(devname, mountpoint, confpath, username, groupname):
         print "Tolerated"
 
     remakeExt4(devname_part1, mountpoint, username, groupname)
+
+def enable_ext4_mballoc_debug(enable):
+    with open("/sys/kernel/debug/ext4/mballoc-debug", 'w') as f:
+        if enable == True:
+            f.write("1")
+        else:
+            f.write("0")
+    return
+
+def send_dmesg(msg):
+    with open("/dev/kmsg", 'w') as f:
+        f.write(msg)
 
 def xfs_freeze(mountpoint):
     cmd = ["xfs_freeze", "-f", mountpoint]
