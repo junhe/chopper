@@ -42,6 +42,10 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
+def fill_white_space(path, filler="_"):
+    path.strip()
+    return path.replace(" ", filler)
+
 class FSMonitor:
     """
     This monitor probes the ext4 file system and return information I 
@@ -302,7 +306,7 @@ class FSMonitor:
         df_ext.addRowByDict(d)
 
         df_ext.addColumn(key = "filepath",
-                         value = filepath)
+                         value = fill_white_space(filepath))
         df_ext.addColumn(key = "HEADERMARKER_extlist",
                          value = "DATAMARKER_extlist")
         df_ext.addColumn(key = "jobid",
@@ -423,7 +427,7 @@ class FSMonitor:
                 n_metablock += n
         
         dumpdict = {}
-        dumpdict["filepath"] = filepath
+        dumpdict["filepath"] = fill_white_space(filepath)
         dumpdict["n_metablock"] = n_metablock
         others = self.filefrag(filepath)
         if others.has_key('nblocks'):
@@ -630,8 +634,7 @@ class FSMonitor:
 
     def stat_a_file(self, filepath):
         filepath = os.path.join(self.mountpoint, filepath)
-        cmd = "stat " + filepath
-        cmd = cmd.split()
+        cmd = ["stat",  filepath]
 
         proc = subprocess.Popen(cmd, 
                                 stdout=subprocess.PIPE)
@@ -655,7 +658,7 @@ class FSMonitor:
         inode_number = self.stat_a_file(filepath)['inode_number']
         df = xfs_db_parser.xfs_get_extent_tree(inode_number, self.devname)
         df.addColumn(key = "filepath",
-                         value = filepath)
+                         value = fill_white_space(filepath))
         return df
 
     def xfs_getExtentList_of_a_dir(self, rootdir="."):
