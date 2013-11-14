@@ -207,6 +207,8 @@ class Walkman:
             self.wrapper_test011a()
         elif self.jobcomment == 'test012':
             self.wrapper_test012()
+        elif self.jobcomment == 'test013':
+            self.wrapper_test013()
 
     def wrapper_test001(self):
         self.RecordWalkmanConfig()
@@ -1698,6 +1700,107 @@ class Walkman:
         proc = subprocess.Popen(cmd) 
         proc.wait()
 
+    def wrapper_test013(self):
+        self.RecordWalkmanConfig()
+        self.RecordFSSummary()
+ 
+        # Run workload
+        self.SetupEnv()
+        #self.RecordStatus(year=0,season=0)
+        subprocess.call("sh ./switch-mb-debug.sh 1".split())
+
+        self.play_test013()
+        subprocess.call("sh ./switch-mb-debug.sh 0".split())
+
+        #self.RecordStatus(year=0,season=1)
+
+    def play_test013(self):
+        self.confparser.set('system','workloadbufpath', 
+                   os.path.join(self.confparser.get('system', 'workloaddir')
+                                + "_workload.buf." 
+                                + self.confparser.get('system', 'hostname')))
+
+        # Big file
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/scratch/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addDirOp('mkdir', pid=0, dirid=0)
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        # write with holes
+        off = 0 
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+            #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+            off += 8*1024 # 8KB stride
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
+        #MWpyFS.FormatFS.umountFS(self.confparser.get('system', 'mountpoint'))
+        #MWpyFS.FormatFS.mountExt4(self.confparser.get('system', 'partition'), 
+                        #self.confparser.get('system', 'mountpoint'))
+
+        # open a new file
+        prd = pyWorkload.producer.Producer(
+                rootdir="/mnt/scratch/",
+                tofile=self.confparser.get('system',
+                    "workloadbufpath"))
+        prd.addUniOp('open', pid=0, dirid=0, fileid=1)
+
+        # new file
+        off = 0
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=1, off=off, len=4096)
+            #prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+            off += 8*1024 # 8KB stride
+           
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=1)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=1)
+
+        prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+        # filling holes 
+        off = 4096 
+        for i in range(17):
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=off, len=4096)
+
+            off += 8*1024 # 8KB stride
+
+        prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+
+
+        prd.display()
+        prd.saveWorkloadToFile()
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+
 def main(args):
     if len(args) != 2:
         print 'usage:', args[0], 'config-file'
@@ -1711,7 +1814,7 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
     
-    walkman = Walkman(confparser, 'test012')
+    walkman = Walkman(confparser, 'test013')
     walkman.wrapper()
 
 if __name__ == "__main__":
