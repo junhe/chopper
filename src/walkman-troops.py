@@ -195,8 +195,17 @@ class Walkman:
             f.write(header+datas)
 
     def _RecordStatus(self, year, season):
-        MWpyFS.FormatFS.remountFS(devname=self.confparser.get('system', 'partition'),
-                                  mountpoint=self.confparser.get('system', 'mountpoint'))
+        #subprocess.call(['sync'])
+        if self.confparser.get('system', 'filesystem') == 'xfs':
+            MWpyFS.FormatFS.remountFS(devname=self.confparser.get('system', 'partition'),
+                                      mountpoint=self.confparser.get('system', 'mountpoint'))
+            MWpyFS.FormatFS.umountFS(self.confparser.get('system', 'partition'))
+            MWpyFS.FormatFS.mountXFS(self.confparser.get('system', 'partition'),
+                                     self.confparser.get('system', 'mountpoint'))
+
+            time.sleep(1) # TODO: find a better way to make sure all logs
+                          # are replayed.
+
         self.monitor.display(savedata=True, 
                     logfile=self._getLogFilenameBySeasonYear(season,year),
                     monitorid=self._getYearSeasonStr(year=year, season=season),
@@ -246,13 +255,13 @@ class Walkman:
         for year in range(nyear):
             for season in range(nseasons_per_year):
                 # Run workload
-                ret = self._play_test()
+                ret = self._play_test(ext4debug=True)
                 #do not record faulty status of the file system
                 #however, sometimes it is useful to record faulty ones
                 if ret == 0:
                     self._RecordStatus(year=year,season=season+1)
 
-    def _play_test(self):
+    def _play_test(self, ext4debug=False):
         """
         Generate the workload based on the config file, and then
         play it by our external player
@@ -279,8 +288,21 @@ class Walkman:
                 self.confparser.get('system','playerpath'), 
                 self.confparser.get('system','workloadbufpath')]
         cmd = [str(x) for x in cmd]
+
+        # turn on ext4 debug if necessary
+        if self.confparser.get('system', 'filesystem') == 'ext4' \
+           and ext4debug == True:
+            MWpyFS.FormatFS.enable_ext4_mballoc_debug(True)
+            MWpyFS.FormatFS.send_dmesg("Turned on mballoc debug. MARKER_MBALLOC_ON")
+
         proc = subprocess.Popen(cmd) 
         proc.wait()
+
+        # turn on ext4 debug if necessary
+        if self.confparser.get('system', 'filesystem') == 'ext4'  \
+            and ext4debug == True:
+            MWpyFS.FormatFS.enable_ext4_mballoc_debug(True)
+            MWpyFS.FormatFS.send_dmesg("Turned off mballoc debug. MARKER_MBALLOC_OFF")
 
         return proc.returncode
 
@@ -671,8 +693,124 @@ class Troops:
 
         return paralist
 
+    def _test016(self):
+        "temp tests"
+        paradict = {
+                'nwrites_per_file': [64],
+                'w_hole'          : [256*1024*1024],
+                'wsize'           : [4*1024],
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [1] 
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            # Calc stride
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            #Calc fsync
+            if para['fsync'] == 0:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 1
+            elif para['fsync'] == 1:
+                para['fsync_per_write'] = 1
+                para['fsync_before_close'] = 0
+            elif para['fsync'] == 2:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 0
+            else:
+                print "invalid fsync"
+                exit(0)
+
+        pprint.pprint( paralist )
+
+        return paralist
+
+    def _test017(self):
+        "where the directory data is?"
+        paradict = {
+                'nwrites_per_file': [1],
+                'w_hole'          : [0],
+                'wsize'           : [4096],
+                'nfile_per_dir'   : [1000],
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [2] 
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            # Calc stride
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            #Calc fsync
+            if para['fsync'] == 0:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 1
+            elif para['fsync'] == 1:
+                para['fsync_per_write'] = 1
+                para['fsync_before_close'] = 0
+            elif para['fsync'] == 2:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 0
+            else:
+                print "invalid fsync"
+                exit(0)
+
+        pprint.pprint( paralist )
+
+        return paralist
+
+    def _test018(self):
+        "where the directory data is?"
+        paradict = {
+                'nwrites_per_file': [3],
+                'w_hole'          : [256*1024*1024],
+                'wsize'           : [4096],
+                'nfile_per_dir'   : [1],
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [2] 
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            # Calc stride
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            #Calc fsync
+            if para['fsync'] == 0:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 1
+            elif para['fsync'] == 1:
+                para['fsync_per_write'] = 1
+                para['fsync_before_close'] = 0
+            elif para['fsync'] == 2:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 0
+            else:
+                print "invalid fsync"
+                exit(0)
+
+        pprint.pprint( paralist )
+
+        return paralist
+
     def _march_parameter_table(self):
-        return self._test015()
+        return self._test018()
 
     def march(self):
         """
