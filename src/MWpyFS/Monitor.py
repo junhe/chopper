@@ -532,6 +532,10 @@ class FSMonitor:
         ndataindex = df_files.header.index('n_datablock')
 
         for row in df_files.table:
+            if row[nmetaindex] == 'NA' or row[ndataindex] == 'NA':
+                fs_nmetablocks = 'NA'
+                fs_ndatablocks = 'NA'
+                break
             fs_nmetablocks += int(row[nmetaindex])
             fs_ndatablocks += int(row[ndataindex])
 
