@@ -850,11 +850,11 @@ def main(args):
         print "unable to read config file:", confpath
         exit(1)
    
-    #troops = Troops(confparser)
-    #troops.march()
+    troops = Troops(confparser)
+    troops.march()
 
-    walkman = Walkman(confparser, 'recorder')
-    walkman._RecordStatus(0, 0)
+    #walkman = Walkman(confparser, 'recorder')
+    #walkman._RecordStatus(0, 0)
 
 if __name__ == "__main__":
     main(sys.argv)
