@@ -302,6 +302,41 @@ def xfs_repair(devname):
     cmd = ["xfs_repair", devname]
     return subprocess.call(cmd)
 
+def btrfs_mkfs(devname, nbytes):
+    cmd = ['mkfs.btrfs', '-b', str(nbytes), devname]
+    return subprocess.call(cmd)
+
+def btrfs_mount(devname, mountpoint):
+    cmd = ['mount', devname, mountpoint]
+    return subprocess.call(cmd)
+
+def btrfs_remake(partition, mountpoint, username, groupname, 
+                nbytes):
+    "= format that partition"
+    print "remaking btrfs...."
+    if isMounted(mountpoint):
+        print mountpoint, "is mounted"
+        ret = umountFS(mountpoint)
+        if ret != 0:
+            print "Error in umountFS: this should not happen"
+            exit(1)
+        else:
+            print mountpoint, "is umounted"
+    else:
+        print mountpoint, "is NOT mounted."
+
+    ret = btrfs_mkfs(partition, nbytes)
+    if ret != 0:
+        print "Error in btrfs_mkfs: this should not happen"
+        exit(1)
+    ret = btrfs_mount(partition, mountpoint)
+    if ret != 0:
+        print "Error in btrfs_mount: this should not happen"
+        exit(1)
+
+    # all of the above has to success except this one
+    chDirOwner(mountpoint, username, groupname)
+
 #buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 
 #makeXFS(devname='/dev/loop0', blockscount=16777216, blocksize=4096)
