@@ -16,14 +16,22 @@ if not os.path.exists("/mnt/scratch"):
     os.mkdir("/mnt/scratch")
 
 fs_choice = raw_input(
-        "What file system do you want to mount on the device?([0]abort[1]xfs|[2]ext4):")
+        "What file system do you want to mount on the device?\n"\
+        "[0]abort\n"\
+        "[1]xfs\n"\
+        "[2]ext4\n"\
+        "[3]btrfs\n"\
+        ":")
 
 if fs_choice.lower() == 'abort' or fs_choice == '0':
     exit(0)
-elif fs_choice.lower() == 'ext4' or fs_choice == '2':
-    MWpyFS.FormatFS.remakeExt4("/dev/loop0", "/mnt/scratch/", "jhe", "plfs", 
-                    blockscount=1024*1024, blocksize=4096)
 elif fs_choice.lower() == 'xfs' or fs_choice == '1':
     MWpyFS.FormatFS.remakeXFS('/dev/loop0', '/mnt/scratch', 'jhe', 'plfs',
                                 blocksize=4096)
+elif fs_choice.lower() == 'ext4' or fs_choice == '2':
+    MWpyFS.FormatFS.remakeExt4("/dev/loop0", "/mnt/scratch/", "jhe", "plfs", 
+                    blockscount=1024*1024, blocksize=4096)
+elif fs_choice.lower() == 'btrfs' or fs_choice == '3':
+    MWpyFS.FormatFS.btrfs_remake("/dev/loop0", "/mnt/scratch/", "jhe", "plfs", 
+                    nbytes=4*1024*1024*1024)
 
