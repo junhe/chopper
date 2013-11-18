@@ -28,46 +28,83 @@ class TreeParser:
         """
         number of tab before a line = level of the line
         """
-        path = []
+        # path is used to hold dictionaries along from root to the
+        # current node
+        path = [None]*10 
+
+        cur_level = -1 
         for line in self.lines:
-            d = line_dict(line)
-            if d.has_key('type') and d['type'] != None:
-                print d
+            pre_level = cur_level
+            cur_level = nPrefixTab(line)
+            
+            line_dic = line_parts(line)
+            #print "cur_level", cur_level, "pre_level", pre_level, 'linetype', 
+            #if line_dic:
+                #print line_dic['linetype']
+            #else:
+                #print "UNKNOWN"
+
+            if cur_level > pre_level:
+                #   XXXXXX <- pre
+                #       XXXXXXX <- cur
+                path[cur_level] = line_dic # It could be None
+            elif cur_level == pre_level:
+                #   XXXXXX <- pre
+                #   XXXXXXX <- cur
+                if line_dic != None:
+                    path[cur_level].update(line_dic)
+                else:
+                    pass
+            else:
+                #       XXXXXX <- pre
+                #   XXXXXXX <- cur
+                path[pre_level] = None
+                path[cur_level] = line_dic # It can be None
+            
+
+
+
+
+
+
+
+
+
     
-def get_key(line):
-    key = re.findall(r'\((\S+) (\S+) (\S+)\)', line)
-    assert len(key) <= 1, 'I assume at most one key per line.'
-    dic = None
-    if len(key) == 1:
-        dic = {'objectid':key[0][0],
-                   'type':key[0][1],
-                 'offset':key[0][2]
-            }
-    return dic
+#def get_key(line):
+    #key = re.findall(r'\((\S+) (\S+) (\S+)\)', line)
+    #assert len(key) <= 1, 'I assume at most one key per line.'
+    #dic = None
+    #if len(key) == 1:
+        #dic = {'objectid':key[0][0],
+                   #'type':key[0][1],
+                 #'offset':key[0][2]
+            #}
+    #return dic
 
-def line_dict(line):
-    """
-    Put information of a line into a dictionary
-    """
-    ldict = {}
-    ldict['level'] = nPrefixTab(line)
-    if ldict['level'] == 0:
-        ldict['linetype'] = level0_type(line)
-        ldict['key'] = get_key(line)
-    return ldict
+#def line_dict(line):
+    #"""
+    #Put information of a line into a dictionary
+    #"""
+    #ldict = {}
+    #ldict['level'] = nPrefixTab(line)
+    #if ldict['level'] == 0:
+        #ldict['linetype'] = level0_type(line)
+        #ldict['key'] = get_key(line)
+    #return ldict
 
-def level0_type(line):
-    line = line.strip()
-    types = ['root tree',
-            'chunk tree',
-            'extent tree',
-            'device tree',
-            'fs tree',
-            'checksum tree']
-    for type in types:
-        if line.startswith(type):
-            return type
-    return None
+#def level0_type(line):
+    #line = line.strip()
+    #types = ['root tree',
+            #'chunk tree',
+            #'extent tree',
+            #'device tree',
+            #'fs tree',
+            #'checksum tree']
+    #for type in types:
+        #if line.startswith(type):
+            #return type
+    #return None
 
 def line_parts(line):
     """
@@ -445,10 +482,8 @@ def debug_main():
 
     lines = []
     for line in f:
-        print line_parts(line)
-        #lines.append(line)
-
-    return 
+        #print line_parts(line)
+        lines.append(line)
 
     tparser = TreeParser(lines)
     tparser.parse()
