@@ -32,6 +32,9 @@ class TreeParser:
         # current node
         path = [None]*10 
 
+        # node_queue[i] store children of path[i-1]
+        node_queue = [[]]*10 
+
         cur_level = -1 
         for line in self.lines:
             pre_level = cur_level
@@ -48,29 +51,47 @@ class TreeParser:
                 #   XXXXXX <- pre
                 #       XXXXXXX <- cur
                 path[cur_level] = line_dic # It could be None
+                node_queue[cur_level] = [line_dic]
             elif cur_level == pre_level:
                 #   XXXXXX <- pre
                 #   XXXXXXX <- cur
                 if line_dic != None:
                     path[cur_level].update(line_dic)
+                    node_queue[cur_level].append(line_dic)
                 else:
                     pass
             else:
                 #       XXXXXX <- pre
                 #   XXXXXXX <- cur
                 path[pre_level] = None
-                path[cur_level] = line_dic # It can be None
+                node_queue[pre_level] = [] # probably not necessary
+                path[cur_level].append(line_dic) # It can be None
             
+            # Now you can get what you want.
+            
+            # Let's do the math work in R, here
+            # we only print out things like:
+            #
+            # EXTENT_DATA_DATA INODE_NUMBER Logical_start virtual_start length
 
+            #print path[cur_level]
+            if path[cur_level] != None and \
+                    path[cur_level]['linetype'] == 'EXTENT_DATA_DATA_3':
+                # we know we have a whole extent
+                #print path[cur_level]
+                #print "Parent:", path[cur_level-1]['key']['objectid']
 
+                # Note that when extent_disk_number_of_bytes == 0, this is
+                # an empty extent and should not be used to show data.
+                dic = { 'Inode_number': path[cur_level - 1]['key']['objectid'],
+                        'Logical_start': path[cur_level - 1]['key']['offset'],
+                        'Virtual_start': path[cur_level]['extent_disk_byte'] + 
+                                          path[cur_level]['in_extent_offset'],
+                        'Length': path[cur_level]['in_extent_number_of_bytes']
+                      }
+                print dic
 
-
-
-
-
-
-
-    
+   
 #def get_key(line):
     #key = re.findall(r'\((\S+) (\S+) (\S+)\)', line)
     #assert len(key) <= 1, 'I assume at most one key per line.'
@@ -399,8 +420,8 @@ def line_parts(line):
         #print mo.groups()
         dic = {}
         dic['linetype'] = 'EXTENT_DATA_DATA_1'
-        dic['disk_byte'] = mo.group(1)
-        dic['disk_number_of_bytes'] = mo.group(2)
+        dic['extent_disk_byte'] = mo.group(1)
+        dic['extent_disk_number_of_bytes'] = mo.group(2)
         
         return dic
 
@@ -413,8 +434,8 @@ def line_parts(line):
         #print mo.groups()
         dic = {}
         dic['linetype'] = 'EXTENT_DATA_DATA_2'
-        dic['offset'] = mo.group(1)
-        dic['ram_number_of_bytes'] = mo.group(2)
+        dic['in_extent_offset'] = mo.group(1)
+        dic['in_extent_number_of_bytes'] = mo.group(2)
         dic['ram_upper_bound'] = mo.group(3)
 
         return dic
@@ -446,7 +467,7 @@ def line_parts(line):
 
         return dic
 
-    print "WARNING: an unrecognized line ->", orgin_line,
+    #print "WARNING: an unrecognized line ->", orgin_line,
     return None
 
 def nPrefixTab(line):
