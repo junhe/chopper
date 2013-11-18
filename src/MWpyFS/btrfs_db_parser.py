@@ -161,11 +161,26 @@ def line_parts(line):
                      }
         return dic
 
+    # linetype=ROOT_DATA_RELOC_TREE_LINE
+    # data reloc tree key (DATA_RELOC_TREE ROOT_ITEM 0)
+    mo = re.match(r'data reloc tree key \(DATA_RELOC_TREE ROOT_ITEM (\d+)\)',
+            line)
+    if mo:
+        dic = {}
+        dic['linetype'] = 'ROOT_DATA_RELOC_TREE_LINE'
+        dic['key'] = {
+                        'objectid':'ROOT_RELOC_TREE',
+                        'type':'ROOT_ITEM',
+                        'offset':mo.group(1)
+                     }
+        return dic
+
+
     # Match KEYLINE
     mo = re.match(r'key \((\S+) (\S+) (\S+)\) block (\d+) \((\S+)\) gen (\d+)',
             line)
     if mo:
-        print mo.groups()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'KEYLINE'
         dic['key'] = {'objectid':mo.group(1), 
@@ -180,8 +195,8 @@ def line_parts(line):
     mo = re.match(r'item (\d+) key \((\S+) (\S+) (\S+)\) itemoff (\d+) itemsize (\d+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'ITEMLINE'
         dic['item'] = {'number':mo.group(1),
@@ -198,8 +213,8 @@ def line_parts(line):
     mo = re.match(r'leaf (\d+) items (\d+) free space (\d+) generation (\d+) owner (\d+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'LEAFLINE'
         dic['block'] = mo.group(1) # Not sure!
@@ -214,11 +229,11 @@ def line_parts(line):
     #    fs uuid 07050600-b92a-4d31-bc52-d21ad6b02b3c
     mo = re.match(r'fs uuid (\S+)', line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'FSUUIDLINE'
-        dic['fs_uuid'] = group(1)
+        dic['fs_uuid'] = mo.group(1)
 
         return dic
 
@@ -226,8 +241,8 @@ def line_parts(line):
     #    chunk uuid 764626ad-671b-4dd8-ab2e-a05b75602fec
     mo = re.match(r'chunk uuid (\S+)', line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'CHUNKUUIDLINE'
         dic['chunk_uuid'] = mo.group(1)
@@ -239,8 +254,8 @@ def line_parts(line):
     mo = re.match(r'node (\d+) level (\d+) items (\d+) free (\d+) generation (\d+) owner (\d+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'NODELINE'
         dic['block'] = mo.group(1)
@@ -262,8 +277,8 @@ def line_parts(line):
     mo = re.match(r'dev item devid (\d+) total_bytes (\d+) bytes used (\d+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'DEV_ITEM_DATA'
         dic['devid'] = mo.group(1)
@@ -277,8 +292,8 @@ def line_parts(line):
     mo = re.match(r'chunk length (\d+) owner (\d+) type (\d+) num_stripes (\d+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'CHUNK_ITEM_DATA'
         dic['length'] = mo.group(1)
@@ -292,8 +307,8 @@ def line_parts(line):
     # stripe 0 devid 1 offset 4194304
     mo = re.match(r'stripe (\d+) devid (\d+) offset (\d+)', line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'CHUNK_ITEM_DATA_STRIPE'
         dic['stripe'] = mo.group(1)
@@ -312,8 +327,8 @@ def line_parts(line):
     mo = re.match(r'inode generation (\d+) size (\d+) block group (\d+) mode (\d+) links (\d+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'INODE_ITEM_DATA'
         dic['generation'] = mo.group(1)
@@ -329,8 +344,8 @@ def line_parts(line):
     mo = re.match(r'inode ref index (\d+) namelen (\d+) name: (\S+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'INODE_REF_DATA'
         dic['index'] = mo.group(1)
@@ -343,8 +358,8 @@ def line_parts(line):
     # extent data disk byte 12582912 nr 147456
     mo = re.match(r'extent data disk byte (\d+) nr (\d+)', line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'EXTENT_DATA_DATA_1'
         dic['disk_byte'] = mo.group(1)
@@ -357,8 +372,8 @@ def line_parts(line):
     mo = re.match(r'extent data offset (\d+) nr (\d+) ram (\d+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'EXTENT_DATA_DATA_2'
         dic['offset'] = mo.group(1)
@@ -369,10 +384,10 @@ def line_parts(line):
 
     # linetype=EXTENT_DATA_DATA_3
     # extent compression 0
-    mo = re.match(r'extent compression 0', line)
+    mo = re.match(r'extent compression (\d+)', line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'EXTENT_DATA_DATA_3'
         dic['compression'] = mo.group(1)
@@ -384,8 +399,8 @@ def line_parts(line):
     mo = re.match(r'inline extent data size (\d+) ram (\d+) compress (\d+)',
             line)
     if mo:
-        print mo.group()
-        print mo.groups()
+        #print mo.group()
+        #print mo.groups()
         dic = {}
         dic['linetype'] = 'EXTENT_DATA_DATA_INLINE'
         dic['data_size'] = mo.group(1)
@@ -394,11 +409,8 @@ def line_parts(line):
 
         return dic
 
-    print "WARNING: an unrecognized line ->", orgin_line
+    print "WARNING: an unrecognized line ->", orgin_line,
     return None
-
-
-
 
 def nPrefixTab(line):
     #print line
@@ -422,19 +434,21 @@ def debug_main():
     #line = "key (0 BLOCK_GROUP_ITEM 4194304) block 29900800 (7300) gen 11"
     #line = "item 0 key (0 BLOCK_GROUP_ITEM 4194304) itemoff 3971 itemsize 24"
     #line = "leaf 30089216 items 9 free space 2349 generation 11 owner 1"
-    line = "node 29888512 level 1 items 3 free 118 generation 11 owner 2"
-    line = "chunk length 4194304 owner 2 type 2 num_stripes 1"
-    line = "stripe 0 devid 1 offset 4194304"
-    line = "inode generation 10 size 45 block group 0 mode 100644 links 1"
-    print line_parts(line)
-    return 
+    #line = "node 29888512 level 1 items 3 free 118 generation 11 owner 2"
+    #line = "chunk length 4194304 owner 2 type 2 num_stripes 1"
+    #line = "stripe 0 devid 1 offset 4194304"
+    #line = "inode generation 10 size 45 block group 0 mode 100644 links 1"
+    #print line_parts(line)
+    #return 
     
-
     f = open("./abtrfsdebugtree-output", 'r')
 
     lines = []
     for line in f:
-        lines.append(line)
+        print line_parts(line)
+        #lines.append(line)
+
+    return 
 
     tparser = TreeParser(lines)
     tparser.parse()
