@@ -32,7 +32,7 @@ class TreeParser:
         # current node
         path = [None]*10 
 
-        # node_queue[i] store children of path[i-1]
+        # node_queue[i] store entries of a child node of path[i-1]
         node_queue = [[]]*10 
 
         cur_level = -1 
@@ -50,23 +50,24 @@ class TreeParser:
             if cur_level > pre_level:
                 #   XXXXXX <- pre
                 #       XXXXXXX <- cur
-                path[cur_level] = line_dic # It could be None
+                #path[cur_level] = line_dic # It could be None
                 node_queue[cur_level] = [line_dic]
             elif cur_level == pre_level:
                 #   XXXXXX <- pre
                 #   XXXXXXX <- cur
                 if line_dic != None:
-                    path[cur_level].update(line_dic)
+                    #path[cur_level].update(line_dic)
                     node_queue[cur_level].append(line_dic)
                 else:
                     pass
             else:
                 #       XXXXXX <- pre
                 #   XXXXXXX <- cur
-                path[pre_level] = None
-                node_queue[pre_level] = [] # probably not necessary
-                path[cur_level].append(line_dic) # It can be None
-            
+                #path[pre_level] = None
+                node_queue[pre_level] = [] # probably not necessary, but good to clean
+                node_queue[cur_level] = [line_dic] # It can be None
+            #pprint.pprint( node_queue )
+
             # Now you can get what you want.
             
             # Let's do the math work in R, here
@@ -74,20 +75,28 @@ class TreeParser:
             #
             # EXTENT_DATA_DATA INODE_NUMBER Logical_start virtual_start length
 
-            #print path[cur_level]
-            if path[cur_level] != None and \
-                    path[cur_level]['linetype'] == 'EXTENT_DATA_DATA_3':
+            if node_queue[cur_level] != [] and \
+                    node_queue[cur_level][-1] != None and \
+                    node_queue[cur_level][-1]['linetype'] == 'EXTENT_DATA_DATA_3':
                 # we know we have a whole extent
                 #print path[cur_level]
                 #print "Parent:", path[cur_level-1]['key']['objectid']
 
+                # for short
+                ext_dic_1 = node_queue[cur_level][0]
+                ext_dic_2 = node_queue[cur_level][1]
+                ext_dic_3 = node_queue[cur_level][2]
+                parent = node_queue[cur_level - 1][-1]
+
+                #pprint.pprint( node_queue )
+
                 # Note that when extent_disk_number_of_bytes == 0, this is
                 # an empty extent and should not be used to show data.
-                dic = { 'Inode_number': path[cur_level - 1]['key']['objectid'],
-                        'Logical_start': path[cur_level - 1]['key']['offset'],
-                        'Virtual_start': path[cur_level]['extent_disk_byte'] + 
-                                          path[cur_level]['in_extent_offset'],
-                        'Length': path[cur_level]['in_extent_number_of_bytes']
+                dic = { 'Inode_number': parent['key']['objectid'],
+                        'Logical_start': parent['key']['offset'],
+                        'Virtual_start': ext_dic_1['extent_disk_byte'] + 
+                                         ext_dic_2['in_extent_offset'],
+                        'Length': ext_dic_2['in_extent_number_of_bytes']
                       }
                 print dic
 
