@@ -2,6 +2,8 @@ import os
 import subprocess
 import pprint
 import re
+import dataframe
+import Monitor
 
 
 def btrfs_debug_tree(partition):
@@ -34,6 +36,11 @@ class TreeParser:
 
         # node_queue[i] store entries of a child node of path[i-1]
         node_queue = [[]]*10 
+
+        # dataframe to store the results
+        df_ext = dataframe.DataFrame()
+        df_chunk = dataframe.DataFrame()
+        df_fname = dataframe.DataFrame()
 
         cur_level = -1 
         for line in self.lines:
@@ -96,22 +103,48 @@ class TreeParser:
                         ext_dic_1['extent_disk_number_of_bytes'] != 0:
                     # Ignore the empty extent
                     
-                        dic = { 'Inode_number': parent['key']['objectid'],
-                            'Logical_start': parent['key']['offset'],
-                            'Virtual_start': ext_dic_1['extent_disk_byte'] + 
-                                             ext_dic_2['in_extent_offset'],
-                            'Length': ext_dic_2['in_extent_number_of_bytes']
-                          }
+                    dic = { 'Inode_number': parent['key']['objectid'],
+                        'Logical_start': parent['key']['offset'],
+                        'Virtual_start': ext_dic_1['extent_disk_byte'] + 
+                                         ext_dic_2['in_extent_offset'],
+                        'Length': ext_dic_2['in_extent_number_of_bytes']
+                        }
+                    if df_ext.header == []:
+                        df_ext.header = dic.keys()
+                    df_ext.addRowByDict(dic)
                     #print dic
             elif node_queue[cur_level] != [] and \
                     node_queue[cur_level][-1] != None and \
                     node_queue[cur_level][-1]['linetype'] == "CHUNK_ITEM_DATA_STRIPE":
+
                 grandparent = node_queue[cur_level - 2][-1]
                 
                 stripe_dic = node_queue[cur_level][-1]
                 stripe_dic['chunk_virtual_off_start'] = grandparent['key']['offset']
-                print stripe_dic
 
+                #print stripe_dic
+                if df_chunk.header == []:
+                    df_chunk.header = stripe_dic.keys()
+                
+                df_chunk.addRowByDict(stripe_dic)
+
+            elif node_queue[cur_level] != [] and \
+                    node_queue[cur_level][-1] != None and \
+                    node_queue[cur_level][-1]['linetype'] == "INODE_REF_DATA":
+                parent = node_queue[cur_level - 1][-1]
+                ref_dic = node_queue[cur_level][-1]
+
+                #ref_dic.update( parent )
+                #print ref_dic
+                #dic = {}
+                #dic['Inode_number'] = ref_dic['key']['objectid']
+                pass
+
+        #print df_ext.toStr()
+        #print df_chunk.toStr()
+
+#def get_filepath_inode_map(mountpoint):
+    #Monitor.getAllInodePaths
 
 def line_parts(line):
     """
