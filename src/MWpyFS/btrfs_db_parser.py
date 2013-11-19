@@ -103,7 +103,7 @@ class TreeParser:
                         ext_dic_1['extent_disk_number_of_bytes'] != 0:
                     # Ignore the empty extent
                     
-                    dic = { 'Inode_number': parent['key']['objectid'],
+                    dic = { 'inode_number': parent['key']['objectid'],
                         'Logical_start': parent['key']['offset'],
                         'Virtual_start': ext_dic_1['extent_disk_byte'] + 
                                          ext_dic_2['in_extent_offset'],
@@ -137,14 +137,24 @@ class TreeParser:
                 #ref_dic.update( parent )
                 #print ref_dic
                 #dic = {}
-                #dic['Inode_number'] = ref_dic['key']['objectid']
+                #dic['inode_number'] = ref_dic['key']['objectid']
                 pass
 
         #print df_ext.toStr()
         #print df_chunk.toStr()
+        return {'extents':df_ext, 'chunks':df_chunk}
 
-#def get_filepath_inode_map(mountpoint):
-    #Monitor.getAllInodePaths
+def get_filepath_inode_map(mountpoint, dir):
+    paths = Monitor.get_all_paths(mountpoint, dir)
+
+    df = dataframe.DataFrame()
+    df.header = ['filepath', 'inode_number']
+    for path in paths:
+        inode_number = Monitor.stat_a_file(path)['inode_number']
+        df.addRowByList([path, inode_number])
+
+    return df
+
 
 def line_parts(line):
     """
@@ -529,5 +539,5 @@ def debug_main():
     tparser.parse()
 
 
-debug_main()
+#debug_main()
 

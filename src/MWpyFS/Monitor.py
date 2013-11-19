@@ -627,6 +627,42 @@ class FSMonitor:
                                          self.jobid])
                 h = "---------------- extent list -------------------\n"
                 f.write( h + df_ext.toStr() )
+        elif self.filesystem == 'btrfs':
+            tree_lines = btrfs_db_parser.btrfs_debug_tree(self.devname)
+
+            tree_parser = btrfs_db_parser.TreeParser(tree_lines)
+            df_dic = tree_parser.parse()
+            df_ext = df_dic['extents']
+            df_chunk = df_dic['chunks']
+            df_map = get_filepath_inode_map(self.mountpoint, "./")
+            
+            df_ext.addColumns(keylist=["HEADERMARKER_extlistraw",
+                                     "monitor_time",
+                                     "jobid"],
+                              valuelist=["DATAMARKER_extlistraw",
+                                     self.monitor_time,
+                                     self.jobid])
+            df_chunk.addColumns(keylist=["HEADERMARKER_chunks",
+                                     "monitor_time",
+                                     "jobid"],
+                              valuelist=["DATAMARKER_chunks",
+                                     self.monitor_time,
+                                     self.jobid])
+            df_map.addColumns(keylist=["HEADERMARKER_pathinodemap",
+                                     "monitor_time",
+                                     "jobid"],
+                              valuelist=["DATAMARKER_pathinodemap",
+                                     self.monitor_time,
+                                     self.jobid])
+            if savedata:
+                h = "---------------- extent list -------------------\n"
+                f.write( h + df_ext.toStr())
+                h = "---------------- chunks  -------------------\n"
+                f.write( h + df_chunk.toStr() )
+                h = "---------------- inode map  -------------------\n"
+                f.write( h + df_map.toStr() )
+
+
         else:
             print "Unsupported file system."
             exit(1)
@@ -677,6 +713,52 @@ class FSMonitor:
             else:
                 df.table.extend( self.xfs_get_extentlist_of_a_file(f).table )
         return df
+
+
+############################################
+
+
+def stat_a_file(filepath):
+    filepath = os.path.join(filepath)
+    cmd = ["stat",  filepath]
+
+    proc = subprocess.Popen(cmd, 
+                            stdout=subprocess.PIPE)
+    output = proc.communicate()[0] # communicate() uses limited buffer
+    lines = output.strip()
+    lines = lines.split('\n')
+   
+    stat_dict = {}
+    for line in lines:
+        #print line
+        if not "Inode" in line:
+            continue
+        mo = re.search( r'Inode:\s(\d+)', line, re.M)
+        if mo:
+            print mo.group(1)
+            inode_number = mo.group(1)
+            stat_dict['inode_number'] = inode_number
+    return stat_dict
+
+def get_all_paths(mountpoint, dir):
+    "it returns paths of all files and diretories"
+    paths = []
+    with cd(mountpoint):
+        cmd = ['find', dir]
+        proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+
+        for line in proc.stdout:
+            paths.append(line.replace("\n", ""))
+        proc.wait()
+    return paths
+
+
+
+
+
+
+
+
 
 
 # Testing
