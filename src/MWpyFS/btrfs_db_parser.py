@@ -39,8 +39,11 @@ class TreeParser:
 
         # dataframe to store the results
         df_ext = dataframe.DataFrame()
+        df_ext.header = ['Length', 'inode_number', 
+                         'Logical_start', 'Virtual_start']
         df_chunk = dataframe.DataFrame()
-        df_fname = dataframe.DataFrame()
+        df_chunk.header = ['devid', 'physical_offset', 
+                           'stripe', 'chunk_virtual_off_start']
 
         cur_level = -1 
         for line in self.lines:
@@ -109,8 +112,6 @@ class TreeParser:
                                          int(ext_dic_2['in_extent_offset']),
                         'Length': ext_dic_2['in_extent_number_of_bytes']
                         }
-                    if df_ext.header == []:
-                        df_ext.header = dic.keys()
                     df_ext.addRowByDict(dic)
                     #print dic
             elif node_queue[cur_level] != [] and \
@@ -121,11 +122,8 @@ class TreeParser:
                 
                 stripe_dic = node_queue[cur_level][-1]
                 stripe_dic['chunk_virtual_off_start'] = grandparent['key']['offset']
+                del stripe_dic['linetype']
 
-                #print stripe_dic
-                if df_chunk.header == []:
-                    df_chunk.header = stripe_dic.keys()
-                
                 df_chunk.addRowByDict(stripe_dic)
 
             elif node_queue[cur_level] != [] and \
