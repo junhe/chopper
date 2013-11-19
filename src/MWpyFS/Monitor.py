@@ -27,6 +27,7 @@ import shlex
 import os
 import pprint
 
+import btrfs_db_parser
 import xfs_db_parser
 import dataframe
 
@@ -634,7 +635,7 @@ class FSMonitor:
             df_dic = tree_parser.parse()
             df_ext = df_dic['extents']
             df_chunk = df_dic['chunks']
-            df_map = get_filepath_inode_map(self.mountpoint, "./")
+            df_map = btrfs_db_parser.get_filepath_inode_map(self.mountpoint, "./")
             
             df_ext.addColumns(keylist=["HEADERMARKER_extlistraw",
                                      "monitor_time",

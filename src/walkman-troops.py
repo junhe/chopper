@@ -102,6 +102,28 @@ class Walkman:
             self._remakeExt4()
         elif fs == 'xfs':
             self._remakeXFS()
+        elif fs == 'btrfs':
+            self._remakeBtrfs()
+
+    def _remakeBtrfs(self):
+        blockscount = self.confparser.getint('system', 'blockscount')
+        blocksize = self.confparser.getint('system', 'blocksize')
+            
+        loodevsizeBytes = blockscount*blocksize
+        if self.confparser.get('system', 'makeloopdevice') == 'yes':
+            MWpyFS.FormatFS.makeLoopDevice(
+                    devname=self.confparser.get('system', 'partition'),
+                    tmpfs_mountpoint=self.confparser.get('system', 'tmpfs_mountpoint'),
+                    sizeMB=loodevsizeBytes)
+
+        if not os.path.exists(self.confparser.get('system','mountpoint')):
+            os.makedirs(self.confparser.get('system','mountpoint'))
+
+        MWpyFS.FormatFS.btrfs_remake(partition  =self.confparser.get('system','partition'),
+                                   mountpoint   =self.confparser.get('system','mountpoint'),
+                                   username     =self.confparser.get('system','username'),
+                                   groupname    =self.confparser.get('system','groupname'),
+                                   nbytes       =loodevsizeBytes)
 
     def _remakeXFS(self):
         blockscount = self.confparser.getint('system', 'blockscount')
@@ -205,6 +227,8 @@ class Walkman:
 
             time.sleep(1) # TODO: find a better way to make sure all logs
                           # are replayed.
+        elif self.confparser.get('system', 'filesystem') == 'btrfs':
+            subprocess.call(['sync'])
 
         self.monitor.display(savedata=True, 
                     logfile=self._getLogFilenameBySeasonYear(season,year),
@@ -255,8 +279,8 @@ class Walkman:
         for year in range(nyear):
             for season in range(nseasons_per_year):
                 # Run workload
-                #ret = self._play_test(ext4debug=True)
-                ret = self._play_ibench(year=year, season=season)
+                ret = self._play_test(ext4debug=True)
+                #ret = self._play_ibench(year=year, season=season)
 
                 #do not record faulty status of the file system
                 #however, sometimes it is useful to record faulty ones
@@ -779,7 +803,6 @@ class Troops:
         return paralist
 
     def _test018(self):
-        "where the directory data is?"
         paradict = {
                 'nwrites_per_file': [3],
                 'w_hole'          : [256*1024*1024],

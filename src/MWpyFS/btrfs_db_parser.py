@@ -99,14 +99,14 @@ class TreeParser:
 
                 # Note that when extent_disk_number_of_bytes == 0, this is
                 # an empty extent and should not be used to show data.
-                if ext_dic_1['extent_disk_byte'] != 0 and \
-                        ext_dic_1['extent_disk_number_of_bytes'] != 0:
+                if ext_dic_1['extent_disk_byte'] != '0' and \
+                        ext_dic_1['extent_disk_number_of_bytes'] != '0':
                     # Ignore the empty extent
                     
                     dic = { 'inode_number': parent['key']['objectid'],
                         'Logical_start': parent['key']['offset'],
-                        'Virtual_start': ext_dic_1['extent_disk_byte'] + 
-                                         ext_dic_2['in_extent_offset'],
+                        'Virtual_start': int(ext_dic_1['extent_disk_byte']) + 
+                                         int(ext_dic_2['in_extent_offset']),
                         'Length': ext_dic_2['in_extent_number_of_bytes']
                         }
                     if df_ext.header == []:
@@ -150,7 +150,7 @@ def get_filepath_inode_map(mountpoint, dir):
     df = dataframe.DataFrame()
     df.header = ['filepath', 'inode_number']
     for path in paths:
-        inode_number = Monitor.stat_a_file(path)['inode_number']
+        inode_number = Monitor.stat_a_file(os.path.join(mountpoint, path))['inode_number']
         df.addRowByList([path, inode_number])
 
     return df
