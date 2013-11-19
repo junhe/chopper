@@ -92,49 +92,26 @@ class TreeParser:
 
                 # Note that when extent_disk_number_of_bytes == 0, this is
                 # an empty extent and should not be used to show data.
-                dic = { 'Inode_number': parent['key']['objectid'],
-                        'Logical_start': parent['key']['offset'],
-                        'Virtual_start': ext_dic_1['extent_disk_byte'] + 
-                                         ext_dic_2['in_extent_offset'],
-                        'Length': ext_dic_2['in_extent_number_of_bytes']
-                      }
-                print dic
+                if ext_dic_1['extent_disk_byte'] != 0 and \
+                        ext_dic_1['extent_disk_number_of_bytes'] != 0:
+                    # Ignore the empty extent
+                    
+                        dic = { 'Inode_number': parent['key']['objectid'],
+                            'Logical_start': parent['key']['offset'],
+                            'Virtual_start': ext_dic_1['extent_disk_byte'] + 
+                                             ext_dic_2['in_extent_offset'],
+                            'Length': ext_dic_2['in_extent_number_of_bytes']
+                          }
+                    #print dic
+            elif node_queue[cur_level] != [] and \
+                    node_queue[cur_level][-1] != None and \
+                    node_queue[cur_level][-1]['linetype'] == "CHUNK_ITEM_DATA_STRIPE":
+                grandparent = node_queue[cur_level - 2][-1]
+                
+                stripe_dic = node_queue[cur_level][-1]
+                stripe_dic['chunk_virtual_off_start'] = grandparent['key']['offset']
+                print stripe_dic
 
-   
-#def get_key(line):
-    #key = re.findall(r'\((\S+) (\S+) (\S+)\)', line)
-    #assert len(key) <= 1, 'I assume at most one key per line.'
-    #dic = None
-    #if len(key) == 1:
-        #dic = {'objectid':key[0][0],
-                   #'type':key[0][1],
-                 #'offset':key[0][2]
-            #}
-    #return dic
-
-#def line_dict(line):
-    #"""
-    #Put information of a line into a dictionary
-    #"""
-    #ldict = {}
-    #ldict['level'] = nPrefixTab(line)
-    #if ldict['level'] == 0:
-        #ldict['linetype'] = level0_type(line)
-        #ldict['key'] = get_key(line)
-    #return ldict
-
-#def level0_type(line):
-    #line = line.strip()
-    #types = ['root tree',
-            #'chunk tree',
-            #'extent tree',
-            #'device tree',
-            #'fs tree',
-            #'checksum tree']
-    #for type in types:
-        #if line.startswith(type):
-            #return type
-    #return None
 
 def line_parts(line):
     """
@@ -380,7 +357,7 @@ def line_parts(line):
         dic['linetype'] = 'CHUNK_ITEM_DATA_STRIPE'
         dic['stripe'] = mo.group(1)
         dic['devid'] = mo.group(2)
-        dic['offset'] = mo.group(3)
+        dic['physical_offset'] = mo.group(3)
 
         return dic
 
