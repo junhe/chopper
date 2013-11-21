@@ -172,7 +172,66 @@ class Producer:
 
         return workload
 
+def GenWorkload2(write_pattern_dic,
+                 writes_per_flush=1):
+    """
+    write_pattern_dic: a dictionary has file size, segment size, write size
+        and write direction('INCREASE' or 'DECREASE'). 
+    """
+    # You'd better be aligned
+    assert write_pattern_dic['file_size'] % write_pattern_dic['segment_size'] == 0
+    assert write_pattern_dic['segment_size'] % write_pattern_dic['write_size'] == 0
 
+    n_writes_per_seg = write_pattern_dic['segment_size'] / \
+                        write_pattern_dic['write_size']
+    n_segments = write_pattern_dic['file_size'] / \
+                  write_pattern_dic['segment_size']
+
+    writes_in_seg = range(0, n_writes_per_seg)
+    if write_pattern_dic['direction'] == 'DECREASE':
+        writes_in_seg.sort(reverse=True)
+
+    # OK, produce the workload
+    prd = Producer(
+            rootdir="/mnt/loopmount/",
+            tofile='/tmp/workload')
+    prd.addDirOp('mkdir', pid=0, dirid=0)
+    prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+
+    nwrites_finished = 0
+    for write_i in writes_in_seg:
+        for seg_i in range(0, n_segments):
+            woff = seg_i * write_pattern_dic['segment_size'] +\
+                    write_i * write_pattern_dic['write_size']
+            wsize = write_pattern_dic['write_size']
+
+            #print woff, wsize
+            prd.addReadOrWrite('write', pid=0, dirid=0,
+                   fileid=0, off=woff, len=wsize)
+            nwrites_finished += 1
+
+            if nwrites_finished % writes_per_flush == 0:
+                prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+    prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+    prd.display()
+    prd.saveWorkloadToFile()
+    
+
+def debug_main():
+    wpd = {
+            'segment_size': 100,
+            'write_size'  : 10,
+            'file_size'   : 1000,
+            #'direction'   : 'INCREASE'
+            'direction'   : 'DECREASE'
+          }
+    GenWorkload2(write_pattern_dic = wpd,
+                 writes_per_flush = 2)
+
+
+debug_main()
 #prd = Producer(rootdir='/l0')
 
 #prd.addUniOp('open', 0, 0, 0)
