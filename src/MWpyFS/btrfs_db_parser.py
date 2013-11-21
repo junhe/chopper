@@ -139,6 +139,19 @@ class TreeParser:
                 #dic = {}
                 #dic['inode_number'] = ref_dic['key']['objectid']
                 pass
+            elif node_queue[cur_level] != [] and \
+                    node_queue[cur_level][-1] != None and \
+                    node_queue[cur_level][-1]['linetype'] \
+                    == "EXTENT_DATA_DATA_INLINE":
+                parent = node_queue[cur_level - 1][-1]
+
+                dic = { 'inode_number': parent['key']['objectid'],
+                    'Logical_start': parent['key']['offset'],
+                    'Virtual_start': int(ext_dic_1['extent_disk_byte']) + 
+                                     int(ext_dic_2['in_extent_offset']),
+                    'Length': ext_dic_2['in_extent_number_of_bytes']
+                    }
+                df_ext.addRowByDict(dic)
 
         #print df_ext.toStr()
         #print df_chunk.toStr()
