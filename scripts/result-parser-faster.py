@@ -24,7 +24,10 @@ def prettyline(line):
 
 keys = ['_extstats', '_extstatssum', '_freefrag_sum',
         '_freefrag_hist', '_freeblocks', '_freeinodes',
-        '_walkman_config', '_extlist']
+        '_walkman_config', '_extlist',
+        # For btrfs
+        '_extlistraw', '_chunks', '_pathinodemap'
+        ]
 
 headerwritten = {}
 tablefiles = {}
@@ -46,6 +49,7 @@ def parsefile(filepath):
             #print 'type:', type, 'linekey:', linekey
 
             if type == 'HEADERMARKER' and headerwritten[linekey] == False:
+                print line
                 tablefiles[linekey].write(line)
                 headerwritten[linekey] = True
             if type == 'DATAMARKER':
@@ -75,13 +79,13 @@ def main(args):
         headerwritten[key] = False
 
     for key in keys:
-        tablefiles[key] = open('zparsed.'+key, 'a')
+        tablefiles[key] = open(os.path.join(dirpath, 'zparsed.'+key), 'a')
         print "Opened table file for", key
 
     for f in files:
         if f.endswith(".rows"): # this files are for human readers only
             continue
-        parsefile(f)
+        parsefile(os.path.join(dirpath, f))
 
     for key in keys:
         tablefiles[key].close()
