@@ -142,12 +142,26 @@ class TreeParser:
                     node_queue[cur_level][-1]['linetype'] \
                     == "EXTENT_DATA_DATA_INLINE":
                 parent = node_queue[cur_level - 1][-1]
+                itemoff = parent['item']['itemoff']
+
+
+                assert len(node_queue[cur_level - 2]) == 3, 'not a good leaf!'
+                assert node_queue[cur_level - 2][0]['linetype'] == 'LEAFLINE',\
+                        "NOT a leaf!!!"
+                grandpa = node_queue[cur_level - 2][0]
+                leaf_v_addr = grandpa['virtual_bytenr']
 
                 dic = { 'inode_number': parent['key']['objectid'],
                     'Logical_start': parent['key']['offset'],
-                    'Virtual_start': int(ext_dic_1['extent_disk_byte']) + 
-                                     int(ext_dic_2['in_extent_offset']),
-                    'Length': ext_dic_2['in_extent_number_of_bytes']
+                    # The magic numbers:
+                    #   40: size of node header
+                    #   21: members of btrfs_file_extent_item stored
+                    #       in the item data, before file data
+                    'Virtual_start': int(leaf_v_addr) + \
+                                     40 + \
+                                     int(itemoff) +\
+                                     21, 
+                    'Length': node_queue[cur_level][-1]['data_size'] 
                     }
                 df_ext.addRowByDict(dic)
 
@@ -315,7 +329,7 @@ def line_parts(line):
         #print mo.groups()
         dic = {}
         dic['linetype'] = 'LEAFLINE'
-        dic['block'] = mo.group(1) # Not sure!
+        dic['virtual_bytenr'] = mo.group(1) 
         dic['number_of_items'] = mo.group(2)
         dic['free_space'] = mo.group(3)
         dic['generation'] = mo.group(4)
@@ -547,8 +561,10 @@ def debug_main():
         lines.append(line)
 
     tparser = TreeParser(lines)
-    tparser.parse()
-
-
-#debug_main()
+    a = tparser.parse()
+    print a['extents'].toStr()
+print 'i am here'
+if __name__ == '__main__':
+    #debug_main()
+    pass
 
