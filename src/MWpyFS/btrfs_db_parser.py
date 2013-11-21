@@ -563,7 +563,7 @@ def debug_main():
     tparser = TreeParser(lines)
     a = tparser.parse()
     print a['extents'].toStr()
-print 'i am here'
+
 if __name__ == '__main__':
     #debug_main()
     pass

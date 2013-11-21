@@ -228,7 +228,9 @@ class Walkman:
             time.sleep(1) # TODO: find a better way to make sure all logs
                           # are replayed.
         elif self.confparser.get('system', 'filesystem') == 'btrfs':
-            subprocess.call(['sync'])
+            MWpyFS.FormatFS.remountFS(devname=self.confparser.get('system', 'partition'),
+                                      mountpoint=self.confparser.get('system', 'mountpoint'))
+            time.sleep(1)
 
         self.monitor.display(savedata=True, 
                     logfile=self._getLogFilenameBySeasonYear(season,year),
@@ -279,7 +281,7 @@ class Walkman:
         for year in range(nyear):
             for season in range(nseasons_per_year):
                 # Run workload
-                ret = self._play_test(ext4debug=True)
+                ret = self._play_test(ext4debug=False)
                 #ret = self._play_ibench(year=year, season=season)
 
                 #do not record faulty status of the file system
@@ -535,6 +537,49 @@ class Troops:
         pprint.pprint( paralist )
 
         return paralist
+
+    def _test010sanity(self):
+        "Test larger write sizes"
+        exps = range(0, 5)
+        sizes = [4096*(4**x) for x in exps]
+
+        paradict = {
+                'nwrites_per_file': [1, 3, 64, 1024],
+                'w_hole'          : [0, 1, 512, 1024, 2048] + sizes,
+                'wsize'           : [1024] + sizes,
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [0, 1, 2] 
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            # Calc stride
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            #Calc fsync
+            if para['fsync'] == 0:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 1
+            elif para['fsync'] == 1:
+                para['fsync_per_write'] = 1
+                para['fsync_before_close'] = 0
+            elif para['fsync'] == 2:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 0
+            else:
+                print "invalid fsync"
+                exit(0)
+
+        pprint.pprint( paralist )
+
+        return paralist
+
+
 
     def _test012(self):
         "test the weird group 0 write"
@@ -806,6 +851,44 @@ class Troops:
         paradict = {
                 'nwrites_per_file': [3],
                 'w_hole'          : [256*1024*1024],
+                'wsize'           : [4096],
+                'nfile_per_dir'   : [1],
+                # 0: only fsync() before closing
+                # 1: fsync() after each write
+                # 2: no fynsc() during open-close
+                'fsync' : [2] 
+                }
+
+        paralist = ParameterCominations(paradict)
+
+        # Translate to list of dictionary
+        for para in paralist:
+            # Calc stride
+            stride = para['w_hole'] + para['wsize']
+            para['wstride'] = stride
+
+            #Calc fsync
+            if para['fsync'] == 0:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 1
+            elif para['fsync'] == 1:
+                para['fsync_per_write'] = 1
+                para['fsync_before_close'] = 0
+            elif para['fsync'] == 2:
+                para['fsync_per_write'] = 0
+                para['fsync_before_close'] = 0
+            else:
+                print "invalid fsync"
+                exit(0)
+
+        pprint.pprint( paralist )
+
+        return paralist
+
+    def _test018(self):
+        paradict = {
+                'nwrites_per_file': [2],
+                'w_hole'          : [1024*1024 - 2*4096],
                 'wsize'           : [4096],
                 'nfile_per_dir'   : [1],
                 # 0: only fsync() before closing
