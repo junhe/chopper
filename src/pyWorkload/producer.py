@@ -173,7 +173,10 @@ class Producer:
         return workload
 
 def GenWorkload2(write_pattern_dic,
-                 writes_per_flush=1):
+                 writes_per_flush=1,
+                 rootdir = "/tmp",
+                 tofile = "/tmp/workload"
+                 ):
     """
     write_pattern_dic: a dictionary has file size, segment size, write size
         and write direction('INCREASE' or 'DECREASE'). 
@@ -193,8 +196,8 @@ def GenWorkload2(write_pattern_dic,
 
     # OK, produce the workload
     prd = Producer(
-            rootdir="/mnt/loopmount/",
-            tofile='/tmp/workload')
+            rootdir = rootdir,
+            tofile = tofile)
     prd.addDirOp('mkdir', pid=0, dirid=0)
     prd.addUniOp('open', pid=0, dirid=0, fileid=0)
 
@@ -217,7 +220,6 @@ def GenWorkload2(write_pattern_dic,
 
     prd.display()
     prd.saveWorkloadToFile()
-    
 
 def debug_main():
     wpd = {
@@ -231,7 +233,7 @@ def debug_main():
                  writes_per_flush = 2)
 
 
-debug_main()
+#debug_main()
 #prd = Producer(rootdir='/l0')
 
 #prd.addUniOp('open', 0, 0, 0)
