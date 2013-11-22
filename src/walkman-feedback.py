@@ -319,9 +319,28 @@ class Walkman:
             exit(1)
 
     def _play_fb_workload(self):
-        for i in range(100):
-            print "I am _play_fb_workload()"
-        return 0
+        wpd = {
+                'segment_size': 100,
+                'write_size'  : 10,
+                'file_size'   : 10000,
+                #'direction'   : 'INCREASE'
+                'direction'   : 'DECREASE'
+              }
+        pyWorkload.producer.GenFBWorkload(
+                                  write_pattern_dic= wpd,
+                                  writes_per_flush = 2,
+                                  rootdir          = self.confparser.get('system', 'mountpoint'),
+                                  tofile           = self.confparser.get('system','workloadbufpath'))
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+        return proc.returncode
 
     def _play_ibench(self, year, season):
         ret = pyWorkload.tools.run_ibench(1, 

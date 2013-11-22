@@ -172,7 +172,7 @@ class Producer:
 
         return workload
 
-def GenWorkload2(write_pattern_dic,
+def GenFBWorkload(write_pattern_dic,
                  writes_per_flush=1,
                  rootdir = "/tmp",
                  tofile = "/tmp/workload"
@@ -229,7 +229,7 @@ def debug_main():
             #'direction'   : 'INCREASE'
             'direction'   : 'DECREASE'
           }
-    GenWorkload2(write_pattern_dic = wpd,
+    GenFBWorkload(write_pattern_dic = wpd,
                  writes_per_flush = 2)
 
 
