@@ -49,7 +49,7 @@ def parsefile(filepath):
             #print 'type:', type, 'linekey:', linekey
 
             if type == 'HEADERMARKER' and headerwritten[linekey] == False:
-                print line
+                #print line
                 tablefiles[linekey].write(line)
                 headerwritten[linekey] = True
             if type == 'DATAMARKER':

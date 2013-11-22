@@ -291,7 +291,7 @@ class Walkman:
         for year in range(nyear):
             for season in range(nseasons_per_year):
                 # Run workload
-                self._play_workload_wrapper(year=year, season=season)
+                ret = self._play_workload_wrapper(year=year, season=season)
 
                 # do not record faulty status of the file system
                 # however, sometimes it is useful to record faulty ones
@@ -314,6 +314,9 @@ class Walkman:
             # many files of many writes
             # and have write frequency.
             return self._play_test()
+        else:
+            print "BAD BAD, you are using a workload name that does not exist"
+            exit(1)
 
     def _play_fb_workload(self):
         for i in range(100):
@@ -421,7 +424,7 @@ class Troops:
                 # 1: fsync() after each write
                 # 2: no fynsc() during open-close
                 'fsync' : [2],
-                'name'  : 'fbworkload'
+                'name'  : ['fbworkload']
                 }
 
         paralist = ParameterCominations(paradict)
