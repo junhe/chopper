@@ -288,7 +288,7 @@ class Walkman:
         nseasons_per_year = self.confparser.getint('workload', 'nseasons_per_year')
 
         self._SetupEnv()
-        self._RecordStatus(year=0, season=0) # always record the inital status
+        #self._RecordStatus(year=0, season=0) # always record the inital status
 
         for year in range(nyear):
             for season in range(nseasons_per_year):
@@ -303,6 +303,9 @@ class Walkman:
                                                     savedata=False)
                     #print ['*'] * 100
                     print ret_record
+                    if ret_record['d_span'] == 'NA':
+                        continue
+
                     d_span = int(ret_record['d_span'])
                     if d_span > feedback_dic['d_span']:
                         print ['findone']*100
