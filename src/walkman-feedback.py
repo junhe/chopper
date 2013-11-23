@@ -307,13 +307,19 @@ class Walkman:
                         continue
 
                     d_span = int(ret_record['d_span'])
-                    if d_span > feedback_dic['d_span']:
+                    if not d_span in feedback_dic['d_span']:
                         print ['findone']*100
-                        feedback_dic['d_span'] = d_span
+                        feedback_dic['d_span'].append(d_span)
                         
                         self.confparser.set('workload_single_file_traverse',
                                             'd_span',
                                             str(d_span))
+                        wps = self.confparser.get('workload_single_file_traverse',
+                                            'wrappers')
+                        wps = literal_eval(wps)
+                        self.confparser.set('workload_single_file_traverse',
+                                            'pattern_symbols',
+                                        pyWorkload.producer.wrappers_to_symbols(wps))
                         self._RecordWalkmanConfig()
                         self._RecordStatus(year=year,season=season+1, 
                                                         savedata=True)
@@ -441,7 +447,7 @@ class Walkman:
 
         return proc.returncode
 
-feedback_dic = {'d_span':0}
+feedback_dic = {'d_span':[]}
 
 class Troops:
     """
@@ -545,6 +551,11 @@ class Troops:
             self._walkman_walk(cparser)
 
     def march_single(self):
+        #fb003
+        #filesize = 100*1024
+        #chunk_size = 25*1024
+
+        #fb004
         filesize = 96*1024
         chunk_size = 32*1024
         
@@ -554,8 +565,6 @@ class Troops:
         offsets = range(0, filesize, chunk_size)
         chunks = zip(offsets, chunk_sizes)
 
-        chunk_iter = itertools.permutations(chunks)
-        wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*4)
         # it is like this
         # OPEN chunk FSYNC CLOSE, OPEN chunk FSYNC CLOSE, ...
         # every 3 number in wrapper_iter represents whether or not
@@ -571,7 +580,10 @@ class Troops:
         #   no nested open-close
         #   
         self.confparser.add_section('workload_single_file_traverse')
+
+        chunk_iter = itertools.permutations(chunks)
         for chks in chunk_iter:
+            wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*4)
             for wraps in wrapper_iter:
                 if not pyWorkload.producer.IsLegal(wraps):
                     # skip bad ones
@@ -589,7 +601,7 @@ class Troops:
                                     wrappers)
 
                 self._walkman_walk(self.confparser)
-                time.sleep(1)
+                #time.sleep(1)
 
 def main(args):
     if len(args) != 2:

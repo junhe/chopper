@@ -271,7 +271,7 @@ def SingleFileTraverse(
             GenWorkloadFromChunks(chks, wraps,
                     rootdir='/mnt/scratch',
                     tofile='/tmp/workload')
-        break # WARNING: this break is for debugging
+        #break # WARNING: this break is for debugging
 
 
 def Filter( opstr, keep ):
@@ -281,8 +281,7 @@ def Filter( opstr, keep ):
     else:
         return ""
 
-def IsLegal( wrappers ):
-    "conver to string and use regex"
+def wrappers_to_symbols( wrappers ):
     num_of_chunks = len(wrappers) / 4
     #strs = ['OPEN', 'FSYNC', 'CLOSE', 'SYNC'] * num_of_chunks
     symbols = ['(', 'C', 'F', ')', 'S'] * num_of_chunks
@@ -292,11 +291,19 @@ def IsLegal( wrappers ):
     choices = list(itertools.chain.from_iterable(choices))
     seq = map(Filter, symbols, choices)
     seq = ''.join(seq)
+
+    return seq
+
+
+def IsLegal( wrappers ):
+    "conver to string and use regex"
+    seq = wrappers_to_symbols( wrappers )
    
     # use regex to check seq
     #
     # GOOD ONE backup: mo = re.match(r'^(\((C+F?)+\)S?)+$', seq, re.M)
-    mo = re.match(r'^(\((C+F)+\))S$', seq, re.M) # always Fsync, only one open-close
+    #mo = re.match(r'^(\((C+F)+\))S$', seq, re.M) # always Fsync, only one open-close, must sync
+    mo = re.match(r'^(\((C+F?)+\)S)+$', seq, re.M)
     if mo:
         print "good match!", seq
         return True
