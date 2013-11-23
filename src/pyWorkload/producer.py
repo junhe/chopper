@@ -223,6 +223,15 @@ def GenFBWorkload(write_pattern_dic,
     prd.display()
     prd.saveWorkloadToFile()
 
+
+##################################################
+##################################################
+##################################################
+##################################################
+# The fancy state exploration
+##################################################
+
+
 def SingleFileTraverse(
                 filesize,
                 num_of_chunks):
@@ -230,23 +239,102 @@ def SingleFileTraverse(
     chunk_sizes = [chunk_size] * num_of_chunks
     offsets = range(0, filesize, chunk_size)
     chunks = zip(offsets, chunk_sizes)
-    print chunks
 
     chunk_iter = itertools.permutations(chunks)
-    wrapper_iter = itertools.product([0,1], repeat=num_of_chunks*3)
+    wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*4)
     # it is like this
     # OPEN chunk FSYNC CLOSE, OPEN chunk FSYNC CLOSE, ...
     # every 3 number in wrapper_iter represents whether or not
-    # do OPEN FSYNC CLOSE
+    # do OPEN FSYNC CLOSE OSSYNC
+    # Each chunk has such a wrapper, so there are num_of_chunks*3 numbers
 
-    i = 0
-    for wp in wrapper_iter:
-        print wp
-        i += 1
-        if i > 100:
+    # Let's not trim the results first. 
+    # Get a prototype working!
+    #
+    # Rules:
+    #   Fsync/chunks must within open-close
+    #   ossync must be out of open-close
+    #   
+    
+    for chks in chunk_iter:
+        for wraps in wrapper_iter:
+            # check if wrapper is legal
+            GenWorkloadFromChunks(chks, wraps,
+                    rootdir='/mnt/scratch',
+                    tofile='/tmp/workload')
             break
+        break
 
 
+def Filter( opstr, keep ):
+    # input is like (FSYNC, True)
+    if keep:
+        return opstr 
+    else:
+        return ""
+
+def LegalChecker( wrappers ):
+    "conver to string and use regex"
+    num_of_chunks = len(wrappers) / 4
+    #strs = ['OPEN', 'FSYNC', 'CLOSE', 'OSSYNC'] * num_of_chunks
+    symbols = ['(', 'C', 'F', ')', 'O'] * num_of_chunks
+
+    choices = [ (wrappers[i], True, wrappers[i+1], wrappers[i+2], wrappers[i+3]) \
+                    for i in range(0, num_of_chunks*4, 4) ]
+    choices = list(itertools.chain.from_iterable(choices))
+    seq = map(Filter, symbols, choices)
+    print seq
+    print ''.join(seq)
+    
+
+def GenWorkloadFromChunks( chunks,
+                           wrappers,
+                           rootdir,
+                           tofile
+                           ):
+        
+    # check if it is legal
+    LegalChecker( wrappers )
+
+
+
+    num_of_chunks = len(chunks)
+
+    # organize it as dictionary
+    chunks = [ dict( zip( ['offset', 'length'], c ) ) \
+                                                    for c in chunks ]
+    # group wrapers to 3 element groups
+    wrappers = [wrappers[i:i+4] for i in range(0, num_of_chunks*4, 4) ]
+    wrappers = [ dict( zip(['OPEN', 'FSYNC', 'CLOSE', 'OSSYNC'], w) ) \
+                                                    for w in wrappers]
+
+    prd = Producer(
+            rootdir = rootdir,
+            tofile = tofile)
+    prd.addDirOp('mkdir', pid=0, dirid=0)
+
+    # ( (off,size), {wrapper} )
+    entries = zip(chunks, wrappers)
+    for entry in entries:
+        #print entry
+        if entry[1]['OPEN']:
+            prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+        
+        # the chunk write
+        prd.addReadOrWrite('write', pid=0, dirid=0,
+               fileid=0, off=entry[0]['offset'], len=entry[0]['length'])
+
+        if entry[1]['FSYNC']: 
+            prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+        if entry[1]['CLOSE']: 
+            prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        if entry[1]['OSSYNC']:
+            pass # not implemented yet
+
+    prd.display()
+    prd.saveWorkloadToFile()
 
 def debug_main():
     wpd = {
@@ -258,6 +346,7 @@ def debug_main():
           }
     GenFBWorkload(write_pattern_dic = wpd,
                  writes_per_flush = 2)
+
 
 
 SingleFileTraverse(filesize=100, num_of_chunks=4)
