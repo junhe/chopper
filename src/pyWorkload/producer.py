@@ -2,6 +2,8 @@
 # Examples:
 #   concurrent writes, frequent file open, 
 import os
+import itertools
+
 class Producer:
     """
     """
@@ -221,6 +223,31 @@ def GenFBWorkload(write_pattern_dic,
     prd.display()
     prd.saveWorkloadToFile()
 
+def SingleFileTraverse(
+                filesize,
+                num_of_chunks):
+    chunk_size = filesize / num_of_chunks
+    chunk_sizes = [chunk_size] * num_of_chunks
+    offsets = range(0, filesize, chunk_size)
+    chunks = zip(offsets, chunk_sizes)
+    print chunks
+
+    chunk_iter = itertools.permutations(chunks)
+    wrapper_iter = itertools.product([0,1], repeat=num_of_chunks*3)
+    # it is like this
+    # OPEN chunk FSYNC CLOSE, OPEN chunk FSYNC CLOSE, ...
+    # every 3 number in wrapper_iter represents whether or not
+    # do OPEN FSYNC CLOSE
+
+    i = 0
+    for wp in wrapper_iter:
+        print wp
+        i += 1
+        if i > 100:
+            break
+
+
+
 def debug_main():
     wpd = {
             'segment_size': 100,
@@ -233,6 +260,7 @@ def debug_main():
                  writes_per_flush = 2)
 
 
+SingleFileTraverse(filesize=100, num_of_chunks=4)
 #debug_main()
 #prd = Producer(rootdir='/l0')
 
