@@ -242,11 +242,12 @@ class Walkman:
                                       mountpoint=self.confparser.get('system', 'mountpoint'))
             time.sleep(1)
 
-        self.monitor.display(savedata=True, 
+        ret = self.monitor.display(savedata=True, 
                     logfile=self._getLogFilenameBySeasonYear(season,year),
                     monitorid=self._getYearSeasonStr(year=year, season=season),
                     jobid=self.confparser.get('system','jobid')
                     )
+        return ret
     def _RecordFSSummary(self):
         # save the fs summary so I can traceback if needed
         fssumpath = os.path.join(self.confparser.get('system', 'resultdir'),
@@ -296,7 +297,9 @@ class Walkman:
                 # do not record faulty status of the file system
                 # however, sometimes it is useful to record faulty ones
                 if ret == 0:
-                    self._RecordStatus(year=year,season=season+1)
+                    ret_record = self._RecordStatus(year=year,season=season+1)
+                    print ret_record
+
 
     def _play_workload_wrapper(self, year, season):
         """
@@ -321,8 +324,8 @@ class Walkman:
     def _play_fb_workload(self):
         wpd = {
                 'segment_size': 100,
-                'write_size'  : 10,
-                'file_size'   : 10000,
+                'write_size'  : 50,
+                'file_size'   : 200,
                 #'direction'   : 'INCREASE'
                 'direction'   : 'DECREASE'
               }

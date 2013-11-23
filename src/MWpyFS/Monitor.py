@@ -571,6 +571,7 @@ class FSMonitor:
         self.resetMonitorTime(monitorid=monitorid)
         self.resetJobID(jobid=jobid)
 
+        ret_dict = {'d_span':'NA'}
         if savedata: 
             if logfile == "":
                 filename = self.monitor_time + ".result"
@@ -582,16 +583,16 @@ class FSMonitor:
         if self.filesystem == 'ext4':
             ######################
             # get per file block count
-            df_bcounts = self.getPerFileBlockCounts()
-            if savedata and df_bcounts != None:
-                extstats_header = "----------- per file block counts  -------------\n"
-                f.write(extstats_header + df_bcounts.toStr())
+            #df_bcounts = self.getPerFileBlockCounts()
+            #if savedata and df_bcounts != None:
+                #extstats_header = "----------- per file block counts  -------------\n"
+                #f.write(extstats_header + df_bcounts.toStr())
 
             # FS block count
-            df_fscounts = self.getFSBlockCount(df_bcounts)
-            if savedata and df_fscounts != None:
-                h = "------------- FS block counts ---------------\n"
-                f.write(h+df_fscounts.toStr())
+            #df_fscounts = self.getFSBlockCount(df_bcounts)
+            #if savedata and df_fscounts != None:
+                #h = "------------- FS block counts ---------------\n"
+                #f.write(h+df_fscounts.toStr())
             
             ######################
             # get extents of all files
@@ -599,23 +600,25 @@ class FSMonitor:
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
                 f.write(h+extlist.toStr())
+            ret_dict['d_span'] = get_d_span_from_extent_list(extlist, 
+                                            './pid00000.dir00000/pid.00000.file.00000')
 
             ######################
             # e2freefrag
-            frag = self.e2freefrag()
-            if savedata and frag != None:
-                frag0_header    = "-----------  Extent summary  -------------\n"
-                frag1_header    = "----------- Extent Histogram   -------------\n"
-                f.write(frag0_header + frag["FragSummary"].toStr())
-                f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
+            #frag = self.e2freefrag()
+            #if savedata and frag != None:
+                #frag0_header    = "-----------  Extent summary  -------------\n"
+                #frag1_header    = "----------- Extent Histogram   -------------\n"
+                #f.write(frag0_header + frag["FragSummary"].toStr())
+                #f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
 
             ######################
             # dumpfs
-            freespaces = self.dumpfs()
-            if savedata and frag != None:
-                dumpfs_header   = "----------- Dumpfs Header ------------\n"
-                f.write(dumpfs_header + freespaces['freeblocks'].toStr())
-                f.write(dumpfs_header + freespaces['freeinodes'].toStr())
+            #freespaces = self.dumpfs()
+            #if savedata and frag != None:
+                #dumpfs_header   = "----------- Dumpfs Header ------------\n"
+                #f.write(dumpfs_header + freespaces['freeblocks'].toStr())
+                #f.write(dumpfs_header + freespaces['freeinodes'].toStr())
 
         elif self.filesystem == 'xfs':
             df_ext = self.xfs_getExtentList_of_a_dir()
@@ -671,7 +674,8 @@ class FSMonitor:
         if savedata:
             f.flush()
             f.close()
-        return
+        
+        return ret_dict
 
     def stat_a_file(self, filepath):
         filepath = os.path.join(self.mountpoint, filepath)
@@ -717,6 +721,38 @@ class FSMonitor:
 
 
 ############################################
+
+
+def get_d_span_from_extent_list(df_ext, filepath):
+    hdr = df_ext.header
+
+    block_max = -1
+    block_min = float('Inf')
+    for row in df_ext.table:
+        if row[hdr.index('filepath')] == filepath and \
+           row[hdr.index('Level_index')] != '-1'  and \
+           row[hdr.index('Level_index')] == row[hdr.index('Max_level')]:
+            #print row
+            physical_start = int(row[hdr.index('Physical_start')])
+            physical_end = int(row[hdr.index('Physical_end')])
+            mmin = min(physical_start, physical_end)
+            mmax = max(physical_start, physical_end)
+            #print mmin, mmax
+            #print physical_start, physical_end
+
+            if mmin < block_min:
+                block_min = mmin
+            if mmax > block_max:
+                block_max = mmax
+
+    if block_max == -1:
+        # no extent found
+        return 'NA'
+    else:
+        #print mmax - mmin + 1 
+        return mmax - mmin + 1
+
+
 
 
 def stat_a_file(filepath):

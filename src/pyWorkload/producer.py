@@ -224,8 +224,8 @@ def GenFBWorkload(write_pattern_dic,
 def debug_main():
     wpd = {
             'segment_size': 100,
-            'write_size'  : 10,
-            'file_size'   : 1000,
+            'write_size'  : 50,
+            'file_size'   : 200,
             #'direction'   : 'INCREASE'
             'direction'   : 'DECREASE'
           }
