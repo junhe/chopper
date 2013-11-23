@@ -44,7 +44,9 @@ bool WorkloadEntry::setItemCache()
     }
 }
 
-
+// I forgot what 'HEAD' is...
+// It seems that it is not necessary in Metawalker proj..
+// Is it the comment line in PLFS traces?
 bool
 WorkloadEntry::isHEAD() const
 {

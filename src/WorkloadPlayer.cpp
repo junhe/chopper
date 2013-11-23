@@ -26,7 +26,8 @@ WorkloadPlayer::WorkloadPlayer()
     if ( ! _logfile.is_open() ) {
         // Something may be seriously wrong if you cannot simply
         // open this log file. Treat it seriously.
-        cerr << "Cannot Open /tmp/WorkloadPlayer.log" << endl;
+        cerr << "Cannot Open /tmp/WorkloadPlayer.log" << strerror(errno) << endl;
+
         exit(1);
     }
 }
@@ -218,8 +219,17 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
             exit(1);
         }
         //cout << ret;
+    } else if ( wl_entry._operation == "sync" ) {
+        string cmd = "sync";
+        string ret = Util::exec(cmd.c_str());
+        if ( ret == "ERROR" ) {
+            logwrite( wl_entry._entry_str + " Faile sync os.");
+            exit(1);
+        }
+        //cout << ret;
     } else {
-        cerr << "Unrecognized Operation in play()" << endl;
+        logwrite( wl_entry._entry_str + "Unrecognized Operation in play()" );
+        exit(1);
     }
 
     return;
