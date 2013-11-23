@@ -227,7 +227,7 @@ class Walkman:
         with open(conflogpath+".cols", 'w') as f:
             f.write(header+datas)
 
-    def _RecordStatus(self, year, season):
+    def _RecordStatus(self, year, season, savedata=True):
         #subprocess.call(['sync'])
         if self.confparser.get('system', 'filesystem') == 'xfs':
             MWpyFS.FormatFS.remountFS(devname=self.confparser.get('system', 'partition'),
@@ -243,12 +243,13 @@ class Walkman:
                                       mountpoint=self.confparser.get('system', 'mountpoint'))
             time.sleep(1)
 
-        ret = self.monitor.display(savedata=True, 
+        ret = self.monitor.display(savedata=savedata, 
                     logfile=self._getLogFilenameBySeasonYear(season,year),
                     monitorid=self._getYearSeasonStr(year=year, season=season),
                     jobid=self.confparser.get('system','jobid')
                     )
         return ret
+
     def _RecordFSSummary(self):
         # save the fs summary so I can traceback if needed
         fssumpath = os.path.join(self.confparser.get('system', 'resultdir'),
@@ -282,7 +283,6 @@ class Walkman:
         workload.Run()
         _RecordStatus()
         """
-        self._RecordWalkmanConfig()
 
         nyear = self.confparser.getint('workload', 'nyears')
         nseasons_per_year = self.confparser.getint('workload', 'nseasons_per_year')
@@ -298,10 +298,22 @@ class Walkman:
                 # do not record faulty status of the file system
                 # however, sometimes it is useful to record faulty ones
                 if ret == 0:
-                    ret_record = self._RecordStatus(year=year,season=season+1)
-                    print ['*'] * 100
+                    global feedback_dic
+                    ret_record = self._RecordStatus(year=year,season=season+1, 
+                                                    savedata=False)
+                    #print ['*'] * 100
                     print ret_record
-
+                    d_span = int(ret_record['d_span'])
+                    if d_span > feedback_dic['d_span']:
+                        print ['findone']*100
+                        feedback_dic['d_span'] = d_span
+                        
+                        self.confparser.set('workload_single_file_traverse',
+                                            'd_span',
+                                            str(d_span))
+                        self._RecordWalkmanConfig()
+                        self._RecordStatus(year=year,season=season+1, 
+                                                        savedata=True)
 
     def _play_workload_wrapper(self, year, season):
         """
@@ -425,6 +437,8 @@ class Walkman:
             MWpyFS.FormatFS.send_dmesg("Turned off mballoc debug. MARKER_MBALLOC_OFF")
 
         return proc.returncode
+
+feedback_dic = {'d_span':0}
 
 class Troops:
     """
