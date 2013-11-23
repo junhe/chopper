@@ -545,8 +545,8 @@ class Troops:
             self._walkman_walk(cparser)
 
     def march_single(self):
-        filesize = 400
-        chunk_size = 100
+        filesize = 96*1024
+        chunk_size = 32*1024
         
         num_of_chunks = filesize / chunk_size
         chunk_size = filesize / num_of_chunks
@@ -576,8 +576,9 @@ class Troops:
                 if not pyWorkload.producer.IsLegal(wraps):
                     # skip bad ones
                     continue
-                #print chks
-                #print wraps
+                print chks
+                print wraps
+                #continue
                 chunks = str(chks)
                 wrappers = str(wraps)
                 self.confparser.set('workload_single_file_traverse',

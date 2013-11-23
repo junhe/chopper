@@ -732,25 +732,27 @@ def get_d_span_from_extent_list(df_ext, filepath):
         if row[hdr.index('filepath')] == filepath and \
            row[hdr.index('Level_index')] != '-1'  and \
            row[hdr.index('Level_index')] == row[hdr.index('Max_level')]:
-            #print row
+            print row
             physical_start = int(row[hdr.index('Physical_start')])
             physical_end = int(row[hdr.index('Physical_end')])
             mmin = min(physical_start, physical_end)
             mmax = max(physical_start, physical_end)
-            #print mmin, mmax
-            #print physical_start, physical_end
 
             if mmin < block_min:
                 block_min = mmin
             if mmax > block_max:
                 block_max = mmax
 
+            print mmin, mmax
+            print physical_start, physical_end
+            print block_min, block_max
+
     if block_max == -1:
         # no extent found
         return 'NA'
     else:
         #print mmax - mmin + 1 
-        return mmax - mmin + 1
+        return block_max - block_min + 1
 
 
 

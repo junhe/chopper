@@ -271,7 +271,7 @@ def SingleFileTraverse(
             GenWorkloadFromChunks(chks, wraps,
                     rootdir='/mnt/scratch',
                     tofile='/tmp/workload')
-        break
+        break # WARNING: this break is for debugging
 
 
 def Filter( opstr, keep ):
@@ -296,7 +296,7 @@ def IsLegal( wrappers ):
     # use regex to check seq
     #
     # GOOD ONE backup: mo = re.match(r'^(\((C+F?)+\)S?)+$', seq, re.M)
-    mo = re.match(r'^(\(((CC)+F?)+\)S)+$', seq, re.M)
+    mo = re.match(r'^(\((C+F)+\))S$', seq, re.M) # always Fsync, only one open-close
     if mo:
         print "good match!", seq
         return True
