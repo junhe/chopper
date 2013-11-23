@@ -3,6 +3,7 @@
 #   concurrent writes, frequent file open, 
 import os
 import itertools
+import re
 
 class Producer:
     """
@@ -254,6 +255,7 @@ def SingleFileTraverse(
     # Rules:
     #   Fsync/chunks must within open-close
     #   ossync must be out of open-close
+    #   no nested open-close
     #   
     
     for chks in chunk_iter:
@@ -262,7 +264,6 @@ def SingleFileTraverse(
             GenWorkloadFromChunks(chks, wraps,
                     rootdir='/mnt/scratch',
                     tofile='/tmp/workload')
-            break
         break
 
 
@@ -273,7 +274,7 @@ def Filter( opstr, keep ):
     else:
         return ""
 
-def LegalChecker( wrappers ):
+def IsLegal( wrappers ):
     "conver to string and use regex"
     num_of_chunks = len(wrappers) / 4
     #strs = ['OPEN', 'FSYNC', 'CLOSE', 'OSSYNC'] * num_of_chunks
@@ -283,9 +284,18 @@ def LegalChecker( wrappers ):
                     for i in range(0, num_of_chunks*4, 4) ]
     choices = list(itertools.chain.from_iterable(choices))
     seq = map(Filter, symbols, choices)
-    print seq
-    print ''.join(seq)
-    
+    seq = ''.join(seq)
+   
+    # use regex to check seq
+    # This ? 
+    #   ^((\(C+F*\))*O*)+$
+    #
+    mo = re.match(r'^(\((C+F?)+\)O?)+$', seq, re.M)
+    if mo:
+        print "good match!", seq
+        return True
+    else:
+        return False
 
 def GenWorkloadFromChunks( chunks,
                            wrappers,
@@ -294,9 +304,9 @@ def GenWorkloadFromChunks( chunks,
                            ):
         
     # check if it is legal
-    LegalChecker( wrappers )
-
-
+    if not IsLegal( wrappers ):
+        return False
+    return
 
     num_of_chunks = len(chunks)
 
