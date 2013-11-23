@@ -22,6 +22,7 @@ from ConfigParser import SafeConfigParser
 import itertools
 import pprint
 import itertools
+from ast import literal_eval
 
 def ParameterCominations(parameter_dict):
     """
@@ -298,6 +299,7 @@ class Walkman:
                 # however, sometimes it is useful to record faulty ones
                 if ret == 0:
                     ret_record = self._RecordStatus(year=year,season=season+1)
+                    print ['*'] * 100
                     print ret_record
 
 
@@ -308,6 +310,8 @@ class Walkman:
         """
         if self.confparser.get('workload', 'name') == 'ibench':
             return self._play_ibench(year, season)
+        elif self.confparser.get('workload', 'name') == 'singlefiletraverse':
+            return self._play_single_file_traverse()
         elif self.confparser.get('workload', 'name') == 'fbworkload':
             # fbworkload is the one with segment, write size,
             # write direction...
@@ -320,6 +324,32 @@ class Walkman:
         else:
             print "BAD BAD, you are using a workload name that does not exist"
             exit(1)
+
+    def _play_single_file_traverse(self):
+        chunks = self.confparser.get('workload_single_file_traverse',
+                                        'chunks')
+        chunks = literal_eval(chunks)
+        wrappers = self.confparser.get('workload_single_file_traverse',
+                                        'wrappers')
+        wrappers = literal_eval(wrappers)
+
+        print chunks
+        print wrappers
+
+        pyWorkload.producer.GenWorkloadFromChunks(
+                chunks, wrappers,
+                rootdir  = self.confparser.get('system', 'mountpoint'),
+                tofile   = self.confparser.get('system', 'workloadbufpath'))
+
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+        return proc.returncode
 
     def _play_fb_workload(self):
         wpd = {
@@ -496,7 +526,53 @@ class Troops:
                 cparser.set( 'workload', str(k), str(v) )
             # Do a run with cparser
             self._walkman_walk(cparser)
-            
+
+    def march_single(self):
+        filesize = 400
+        chunk_size = 100
+        
+        num_of_chunks = filesize / chunk_size
+        chunk_size = filesize / num_of_chunks
+        chunk_sizes = [chunk_size] * num_of_chunks
+        offsets = range(0, filesize, chunk_size)
+        chunks = zip(offsets, chunk_sizes)
+
+        chunk_iter = itertools.permutations(chunks)
+        wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*4)
+        # it is like this
+        # OPEN chunk FSYNC CLOSE, OPEN chunk FSYNC CLOSE, ...
+        # every 3 number in wrapper_iter represents whether or not
+        # do OPEN FSYNC CLOSE SYNC
+        # Each chunk has such a wrapper, so there are num_of_chunks*3 numbers
+
+        # Let's not trim the results first. 
+        # Get a prototype working!
+        #
+        # Rules:
+        #   Fsync/chunks must within open-close
+        #   SYNC must be out of open-close
+        #   no nested open-close
+        #   
+        self.confparser.add_section('workload_single_file_traverse')
+        for chks in chunk_iter:
+            for wraps in wrapper_iter:
+                if not pyWorkload.producer.IsLegal(wraps):
+                    # skip bad ones
+                    continue
+                #print chks
+                #print wraps
+                chunks = str(chks)
+                wrappers = str(wraps)
+                self.confparser.set('workload_single_file_traverse',
+                                    'chunks',
+                                    chunks)
+                self.confparser.set('workload_single_file_traverse',
+                                    'wrappers',
+                                    wrappers)
+
+                self._walkman_walk(self.confparser)
+                time.sleep(1)
+
 def main(args):
     if len(args) != 2:
         print 'usage:', args[0], 'config-file'
@@ -511,7 +587,7 @@ def main(args):
         exit(1)
    
     troops = Troops(confparser)
-    troops.march()
+    troops.march_single()
 
     #walkman = Walkman(confparser, 'recorder')
     #walkman._RecordStatus(0, 0)

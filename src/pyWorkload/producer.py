@@ -33,6 +33,13 @@ class Producer:
         entry = str(pid)+";"+path+";"+op.lower()+"\n";
         self.workload += entry
 
+    def addOSOp(self, op, pid):
+        """
+        op: sync(call sync())
+        This assigned pid should do this
+        """
+        entry = str(pid)+";"+"NA"+";"+op.lower()+"\n";
+        self.workload += entry
 
     def display(self):
         print self.workload
@@ -246,7 +253,7 @@ def SingleFileTraverse(
     # it is like this
     # OPEN chunk FSYNC CLOSE, OPEN chunk FSYNC CLOSE, ...
     # every 3 number in wrapper_iter represents whether or not
-    # do OPEN FSYNC CLOSE OSSYNC
+    # do OPEN FSYNC CLOSE SYNC
     # Each chunk has such a wrapper, so there are num_of_chunks*3 numbers
 
     # Let's not trim the results first. 
@@ -254,7 +261,7 @@ def SingleFileTraverse(
     #
     # Rules:
     #   Fsync/chunks must within open-close
-    #   ossync must be out of open-close
+    #   SYNC must be out of open-close
     #   no nested open-close
     #   
     
@@ -277,8 +284,8 @@ def Filter( opstr, keep ):
 def IsLegal( wrappers ):
     "conver to string and use regex"
     num_of_chunks = len(wrappers) / 4
-    #strs = ['OPEN', 'FSYNC', 'CLOSE', 'OSSYNC'] * num_of_chunks
-    symbols = ['(', 'C', 'F', ')', 'O'] * num_of_chunks
+    #strs = ['OPEN', 'FSYNC', 'CLOSE', 'SYNC'] * num_of_chunks
+    symbols = ['(', 'C', 'F', ')', 'S'] * num_of_chunks
 
     choices = [ (wrappers[i], True, wrappers[i+1], wrappers[i+2], wrappers[i+3]) \
                     for i in range(0, num_of_chunks*4, 4) ]
@@ -287,14 +294,14 @@ def IsLegal( wrappers ):
     seq = ''.join(seq)
    
     # use regex to check seq
-    # This ? 
-    #   ^((\(C+F*\))*O*)+$
     #
-    mo = re.match(r'^(\((C+F?)+\)O?)+$', seq, re.M)
+    # GOOD ONE backup: mo = re.match(r'^(\((C+F?)+\)S?)+$', seq, re.M)
+    mo = re.match(r'^(\(((CC)+F?)+\)S)+$', seq, re.M)
     if mo:
         print "good match!", seq
         return True
     else:
+        #print 'BAD match!', seq
         return False
 
 def GenWorkloadFromChunks( chunks,
@@ -306,7 +313,6 @@ def GenWorkloadFromChunks( chunks,
     # check if it is legal
     if not IsLegal( wrappers ):
         return False
-    return
 
     num_of_chunks = len(chunks)
 
@@ -315,7 +321,7 @@ def GenWorkloadFromChunks( chunks,
                                                     for c in chunks ]
     # group wrapers to 3 element groups
     wrappers = [wrappers[i:i+4] for i in range(0, num_of_chunks*4, 4) ]
-    wrappers = [ dict( zip(['OPEN', 'FSYNC', 'CLOSE', 'OSSYNC'], w) ) \
+    wrappers = [ dict( zip(['OPEN', 'FSYNC', 'CLOSE', 'SYNC'], w) ) \
                                                     for w in wrappers]
 
     prd = Producer(
@@ -340,11 +346,12 @@ def GenWorkloadFromChunks( chunks,
         if entry[1]['CLOSE']: 
             prd.addUniOp('close', pid=0, dirid=0, fileid=0)
 
-        if entry[1]['OSSYNC']:
-            pass # not implemented yet
+        if entry[1]['SYNC']:
+            prd.addOSOp('sync', pid=0)
 
     prd.display()
     prd.saveWorkloadToFile()
+    return True
 
 def debug_main():
     wpd = {
@@ -359,7 +366,7 @@ def debug_main():
 
 
 
-SingleFileTraverse(filesize=100, num_of_chunks=4)
+#SingleFileTraverse(filesize=100, num_of_chunks=4)
 #debug_main()
 #prd = Producer(rootdir='/l0')
 
