@@ -1,4 +1,5 @@
 import itertools
+import re
 import producer
 
 def Filter( opstr, keep ):

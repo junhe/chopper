@@ -327,7 +327,7 @@ class Walkman:
                         wps = literal_eval(wps)
                         self.confparser.set('workload_single_file_traverse',
                                             'pattern_symbols',
-                                        pyWorkload.producer.wrappers_to_symbols(wps))
+                                        pyWorkload.pattern_iter.wrappers_to_symbols(wps))
                         self._RecordWalkmanConfig()
                         self._RecordStatus(year=year,season=season+1, 
                                                         savedata=True)
@@ -365,7 +365,7 @@ class Walkman:
         print chunks
         print wrappers
 
-        pyWorkload.producer.GenWorkloadFromChunks(
+        pyWorkload.pattern_iter.GenWorkloadFromChunks(
                 chunks, wrappers,
                 rootdir  = self.confparser.get('system', 'mountpoint'),
                 tofile   = self.confparser.get('system', 'workloadbufpath'))
@@ -559,25 +559,21 @@ class Troops:
             self._walkman_walk(cparser)
 
     def march_single(self):
-        self.confparser.add_section('workload_single_file_traverse')
-        #fb003
         filesize = 100*1024
-        chunk_size = 25*1024
+        chunk_size = 50*1024
 
-        #fb004
-        #filesize = 96*1024
-        #chunk_size = 32*1024
+        self.confparser.add_section('workload_single_file_traverse')
         self.confparser.set('workload_single_file_traverse', 
                             'filesize', str(filesize))
         self.confparser.set('workload_single_file_traverse',
                             'chunk_size', str(chunk_size))
         
         print "Before iterate..."
-        for entry in pattern_iter(nfiles     =1, 
+        for entry in pyWorkload.pattern_iter.pattern_iter(nfiles     =1, 
                                   filesize   =filesize, 
                                   chunksize  =chunk_size):
-            chunks = str(entry['entry'])
-            wrappers = str(entry['wrappers')
+            chunks = str(entry['chunks'])
+            wrappers = str(entry['wrappers'])
             self.confparser.set('workload_single_file_traverse',
                                 'chunks',
                                 chunks)
