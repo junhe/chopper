@@ -24,6 +24,8 @@ import pprint
 import itertools
 from ast import literal_eval
 
+walkmanlog = None
+
 def ParameterCominations(parameter_dict):
     """
     Get all the cominbation of the values from each key
@@ -304,6 +306,12 @@ class Walkman:
                     #print ['*'] * 100
                     print ret_record
                     if ret_record['d_span'] == 'NA':
+                        walkmanlog.write('d_span is NA. ' + \
+                            self.confparser.get('workload_single_file_traverse',
+                                                'wrappers') + " " + \
+                            self.confparser.get('workload_single_file_traverse',
+                                                'chunks') )
+
                         continue
 
                     d_span = int(ret_record['d_span'])
@@ -556,12 +564,12 @@ class Troops:
         #chunk_size = 25*1024
 
         #fb004
-        #filesize = 96*1024
-        #chunk_size = 32*1024
+        filesize = 96*1024
+        chunk_size = 32*1024
         
         #fb006
-        filesize = 64*1024*1024
-        chunk_size = 16*1024*1024
+        #filesize = 64*1024*1024
+        #chunk_size = 16*1024*1024
 
         num_of_chunks = filesize / chunk_size
         chunk_size = filesize / num_of_chunks
@@ -611,6 +619,8 @@ def main(args):
     if len(args) != 2:
         print 'usage:', args[0], 'config-file'
         exit(1)
+    global walkmanlog
+    walkmanlog = open('/tmp/walkman.log', 'a')
     
     confpath = args[1]
     confparser = SafeConfigParser()
@@ -625,6 +635,7 @@ def main(args):
 
     #walkman = Walkman(confparser, 'recorder')
     #walkman._RecordStatus(0, 0)
+    walkmanlog.close()
 
 if __name__ == "__main__":
     main(sys.argv)
