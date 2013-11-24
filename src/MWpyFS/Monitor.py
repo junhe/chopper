@@ -631,6 +631,8 @@ class FSMonitor:
                                          self.jobid])
                 h = "---------------- extent list -------------------\n"
                 f.write( h + df_ext.toStr() )
+            ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
+                                            './pid00000.dir00000/pid.00000.file.00000')
         elif self.filesystem == 'btrfs':
             tree_lines = btrfs_db_parser.btrfs_debug_tree(self.devname)
 
