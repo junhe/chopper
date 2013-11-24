@@ -1,6 +1,11 @@
 import itertools
 import re
 import producer
+import re
+import random
+import pprint
+
+N_OPERATIONS = 4 # OPEN FSYNC CLOSE SYNC
 
 def Filter( opstr, keep ):
     # input is like (FSYNC, True)
@@ -10,12 +15,13 @@ def Filter( opstr, keep ):
         return ""
 
 def wrappers_to_symbols( wrappers ):
-    num_of_chunks = len(wrappers) / 4
+    num_of_chunks = len(wrappers) / N_OPERATIONS
     #strs = ['OPEN', 'FSYNC', 'CLOSE', 'SYNC'] * num_of_chunks
     symbols = ['(', 'C', 'F', ')', 'S'] * num_of_chunks
 
+    #TODO: this can go bad when the number of operations changes
     choices = [ (wrappers[i], True, wrappers[i+1], wrappers[i+2], wrappers[i+3]) \
-                    for i in range(0, num_of_chunks*4, 4) ]
+                    for i in range(0, num_of_chunks*N_OPERATIONS, N_OPERATIONS) ]
     choices = list(itertools.chain.from_iterable(choices))
     seq = map(Filter, symbols, choices)
     seq = ''.join(seq)
@@ -39,7 +45,7 @@ def IsLegal( wrappers ):
         #print 'BAD match!', seq
         return False
 
-def pattern_iter(nfiles, filesize, chunksize):
+def pattern_iter_nfiles(nfiles, filesize, chunksize):
     """
     Input: 
         nfiles: number of files
@@ -59,6 +65,65 @@ def pattern_iter(nfiles, filesize, chunksize):
         
     Single file case is not hard, multiple is hard.
     """
+    nchunks_per_file = filesize/chunksize
+
+    # split to chunks
+    file_chunks = [] # it is a list of chunks from different files
+    for i in range(nfiles):
+        file_chunks.append( 
+                split_a_file_to_chunks(filesize  =filesize, 
+                                       chunksize =chunksize,
+                                       fileid    =i) )
+
+    # sort the chunks
+    # SKIPPED at this time
+   
+    # Separate chunks of different files out
+
+    # Assign only legal operations to chunks for each file
+    chk_with_ops = [] # [{'chunks':[], 'operations':[]},{},{},...]
+
+    possible_ops = list(operations_iter( nchunks_per_file )) #{chunks, operations}
+    # you now have all k possible operation sequences for a file
+    # you need to pick n (could be repeated) from k and assign to
+    # the n files
+    ## pick n
+    ops_for_files = random.sample( possible_ops, nfiles )
+    chk_with_ops = zip (file_chunks, ops_for_files)
+    chk_with_ops = [ dict( zip( ['chunks', 'operations'], FileEntry) ) \
+                                        for FileEntry in chk_with_ops ]
+    pprint.pprint( chk_with_ops )
+
+def operations_iter(num_of_chunks):
+    """
+    It will return an iterable object the iterates all/selected
+    operations to the num_of_chunks chunks
+    """
+    wrapper_iter = itertools.product([False, True], 
+                        repeat=num_of_chunks*N_OPERATIONS)
+    for wraps in wrapper_iter:
+        if not IsLegal(wraps):
+            # skip bad ones
+            continue
+        yield wraps # (True, False, False, ..)
+
+def split_a_file_to_chunks(filesize, chunksize, fileid=0):
+    """
+    At this time, let me just split the file to 
+    equal sizes. Later we can do random splits
+    """
+    num_of_chunks = filesize / chunksize
+    chunk_sizes = [chunksize] * num_of_chunks
+    file_ids = [fileid] * num_of_chunks
+    offsets = range(0, filesize, chunksize)
+    chunks = zip(file_ids, offsets, chunk_sizes)
+
+    # convert to dictionary
+    ret = [ dict( zip( ['fileid', 'offset', 'length'], c ) ) \
+                                                    for c in chunks ]
+    return ret
+
+def pattern_iter(nfiles, filesize, chunksize):
     num_of_chunks = filesize / chunksize
     chunksize = filesize / num_of_chunks
     chunk_sizes = [chunksize] * num_of_chunks
@@ -67,7 +132,7 @@ def pattern_iter(nfiles, filesize, chunksize):
 
     chunk_iter = itertools.permutations(chunks)
     for chks in chunk_iter:
-        wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*4)
+        wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*N_OPERATIONS)
         for wraps in wrapper_iter:
             if not IsLegal(wraps):
                 # skip bad ones
@@ -88,7 +153,7 @@ def GenWorkloadFromChunks( chunks,
     chunks = [ dict( zip( ['offset', 'length'], c ) ) \
                                                     for c in chunks ]
     # group wrapers to 3 element groups
-    wrappers = [wrappers[i:i+4] for i in range(0, num_of_chunks*4, 4) ]
+    wrappers = [wrappers[i:i+N_OPERATIONS] for i in range(0, num_of_chunks*N_OPERATIONS, N_OPERATIONS) ]
     wrappers = [ dict( zip(['OPEN', 'FSYNC', 'CLOSE', 'SYNC'], w) ) \
                                                     for w in wrappers]
 
@@ -121,6 +186,7 @@ def GenWorkloadFromChunks( chunks,
     prd.saveWorkloadToFile()
     return True
 
+pattern_iter_nfiles(2, 900, 300)
 
 #for x in pattern_iter(1, 6, 2):
     #print x
