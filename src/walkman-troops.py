@@ -279,8 +279,8 @@ class Walkman:
         for year in range(nyear):
             for season in range(nseasons_per_year):
                 # Run workload
-                ret = self._play_test(ext4debug=True)
-                #ret = self._play_ibench(year=year, season=season)
+                #ret = self._play_test(ext4debug=True)
+                ret = self._play_ibench(year=year, season=season)
 
                 #do not record faulty status of the file system
                 #however, sometimes it is useful to record faulty ones
