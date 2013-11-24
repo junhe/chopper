@@ -559,13 +559,18 @@ class Troops:
             self._walkman_walk(cparser)
 
     def march_single(self):
+        self.confparser.add_section('workload_single_file_traverse')
         #fb003
-        #filesize = 100*1024
-        #chunk_size = 25*1024
+        filesize = 100*1024
+        chunk_size = 25*1024
 
         #fb004
-        filesize = 96*1024
-        chunk_size = 32*1024
+        #filesize = 96*1024
+        #chunk_size = 32*1024
+        self.confparser.set('workload_single_file_traverse', 
+                            'filesize', str(filesize))
+        self.confparser.set('workload_single_file_traverse',
+                            'chunk_size', str(chunk_size))
         
         #fb006
         #filesize = 64*1024*1024
@@ -591,7 +596,6 @@ class Troops:
         #   SYNC must be out of open-close
         #   no nested open-close
         #   
-        self.confparser.add_section('workload_single_file_traverse')
         print "Before iterate..."
         chunk_iter = itertools.permutations(chunks)
         for chks in chunk_iter:
