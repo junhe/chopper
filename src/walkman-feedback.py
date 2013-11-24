@@ -559,49 +559,22 @@ class Troops:
         filesize = 96*1024
         chunk_size = 32*1024
         
-        num_of_chunks = filesize / chunk_size
-        chunk_size = filesize / num_of_chunks
-        chunk_sizes = [chunk_size] * num_of_chunks
-        offsets = range(0, filesize, chunk_size)
-        chunks = zip(offsets, chunk_sizes)
-
-        # it is like this
-        # OPEN chunk FSYNC CLOSE, OPEN chunk FSYNC CLOSE, ...
-        # every 3 number in wrapper_iter represents whether or not
-        # do OPEN FSYNC CLOSE SYNC
-        # Each chunk has such a wrapper, so there are num_of_chunks*3 numbers
-
-        # Let's not trim the results first. 
-        # Get a prototype working!
-        #
-        # Rules:
-        #   Fsync/chunks must within open-close
-        #   SYNC must be out of open-close
-        #   no nested open-close
-        #   
         self.confparser.add_section('workload_single_file_traverse')
+        
+        for entry in pattern_iter(nfiles     =1, 
+                                  filesize   =filesize, 
+                                  chunksize  =chunk_size):
+            chunks = str(entry['entry'])
+            wrappers = str(entry['wrappers')
+            self.confparser.set('workload_single_file_traverse',
+                                'chunks',
+                                chunks)
+            self.confparser.set('workload_single_file_traverse',
+                                'wrappers',
+                                wrappers)
 
-        chunk_iter = itertools.permutations(chunks)
-        for chks in chunk_iter:
-            wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*4)
-            for wraps in wrapper_iter:
-                if not pyWorkload.producer.IsLegal(wraps):
-                    # skip bad ones
-                    continue
-                print chks
-                print wraps
-                #continue
-                chunks = str(chks)
-                wrappers = str(wraps)
-                self.confparser.set('workload_single_file_traverse',
-                                    'chunks',
-                                    chunks)
-                self.confparser.set('workload_single_file_traverse',
-                                    'wrappers',
-                                    wrappers)
-
-                self._walkman_walk(self.confparser)
-                #time.sleep(1)
+            self._walkman_walk(self.confparser)
+            #time.sleep(1)
 
 def main(args):
     if len(args) != 2:

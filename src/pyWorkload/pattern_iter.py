@@ -39,5 +39,5 @@ def pattern_iter(nfiles, filesize, chunksize):
             #print wraps
             yield {'chunks':chks, 'wrappers':wraps}
 
-for x in pattern_iter(1, 6, 2):
-    print x
+#for x in pattern_iter(1, 6, 2):
+    #print x
