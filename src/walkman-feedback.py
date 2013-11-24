@@ -556,9 +556,13 @@ class Troops:
         #chunk_size = 25*1024
 
         #fb004
-        filesize = 96*1024
-        chunk_size = 32*1024
+        #filesize = 96*1024
+        #chunk_size = 32*1024
         
+        #fb006
+        filesize = 64*1024*1024
+        chunk_size = 16*1024*1024
+
         num_of_chunks = filesize / chunk_size
         chunk_size = filesize / num_of_chunks
         chunk_sizes = [chunk_size] * num_of_chunks
@@ -580,7 +584,7 @@ class Troops:
         #   no nested open-close
         #   
         self.confparser.add_section('workload_single_file_traverse')
-
+        print "Before iterate..."
         chunk_iter = itertools.permutations(chunks)
         for chks in chunk_iter:
             wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*4)
