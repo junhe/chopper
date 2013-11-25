@@ -258,13 +258,13 @@ def GenWorkloadFromChunksOfFiles(  chks_ops,
 
 #pprint.pprint( list(pattern_iter_nfiles(2, 900, 300)) )
 
-for chks_ops_of_files in pattern_iter_nfiles(2, 900, 300):
-    print "****************************"
-    #pprint.pprint( chks_ops_of_files )
-    GenWorkloadFromChunksOfFiles(chks_ops_of_files, 
-                                 rootdir='/mnt/scratch',
-                                 tofile ='/tmp/workkkkkload')
-    break
+#for chks_ops_of_files in pattern_iter_nfiles(2, 900, 300):
+    #print "****************************"
+    ##pprint.pprint( chks_ops_of_files )
+    #GenWorkloadFromChunksOfFiles(chks_ops_of_files, 
+                                 #rootdir='/mnt/scratch',
+                                 #tofile ='/tmp/workkkkkload')
+    #break
 
 #for x in pattern_iter(1, 6, 2):
     #print x
