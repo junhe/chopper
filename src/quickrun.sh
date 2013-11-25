@@ -9,7 +9,7 @@ then
     echo Usage: ./$0 testname
     exit
 fi
-sleep 3
+#sleep 1
 sudo rm -rf $resultdir \
     && sudo python walkman-feedback.py ../conf/h0.conf \
     && sleep 1 \

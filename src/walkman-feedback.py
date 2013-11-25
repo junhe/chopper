@@ -299,6 +299,7 @@ class Walkman:
 
                 # do not record faulty status of the file system
                 # however, sometimes it is useful to record faulty ones
+                print 'Return of _play_workload_wrapper() =', ret
                 if ret == 0:
                     global feedback_dic
                     ret_record = self._RecordStatus(year=year,season=season+1, 
@@ -341,6 +342,8 @@ class Walkman:
             return self._play_ibench(year, season)
         elif self.confparser.get('workload', 'name') == 'singlefiletraverse':
             return self._play_single_file_traverse()
+        elif self.confparser.get('workload', 'name') == 'manyfiletraverse':
+            return self._play_many_file_traverse()
         elif self.confparser.get('workload', 'name') == 'fbworkload':
             # fbworkload is the one with segment, write size,
             # write direction...
@@ -353,6 +356,29 @@ class Walkman:
         else:
             print "BAD BAD, you are using a workload name that does not exist"
             exit(1)
+
+    def _play_many_file_traverse(self):
+        chunks_and_ops = self.confparser.get('workload_many_file_traverse',
+                                             'chunks_and_ops')
+        chunks_and_ops = literal_eval(chunks_and_ops)
+
+        print "------------------------------------------"
+        pprint.pprint( chunks_and_ops )
+
+        pyWorkload.pattern_iter.GenWorkloadFromChunksOfFiles(
+                chunks_and_ops,
+                rootdir  = self.confparser.get('system', 'mountpoint'),
+                tofile   = self.confparser.get('system', 'workloadbufpath'))
+        
+        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
+                self.confparser.get('workload','np'), 
+                self.confparser.get('system','playerpath'), 
+                self.confparser.get('system','workloadbufpath')]
+        cmd = [str(x) for x in cmd]
+
+        proc = subprocess.Popen(cmd) 
+        proc.wait()
+        return proc.returncode
 
     def _play_single_file_traverse(self):
         chunks = self.confparser.get('workload_single_file_traverse',
@@ -540,7 +566,10 @@ class Troops:
         "It returns paralist, which will be put into confparser"
         return self._test018()
 
-    def march(self):
+    def march_wrapper(self):
+        self._march_many()
+
+    def _march_traditional(self):
         """
         change self.confparser here
         It would be a good idea to touch every option in
@@ -558,7 +587,7 @@ class Troops:
             # Do a run with cparser
             self._walkman_walk(cparser)
 
-    def march_single(self):
+    def _march_single(self):
         filesize = 100*1024
         chunk_size = 50*1024
 
@@ -584,6 +613,34 @@ class Troops:
             self._walkman_walk(self.confparser)
             #time.sleep(1)
 
+    def _march_many(self):
+
+        self.confparser.set('workload', 'name', 'manyfiletraverse')
+
+        filesize = 100*1024
+        chunk_size = 50*1024
+
+        self.confparser.add_section('workload_many_file_traverse')
+        self.confparser.set('workload_many_file_traverse', 
+                            'filesize', str(filesize))
+        self.confparser.set('workload_many_file_traverse',
+                            'chunk_size', str(chunk_size))
+        
+        for entry in pyWorkload.pattern_iter.pattern_iter_nfiles(
+                                  nfiles     =2, 
+                                  filesize   =filesize, 
+                                  chunksize  =chunk_size):
+            #pprint.pprint( entry )
+            chunks_and_ops = str(entry)
+            print "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
+            print chunks_and_ops
+            self.confparser.set('workload_many_file_traverse',
+                                'chunks_and_ops',
+                                chunks_and_ops)
+
+            self._walkman_walk(self.confparser)
+            #time.sleep(1)
+
 def main(args):
     if len(args) != 2:
         print 'usage:', args[0], 'config-file'
@@ -600,7 +657,7 @@ def main(args):
         exit(1)
    
     troops = Troops(confparser)
-    troops.march_single()
+    troops.march_wrapper()
 
     #walkman = Walkman(confparser, 'recorder')
     #walkman._RecordStatus(0, 0)

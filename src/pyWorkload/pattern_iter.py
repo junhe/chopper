@@ -221,7 +221,8 @@ def GenWorkloadFromChunksOfFiles(  chks_ops,
                                    rootdir,
                                    tofile
                                 ):
-    #pprint.pprint( chks_ops_of_files )
+    print "888888888888888888888888888888888888"
+    pprint.pprint( chks_ops_of_files )
 
     prd = producer.Producer(
             rootdir = rootdir,
