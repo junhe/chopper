@@ -109,7 +109,7 @@ def merge_chks_ops ( chks_ops ):
            ]
     """
     #print chks_ops
-    ret = [ dict(zip(['chunks','operations'], onechunk)) \
+    ret = [ dict(zip(['chunk','operations'], onechunk)) \
             for onechunk in zip( chks_ops['chunks'], chks_ops['operations'] ) ]
     #pprint.pprint( ret )
     return ret
@@ -216,6 +216,7 @@ def operations_to_human_readable( wrappers ):
     wrappers = [ dict( zip(['OPEN', 'FSYNC', 'CLOSE', 'SYNC'], w) ) \
                                                     for w in wrappers]
     return wrappers
+
 def GenWorkloadFromChunksOfFiles(  chks_ops,
                                    rootdir,
                                    tofile
@@ -228,22 +229,29 @@ def GenWorkloadFromChunksOfFiles(  chks_ops,
     prd.addDirOp('mkdir', pid=0, dirid=0)
 
     for entry in chks_ops_of_files:
-        #print entry
-        if entry['']['OPEN']:
-            prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+        if entry['operations']['OPEN']:
+            prd.addUniOp('open', pid=0, dirid=0, fileid=entry['chunk']['fileid'])
         
         # the chunk write
         prd.addReadOrWrite('write', pid=0, dirid=0,
-               fileid=0, off=entry[0]['offset'], len=entry[0]['length'])
+           fileid=entry['chunk']['fileid'], 
+           off=entry['chunk']['offset'], 
+           len=entry['chunk']['length'])
 
-        if entry[1]['FSYNC']: 
-            prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+        if entry['operations']['FSYNC']: 
+            prd.addUniOp('fsync', 
+                    pid=0, dirid=0, fileid=entry['chunk']['fileid'])
 
-        if entry[1]['CLOSE']: 
-            prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+        if entry['operations']['CLOSE']: 
+            prd.addUniOp('close', 
+                    pid=0, dirid=0, fileid=entry['chunk']['fileid'])
 
-        if entry[1]['SYNC']:
+        if entry['operations']['SYNC']:
             prd.addOSOp('sync', pid=0)
+
+    prd.display()
+    prd.saveWorkloadToFile()
+    return True
 
 
 
@@ -255,6 +263,7 @@ for chks_ops_of_files in pattern_iter_nfiles(2, 900, 300):
     GenWorkloadFromChunksOfFiles(chks_ops_of_files, 
                                  rootdir='/mnt/scratch',
                                  tofile ='/tmp/workkkkkload')
+    break
 
 #for x in pattern_iter(1, 6, 2):
     #print x
