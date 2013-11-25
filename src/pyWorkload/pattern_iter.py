@@ -96,7 +96,7 @@ def pattern_iter_nfiles(nfiles, filesize, chunksize):
         chks_ops_of_files = [ merge_chks_ops( fentry ) for fentry in chks_ops_of_files]
         chks_ops_of_files = zip( *chks_ops_of_files )
         chks_ops_of_files = [y for x in chks_ops_of_files for y in x]
-        #pprint.pprint( chks_ops_of_files )
+        pprint.pprint( chks_ops_of_files )
         yield chks_ops_of_files
 
 def merge_chks_ops ( chks_ops ):
@@ -109,7 +109,8 @@ def merge_chks_ops ( chks_ops ):
            ]
     """
     #print chks_ops
-    ret = [ onechunk for onechunk in zip( chks_ops['chunks'], chks_ops['operations'] ) ]
+    ret = [ dict(zip(['chunks','operations'], onechunk)) \
+            for onechunk in zip( chks_ops['chunks'], chks_ops['operations'] ) ]
     #pprint.pprint( ret )
     return ret
 
@@ -215,11 +216,36 @@ def operations_to_human_readable( wrappers ):
     wrappers = [ dict( zip(['OPEN', 'FSYNC', 'CLOSE', 'SYNC'], w) ) \
                                                     for w in wrappers]
     return wrappers
-def GenWorkloadFromChunksOfFiles(  chks_ops_of_files,
+def GenWorkloadFromChunksOfFiles(  chks_ops,
                                    rootdir,
                                    tofile
                                 ):
-    pprint.pprint( chks_ops_of_files )
+    #pprint.pprint( chks_ops_of_files )
+
+    prd = producer.Producer(
+            rootdir = rootdir,
+            tofile = tofile)
+    prd.addDirOp('mkdir', pid=0, dirid=0)
+
+    for entry in chks_ops_of_files:
+        #print entry
+        if entry['']['OPEN']:
+            prd.addUniOp('open', pid=0, dirid=0, fileid=0)
+        
+        # the chunk write
+        prd.addReadOrWrite('write', pid=0, dirid=0,
+               fileid=0, off=entry[0]['offset'], len=entry[0]['length'])
+
+        if entry[1]['FSYNC']: 
+            prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
+
+        if entry[1]['CLOSE']: 
+            prd.addUniOp('close', pid=0, dirid=0, fileid=0)
+
+        if entry[1]['SYNC']:
+            prd.addOSOp('sync', pid=0)
+
+
 
 #pprint.pprint( list(pattern_iter_nfiles(2, 900, 300)) )
 
