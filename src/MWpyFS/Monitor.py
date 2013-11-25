@@ -735,6 +735,9 @@ def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
 
     Just sort the physical block start and end, then do a hash
     Inlcuding inode, ETB, and data extent!
+
+    Another way to find layout is to get all the free blocks and do
+    hash on them. It is more straight free space.
     """
     hdr = df_ext.header
 
@@ -769,6 +772,10 @@ def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
             if phy_blocks[i] == phy_blocks[i-1] + 1:
                 # can be merged 
                 merged[-1] = phy_blocks[i+1]
+            elif phy_blocks[i] == phy_blocks[i-2] and \
+                    phy_blocks[i+1] == phy_blocks[i-1]:
+                # hmm... duplicated extent. can only happen to inode
+                pass # do nothing
             else:
                 # cannot be merged
                 merged.append( phy_blocks[i] )
