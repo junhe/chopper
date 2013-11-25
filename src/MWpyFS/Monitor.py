@@ -724,7 +724,6 @@ class FSMonitor:
 
 ############################################
 
-
 def get_d_span_from_extent_list(df_ext, filepath):
     hdr = df_ext.header
 
@@ -755,9 +754,6 @@ def get_d_span_from_extent_list(df_ext, filepath):
     else:
         #print mmax - mmin + 1 
         return block_max - block_min + 1
-
-
-
 
 def stat_a_file(filepath):
     filepath = os.path.join(filepath)
@@ -792,14 +788,6 @@ def get_all_paths(mountpoint, dir):
             paths.append(line.replace("\n", ""))
         proc.wait()
     return paths
-
-
-
-
-
-
-
-
 
 
 # Testing

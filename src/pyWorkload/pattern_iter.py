@@ -76,13 +76,11 @@ def pattern_iter_nfiles(nfiles, filesize, chunksize):
                                        fileid    =i) )
 
     # sort the chunks
-    # SKIPPED at this time
-   
+    #all_chunks = [c for f in file_chunks for c in f ]
+
     # Separate chunks of different files out
 
     # Assign only legal operations to chunks for each file
-    chk_with_ops = [] # [{'chunks':[], 'operations':[]},{},{},...]
-
     possible_ops = list(operations_iter( nchunks_per_file )) #{chunks, operations}
     # you now have all k possible operation sequences for a file
     # you need to pick n (could be repeated) from k and assign to
@@ -90,11 +88,31 @@ def pattern_iter_nfiles(nfiles, filesize, chunksize):
     ## pick n
     for j in range(10):
         ops_for_files = random.sample( possible_ops, nfiles )
-        chk_with_ops = zip (file_chunks, ops_for_files)
-        chk_with_ops = [ dict( zip( ['chunks', 'operations'], FileEntry) ) \
-                                            for FileEntry in chk_with_ops ]
-        #pprint.pprint( chk_with_ops )
-        yield chk_with_ops
+        chks_ops_of_files = zip (file_chunks, ops_for_files)
+        chks_ops_of_files = [ dict( zip( ['chunks', 'operations'], FileEntry) ) \
+                                            for FileEntry in chks_ops_of_files ]
+        for fentry in chks_ops_of_files:
+            fentry['operations'] = operations_to_human_readable( fentry['operations'] )
+        chks_ops_of_files = [ merge_chks_ops( fentry ) for fentry in chks_ops_of_files]
+        chks_ops_of_files = zip( *chks_ops_of_files )
+        chks_ops_of_files = [y for x in chks_ops_of_files for y in x]
+        #pprint.pprint( chks_ops_of_files )
+        yield chks_ops_of_files
+
+def merge_chks_ops ( chks_ops ):
+    """
+    Input: {'chunks':... 'operations':...}
+    Output:[ 
+             {'chunks':.. 'operations':...},
+             {'chunks':.. 'operations':...} 
+             ...
+           ]
+    """
+    #print chks_ops
+    ret = [ onechunk for onechunk in zip( chks_ops['chunks'], chks_ops['operations'] ) ]
+    #pprint.pprint( ret )
+    return ret
+
 
 def operations_iter(num_of_chunks):
     """
@@ -190,71 +208,27 @@ def GenWorkloadFromChunks( chunks,
 
 def operations_to_human_readable( wrappers ):
     # put operations of a chunk to a tuple
+    num_of_wrappers = len(wrappers)
     wrappers = [wrappers[i:i+N_OPERATIONS] \
-            for i in range(0, num_of_chunks*N_OPERATIONS, N_OPERATIONS) ]
+            for i in range(0, num_of_wrappers, N_OPERATIONS) ]
     # give them names
     wrappers = [ dict( zip(['OPEN', 'FSYNC', 'CLOSE', 'SYNC'], w) ) \
                                                     for w in wrappers]
-def GenWorkloadFromChunksOfFiles(  chunks,
-                                   wrappers,
+    return wrappers
+def GenWorkloadFromChunksOfFiles(  chks_ops_of_files,
                                    rootdir,
                                    tofile
-                                 ):
-    """
-    Input:
-        [ # file 001
-          {'chunks': chunks of a file,
-           'operations': operations for the chunks}
-          # file 002
-          {'chunks': chunks of a file,
-           'operations': operations for the chunks}
-          # file 003
-          {'chunks': chunks of a file,
-           'operations': operations for the chunks}
-          ...
-        ]
-    """
-    num_of_chunks = len(chunks)
+                                ):
+    pprint.pprint( chks_ops_of_files )
 
-    # organize it as dictionary
-    chunks = [ dict( zip( ['offset', 'length'], c ) ) \
-                                                    for c in chunks ]
+#pprint.pprint( list(pattern_iter_nfiles(2, 900, 300)) )
 
-
-    prd = producer.Producer(
-            rootdir = rootdir,
-            tofile = tofile)
-    prd.addDirOp('mkdir', pid=0, dirid=0)
-
-    # ( (off,size), {wrapper} )
-    entries = zip(chunks, wrappers)
-    for entry in entries:
-        #print entry
-        if entry[1]['OPEN']:
-            prd.addUniOp('open', pid=0, dirid=0, fileid=0)
-        
-        # the chunk write
-        prd.addReadOrWrite('write', pid=0, dirid=0,
-               fileid=0, off=entry[0]['offset'], len=entry[0]['length'])
-
-        if entry[1]['FSYNC']: 
-            prd.addUniOp('fsync', pid=0, dirid=0, fileid=0)
-
-        if entry[1]['CLOSE']: 
-            prd.addUniOp('close', pid=0, dirid=0, fileid=0)
-
-        if entry[1]['SYNC']:
-            prd.addOSOp('sync', pid=0)
-
-    prd.display()
-    prd.saveWorkloadToFile()
-    return True
-
-
-
-
-
-pprint.pprint( list(pattern_iter_nfiles(2, 900, 300)) )
+for chks_ops_of_files in pattern_iter_nfiles(2, 900, 300):
+    print "****************************"
+    #pprint.pprint( chks_ops_of_files )
+    GenWorkloadFromChunksOfFiles(chks_ops_of_files, 
+                                 rootdir='/mnt/scratch',
+                                 tofile ='/tmp/workkkkkload')
 
 #for x in pattern_iter(1, 6, 2):
     #print x
