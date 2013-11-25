@@ -306,32 +306,53 @@ class Walkman:
                                                     savedata=False)
                     #print ['*'] * 100
                     print ret_record
-                    if ret_record['d_span'] == 'NA':
-                        walkmanlog.write('d_span is NA. ' + \
-                            self.confparser.get('workload_single_file_traverse',
-                                                'wrappers') + " " + \
-                            self.confparser.get('workload_single_file_traverse',
-                                                'chunks') )
+                    #feedback_type = 'd_span'
+                    feedback_type = 'physical_layout_hash'
 
-                        continue
+                    if feedback_type == 'd_span':
+                        if not ret_record.has_key('d_span') or ret_record['d_span'] == 'NA':
+                            walkmanlog.write('d_span is NA. Or d_span key does not exist. ' + \
+                                self.confparser.get('workload_single_file_traverse',
+                                                    'wrappers') + " " + \
+                                self.confparser.get('workload_single_file_traverse',
+                                                    'chunks') )
 
-                    d_span = int(ret_record['d_span'])
-                    if not d_span in feedback_dic['d_span']:
-                        print ['findone']*100
-                        feedback_dic['d_span'].append(d_span)
+                            continue
+
+                        d_span = int(ret_record['d_span'])
+                        if not d_span in feedback_dic['d_span']:
+                            print ['findone']*100
+                            feedback_dic['d_span'].append(d_span)
+                            
+                            self.confparser.set('workload_single_file_traverse',
+                                                'd_span',
+                                                str(d_span))
+                            wps = self.confparser.get('workload_single_file_traverse',
+                                                'wrappers')
+                            wps = literal_eval(wps)
+                            self.confparser.set('workload_single_file_traverse',
+                                                'pattern_symbols',
+                                            pyWorkload.pattern_iter.wrappers_to_symbols(wps))
+                            self._RecordWalkmanConfig()
+                            self._RecordStatus(year=year,season=season+1, 
+                                                            savedata=True)
+                    elif feedback_type == 'physical_layout_hash':
+                        if not ret_record.has_key('physical_layout_hash') or \
+                                ret_record['physical_layout_hash'] == hash( str([]) ): # no physical block found
+                            walkmanlog.write('physical_layout_hash does not exist or it is a hash of empty list')
+                            continue
+
+                        if not feedback_dic.has_key('physical_layout_hash'):
+                            feedback_dic['physical_layout_hash'] = []
                         
-                        self.confparser.set('workload_single_file_traverse',
-                                            'd_span',
-                                            str(d_span))
-                        wps = self.confparser.get('workload_single_file_traverse',
-                                            'wrappers')
-                        wps = literal_eval(wps)
-                        self.confparser.set('workload_single_file_traverse',
-                                            'pattern_symbols',
-                                        pyWorkload.pattern_iter.wrappers_to_symbols(wps))
-                        self._RecordWalkmanConfig()
-                        self._RecordStatus(year=year,season=season+1, 
-                                                        savedata=True)
+                        if not ret_record['physical_layout_hash'] in feedback_dic['physical_layout_hash']:
+                            feedback_dic['physical_layout_hash'].append( ret_record['physical_layout_hash'] )
+                        
+                            self.confparser.set('workload_many_file_traverse',
+                                                'physical_layout_hash', str(ret_record['physical_layout_hash']) )
+                            self._RecordWalkmanConfig()
+                            self._RecordStatus(year=year,season=season+1, 
+                                                            savedata=True)
 
     def _play_workload_wrapper(self, year, season):
         """

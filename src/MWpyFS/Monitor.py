@@ -571,7 +571,8 @@ class FSMonitor:
         self.resetMonitorTime(monitorid=monitorid)
         self.resetJobID(jobid=jobid)
 
-        ret_dict = {'d_span':'NA'}
+        ret_dict = {'d_span':'NA',
+                    'physical_layout_hash':'NA'}
         if savedata: 
             if logfile == "":
                 filename = self.monitor_time + ".result"
@@ -601,7 +602,9 @@ class FSMonitor:
                 h = "---------------- extent list -------------------\n"
                 f.write(extlist.toStr())
             ret_dict['d_span'] = get_d_span_from_extent_list(extlist, 
-                                            './pid00000.dir00000/pid.00000.file.00000')
+                                    './pid00000.dir00000/pid.00000.file.00000')
+            ret_dict['physical_layout_hash'] = \
+                get_physical_layout_hash(extlist, 'file')
 
             ######################
             # e2freefrag
@@ -633,6 +636,7 @@ class FSMonitor:
                 f.write( h + df_ext.toStr() )
             ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
                                             './pid00000.dir00000/pid.00000.file.00000')
+            ret_dict['physical_layout_hash'] = get_physical_layout_hash(df_ext, 'file')
         elif self.filesystem == 'btrfs':
             tree_lines = btrfs_db_parser.btrfs_debug_tree(self.devname)
 
@@ -723,6 +727,31 @@ class FSMonitor:
 
 
 ############################################
+
+def get_physical_layout_hash(df_ext, filter_str):
+    """
+    It only cares about physical block positions.
+    It has nothing to do with filename, logical address of blocks..
+
+    Just sort the physical block start and end, then do a hash
+    Inlcuding inode, ETB, and data extent!
+    """
+    hdr = df_ext.header
+
+    phy_blocks = []
+    for row in df_ext.table:
+        if filter_str in row[hdr.index('filepath')]:
+            print row
+            physical_start = int(row[hdr.index('Physical_start')])
+            physical_end = int(row[hdr.index('Physical_end')])
+
+            phy_blocks.append( physical_start )
+            phy_blocks.append( physical_end )
+
+    phy_blocks.sort()
+    return hash( str(phy_blocks) )
+
+
 
 def get_d_span_from_extent_list(df_ext, filepath):
     hdr = df_ext.header
