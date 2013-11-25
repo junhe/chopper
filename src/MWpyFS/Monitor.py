@@ -599,7 +599,7 @@ class FSMonitor:
             extlist = self.getExtentList_of_a_dir()
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
-                f.write(h+extlist.toStr())
+                f.write(extlist.toStr())
             ret_dict['d_span'] = get_d_span_from_extent_list(extlist, 
                                             './pid00000.dir00000/pid.00000.file.00000')
 
