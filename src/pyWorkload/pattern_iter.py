@@ -267,29 +267,48 @@ def GenWorkloadFromChunksOfFiles(  chks_ops,
     prd = producer.Producer(
             rootdir = rootdir,
             tofile = tofile)
-    prd.addDirOp('mkdir', pid=0, dirid=0)
+
+    dirs_exist = []
 
     for entry in chks_ops:
         pprint.pprint(entry)
+
+
+        if not entry['chunk']['fileid'] in dirs_exist:
+            prd.addDirOp('mkdir', pid=entry['chunk']['fileid'], 
+                                  dirid=0)
+            dirs_exist.append( entry['chunk']['fileid'] )
+
         if entry['operations']['OPEN']:
-            prd.addUniOp('open', pid=0, dirid=0, fileid=entry['chunk']['fileid'])
+            prd.addUniOp('open', 
+                                 pid    =entry['chunk']['fileid'], 
+                                 dirid  =0, 
+                                 fileid =entry['chunk']['fileid'])
         
         # the chunk write
-        prd.addReadOrWrite('write', pid=0, dirid=0,
-           fileid=entry['chunk']['fileid'], 
-           off=entry['chunk']['offset'], 
-           len=entry['chunk']['length'])
+        prd.addReadOrWrite('write', 
+           pid    =entry['chunk']['fileid'], 
+           dirid  =0,
+           fileid =entry['chunk']['fileid'], 
+           off    =entry['chunk']['offset'], 
+           len    =entry['chunk']['length'])
 
         if entry['operations']['FSYNC']: 
             prd.addUniOp('fsync', 
-                    pid=0, dirid=0, fileid=entry['chunk']['fileid'])
+                    pid    =entry['chunk']['fileid'], 
+                    dirid  =0, 
+                    fileid =entry['chunk']['fileid'])
 
         if entry['operations']['CLOSE']: 
             prd.addUniOp('close', 
-                    pid=0, dirid=0, fileid=entry['chunk']['fileid'])
+                    pid    =entry['chunk']['fileid'], 
+                    dirid  =0, 
+                    fileid =entry['chunk']['fileid'])
 
         if entry['operations']['SYNC']:
-            prd.addOSOp('sync', pid=0)
+            prd.addOSOp('sync', 
+                            pid    =entry['chunk']['fileid'], 
+                            )
 
     prd.display()
     prd.saveWorkloadToFile()
