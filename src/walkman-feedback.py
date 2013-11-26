@@ -630,8 +630,8 @@ class Troops:
             self._walkman_walk(cparser)
 
     def _march_single(self):
-        filesize = 96*1024
-        chunk_size = 32*1024
+        filesize = 100*1024
+        chunk_size = 25*1024
 
         self.confparser.set('workload', 'name', 'singlefiletraverse')
         self.confparser.add_section( self.confparser.get('workload','name') )

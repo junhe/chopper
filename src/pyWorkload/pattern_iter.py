@@ -115,18 +115,51 @@ def merge_chks_ops ( chks_ops ):
     return ret
 
 
-def operations_iter(num_of_chunks):
+def operations_iter(num_of_chunks, method='ALL'):
     """
     It will return an iterable object the iterates all/selected
     operations to the num_of_chunks chunks
+
+    If reduce == True. We try to reduce the number of operations
     """
-    wrapper_iter = itertools.product([False, True], 
-                        repeat=num_of_chunks*N_OPERATIONS)
-    for wraps in wrapper_iter:
-        if not IsLegal(wraps):
-            # skip bad ones
-            continue
-        yield wraps # (True, False, False, ..)
+    if method == 'ALL':
+        wrapper_iter = itertools.product([False, True], 
+                            repeat=num_of_chunks*N_OPERATIONS)
+        for wraps in wrapper_iter:
+            if not IsLegal(wraps):
+                # skip bad ones
+                continue
+            yield wraps # (True, False, False, ..)
+    elif method == 'fixed'
+        # Try to reduce the amount of operation sequences
+        # OPEN FSYNC CLOSE SYNC
+        # You can set cretiria like: 
+        #   1. only one open/close
+        #   2. no fsync
+        #   3. always fsync
+        #   4. always sync   USEFUL, I always need it. 
+
+        # 1. only one open-close
+        opens = [False] * num_of_chunks 
+        opens[0] = True
+        closes = [False] * num_of_chunks
+        closes[-1] = True
+
+        # 2. no fsync
+        #fsyncs = [False] * num_of_chunks
+        # 3. always fsync
+        fsyncs = [True] * num_of_chunks
+
+        # 4. always sync
+        syncs = [True] * num_of_chunks
+
+        wrappers = zip( opens, fsyncs, closes, syncs )
+
+    elif method == 'sample':
+        pass
+    else:
+        print 'not defined method in operations_iter'
+        exit(1)
 
 def split_a_file_to_chunks(filesize, chunksize, fileid=0):
     """
