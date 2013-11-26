@@ -70,6 +70,10 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         string cmd = "mkdir -p ";
         cmd += wl_entry._path;
         string ret = Util::exec(cmd.c_str());
+        if ( ret == "ERROR" ) {
+            logwrite( wl_entry._entry_str + " File to mkdir.");
+            exit(1);
+        }
     } else if ( wl_entry._operation == "open" ) {
         // open file
         int fd = open( wl_entry._path.c_str(), O_CREAT|O_RDWR, 0666);
