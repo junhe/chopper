@@ -231,7 +231,7 @@ class Walkman:
             f.write(header+datas)
 
     def _RecordStatus(self, year, season, savedata=True):
-        #subprocess.call(['sync'])
+        subprocess.call(['sync'])
         if self.confparser.get('system', 'filesystem') == 'xfs':
             MWpyFS.FormatFS.remountFS(devname=self.confparser.get('system', 'partition'),
                                       mountpoint=self.confparser.get('system', 'mountpoint'))
@@ -668,7 +668,7 @@ class Troops:
 
         self.confparser.set('workload', 'name', 'manyfiletraverse')
 
-        filesize = 2*1024*1024
+        filesize = 64*1024*1024
         chunk_size = 1024*1024
 
         self.confparser.add_section(self.confparser.get('workload','name'))
@@ -678,7 +678,7 @@ class Troops:
                             'chunk_size', str(chunk_size))
         
         for entry in pyWorkload.pattern_iter.pattern_iter_nfiles(
-                                  nfiles     =8, 
+                                  nfiles     =20,
                                   filesize   =filesize, 
                                   chunksize  =chunk_size):
             #pprint.pprint( entry )

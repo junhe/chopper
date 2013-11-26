@@ -88,6 +88,7 @@ def pattern_iter_nfiles(nfiles, filesize, chunksize):
     ## pick n
     for j in range(10):
         ops_for_files = random.sample( possible_ops, nfiles )
+        #ops_for_files = list(possible_ops[0]) * nfiles 
         chks_ops_of_files = zip (file_chunks, ops_for_files)
         chks_ops_of_files = [ dict( zip( ['chunks', 'operations'], FileEntry) ) \
                                             for FileEntry in chks_ops_of_files ]
@@ -147,13 +148,13 @@ def operations_iter(num_of_chunks, method='fixed'):
         closes[-1] = True
 
         # 2. no fsync
-        #fsyncs = [False] * num_of_chunks
+        fsyncs = [False] * num_of_chunks
         # 3. always fsync
-        fsyncs = [True] * num_of_chunks
+        #fsyncs = [True] * num_of_chunks
 
         # 4. always sync
         syncs = [False] * num_of_chunks
-        syncs[-1] = True
+        #syncs[-1] = True
 
         wrappers = zip( opens, fsyncs, closes, syncs )
         wrappers = [y for x in wrappers for y in x]
