@@ -728,13 +728,16 @@ class FSMonitor:
 
 ############################################
 
-def get_physical_layout_hash(df_ext, filter_str):
+def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
     """
     It only cares about physical block positions.
     It has nothing to do with filename, logical address of blocks..
 
     Just sort the physical block start and end, then do a hash
     Inlcuding inode, ETB, and data extent!
+
+    Another way to find layout is to get all the free blocks and do
+    hash on them. It is more straight free space.
     """
     hdr = df_ext.header
 
@@ -744,11 +747,41 @@ def get_physical_layout_hash(df_ext, filter_str):
             print row
             physical_start = int(row[hdr.index('Physical_start')])
             physical_end = int(row[hdr.index('Physical_end')])
-
+        
             phy_blocks.append( physical_start )
             phy_blocks.append( physical_end )
-
+    
+    # There can be over lap between extents for inode and only for inode
+    # block number can be overlapped in extent
+    # block number of the same extent always next to each other
     phy_blocks.sort()
+
+    if merge_contiguous:
+        # the block number are ALWAYS in pair, even after sorting
+        # [start, end, start, end, start, end, ...]
+        # This may not work for BTRFS!
+        merged = []
+        n = len(phy_blocks)
+        assert n % 2 == 0
+        for i in range(0, n, 2):
+            # i is start of an extent
+            if i == 0: # the first extent
+                merged.append( phy_blocks[i] )
+                merged.append( phy_blocks[i+1] )
+                continue
+            if phy_blocks[i] == phy_blocks[i-1] + 1:
+                # can be merged 
+                merged[-1] = phy_blocks[i+1]
+            elif phy_blocks[i] == phy_blocks[i-2] and \
+                    phy_blocks[i+1] == phy_blocks[i-1]:
+                # hmm... duplicated extent. can only happen to inode
+                pass # do nothing
+            else:
+                # cannot be merged
+                merged.append( phy_blocks[i] )
+                merged.append( phy_blocks[i+1] )
+        phy_blocks = merged
+
     return hash( str(phy_blocks) )
 
 
