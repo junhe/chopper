@@ -419,9 +419,20 @@ class Walkman:
                 chunks_and_ops,
                 rootdir  = self.confparser.get('system', 'mountpoint'),
                 tofile   = self.confparser.get('system', 'workloadbufpath'))
-        
+       
+        # find out how many proc we need
+        max_rank = 0
+        with open( self.confparser.get('system', 'workloadbufpath') ) as f:
+            for line in f:
+                items = line.split(";")
+                rank  = int(items[0])
+                if rank > max_rank:
+                    max_rank = rank
+
+
         cmd = [self.confparser.get('system','mpirunpath'), "-np", 
-                self.confparser.get('workload','np'), 
+                #self.confparser.get('workload','np'), 
+                max_rank+1,
                 self.confparser.get('system','playerpath'), 
                 self.confparser.get('system','workloadbufpath')]
         cmd = [str(x) for x in cmd]
