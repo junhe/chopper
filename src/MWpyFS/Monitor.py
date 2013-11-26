@@ -604,7 +604,9 @@ class FSMonitor:
             ret_dict['d_span'] = get_d_span_from_extent_list(extlist, 
                                     './pid00000.dir00000/pid.00000.file.00000')
             ret_dict['physical_layout_hash'] = \
-                get_physical_layout_hash(extlist, 'file')
+                get_physical_layout_hash(extlist, 
+                                         'file', 
+                                         merge_contiguous=True)
 
             ######################
             # e2freefrag
@@ -636,7 +638,10 @@ class FSMonitor:
                 f.write( h + df_ext.toStr() )
             ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
                                             './pid00000.dir00000/pid.00000.file.00000')
-            ret_dict['physical_layout_hash'] = get_physical_layout_hash(df_ext, 'file')
+            ret_dict['physical_layout_hash'] \
+                    = get_physical_layout_hash(df_ext, 
+                                               'file', 
+                                               merge_contiguous=True)
         elif self.filesystem == 'btrfs':
             tree_lines = btrfs_db_parser.btrfs_debug_tree(self.devname)
 

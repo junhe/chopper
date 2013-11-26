@@ -130,7 +130,7 @@ def operations_iter(num_of_chunks, method='ALL'):
                 # skip bad ones
                 continue
             yield wraps # (True, False, False, ..)
-    elif method == 'fixed'
+    elif method == 'fixed':
         # Try to reduce the amount of operation sequences
         # OPEN FSYNC CLOSE SYNC
         # You can set cretiria like: 
