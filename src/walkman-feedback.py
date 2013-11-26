@@ -408,7 +408,7 @@ class Walkman:
             exit(1)
 
     def _play_many_file_traverse(self):
-        chunks_and_ops = self.confparser.get('workload_many_file_traverse',
+        chunks_and_ops = self.confparser.get(self.confparser.get('workload','name'),
                                              'chunks_and_ops')
         chunks_and_ops = literal_eval(chunks_and_ops)
 
@@ -616,8 +616,8 @@ class Troops:
         return self._test018()
 
     def march_wrapper(self):
-        #self._march_many()
-        self._march_single()
+        self._march_many()
+        #self._march_single()
 
     def _march_traditional(self):
         """
@@ -668,28 +668,29 @@ class Troops:
 
         self.confparser.set('workload', 'name', 'manyfiletraverse')
 
-        filesize = 96*1024
-        chunk_size = 32*1024
+        filesize = 2*1024*1024
+        chunk_size = 1024*1024
 
-        self.confparser.add_section('workload_many_file_traverse')
-        self.confparser.set('workload_many_file_traverse', 
+        self.confparser.add_section(self.confparser.get('workload','name'))
+        self.confparser.set(self.confparser.get('workload','name'), 
                             'filesize', str(filesize))
-        self.confparser.set('workload_many_file_traverse',
+        self.confparser.set(self.confparser.get('workload','name'),
                             'chunk_size', str(chunk_size))
         
         for entry in pyWorkload.pattern_iter.pattern_iter_nfiles(
-                                  nfiles     =2, 
+                                  nfiles     =8, 
                                   filesize   =filesize, 
                                   chunksize  =chunk_size):
             #pprint.pprint( entry )
             chunks_and_ops = str(entry)
             print "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
             print chunks_and_ops
-            self.confparser.set('workload_many_file_traverse',
+            self.confparser.set(self.confparser.get('workload','name'),
                                 'chunks_and_ops',
                                 chunks_and_ops)
 
             self._walkman_walk(self.confparser)
+            exit(1)
             #time.sleep(1)
 
 def main(args):

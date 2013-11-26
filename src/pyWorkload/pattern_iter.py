@@ -96,6 +96,7 @@ def pattern_iter_nfiles(nfiles, filesize, chunksize):
         chks_ops_of_files = [ merge_chks_ops( fentry ) for fentry in chks_ops_of_files]
         chks_ops_of_files = zip( *chks_ops_of_files )
         chks_ops_of_files = [y for x in chks_ops_of_files for y in x]
+        print "pppppppppppppppppppppp"
         pprint.pprint( chks_ops_of_files )
         yield chks_ops_of_files
 
@@ -115,7 +116,7 @@ def merge_chks_ops ( chks_ops ):
     return ret
 
 
-def operations_iter(num_of_chunks, method='ALL'):
+def operations_iter(num_of_chunks, method='fixed'):
     """
     It will return an iterable object the iterates all/selected
     operations to the num_of_chunks chunks
@@ -151,9 +152,14 @@ def operations_iter(num_of_chunks, method='ALL'):
         fsyncs = [True] * num_of_chunks
 
         # 4. always sync
-        syncs = [True] * num_of_chunks
+        syncs = [False] * num_of_chunks
+        syncs[-1] = True
 
         wrappers = zip( opens, fsyncs, closes, syncs )
+        wrappers = [y for x in wrappers for y in x]
+
+        for i in range(100):
+            yield wrappers
 
     elif method == 'sample':
         pass
@@ -255,14 +261,15 @@ def GenWorkloadFromChunksOfFiles(  chks_ops,
                                    tofile
                                 ):
     print "888888888888888888888888888888888888"
-    pprint.pprint( chks_ops_of_files )
+    #pprint.pprint( chks_ops_of_files )
 
     prd = producer.Producer(
             rootdir = rootdir,
             tofile = tofile)
     prd.addDirOp('mkdir', pid=0, dirid=0)
 
-    for entry in chks_ops_of_files:
+    for entry in chks_ops:
+        pprint.pprint(entry)
         if entry['operations']['OPEN']:
             prd.addUniOp('open', pid=0, dirid=0, fileid=entry['chunk']['fileid'])
         
