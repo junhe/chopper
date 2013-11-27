@@ -288,9 +288,15 @@ class Walkman:
                     self._RecordStatus(year=year,season=season+1)
 
     def _play_ibench(self, year, season):
-        ret = pyWorkload.tools.run_ibench(1, 
+        ret = pyWorkload.tools.run_ibench(
+                                num_of_runs     = 1, 
+                                run_name        =
                                     "{year}.{season}".format(year=year, season=season), 
-                                    self.confparser.get("system", "mountpoint"))
+                                target_dir      =
+                                    self.confparser.get("system", "mountpoint"),
+                                sopath          = 
+                                    self.confparser.get('workload', 'sopath'))
+
         return ret
 
     def _play_test(self, ext4debug=False):
@@ -852,13 +858,19 @@ class Troops:
         unchanged in the near future. 
         """
         cparser = self.confparser
-        paralist = self._march_parameter_table()
+        #paralist = self._march_parameter_table()
+        
+        # get the list of so paths
+        sopaths = []
+        with open('./app-so-list.txt', 'r') as f:
+            for line in f:
+                sopaths.append( line.strip('\n') )
 
-        for para in paralist:
-            for k,v in para.items():
-                cparser.set( 'workload', str(k), str(v) )
+        for sopath in sopaths:
+            cparser.set( 'workload', 'sopath', sopath )
             
             self._walkman_walk(cparser)
+            exit(1)
             
 def main(args):
     if len(args) != 2:

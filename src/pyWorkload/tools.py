@@ -12,17 +12,27 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def run_ibench(num_of_runs, run_name, target_dir):
-    dir = "/users/jhe/Home2/tars/artc-0.9b/magritte/"
-    cmd = "./runall.sh -n {NUM_RUNS} {RUN_NAME} -c0 {DIRECTORY_TO_REPLAY_IN}".format(
-          NUM_RUNS=num_of_runs, 
-          RUN_NAME=run_name,
-          DIRECTORY_TO_REPLAY_IN=target_dir)
-    print cmd
-    with cd(dir):
-        ret = subprocess.call(cmd.split())
+def run_ibench(num_of_runs, run_name, target_dir, sopath=""):
+    if sopath == "":
+        dir = "/users/jhe/Home2/tars/artc-0.9b/magritte/"
+        cmd = "./runall.sh -n {NUM_RUNS} {RUN_NAME} -c0 {DIRECTORY_TO_REPLAY_IN}".format(
+              NUM_RUNS=num_of_runs, 
+              RUN_NAME=run_name,
+              DIRECTORY_TO_REPLAY_IN=target_dir)
+        print cmd
+        with cd(dir):
+            ret = subprocess.call(cmd.split())
+    else:
+        dir = "/users/jhe/Home2/tars/artc-0.9b/"
+        cmd = "./artrun {SO_PATH}  {OUTDIR}".format(
+                SO_PATH  = os.path.join('magritte/ibench/', sopath),
+                OUTDIR   = target_dir)
+        print cmd
+        with cd(dir):
+            ret = subprocess.call(cmd.split())
+
     return ret
 
 
-#run_ibench(1, "myrun", "/mnt/scratch/")
+#run_ibench(1, "myrun", "/mnt/scratch/", sopath="./numbers_xls5/numbers_xls5.so")
 
