@@ -582,40 +582,46 @@ class FSMonitor:
         if self.filesystem == 'ext4':
             ######################
             # get per file block count
-            df_bcounts = self.getPerFileBlockCounts()
-            if savedata and df_bcounts != None:
-                extstats_header = "----------- per file block counts  -------------\n"
-                f.write(extstats_header + df_bcounts.toStr())
+            #df_bcounts = self.getPerFileBlockCounts()
+            #if savedata and df_bcounts != None:
+                #extstats_header = "----------- per file block counts  -------------\n"
+                #f.write(extstats_header + df_bcounts.toStr())
 
-            # FS block count
-            df_fscounts = self.getFSBlockCount(df_bcounts)
-            if savedata and df_fscounts != None:
-                h = "------------- FS block counts ---------------\n"
-                f.write(h+df_fscounts.toStr())
+            ## FS block count
+            #df_fscounts = self.getFSBlockCount(df_bcounts)
+            #if savedata and df_fscounts != None:
+                #h = "------------- FS block counts ---------------\n"
+                #f.write(h+df_fscounts.toStr())
             
             ######################
             # get extents of all files
             extlist = self.getExtentList_of_a_dir()
+            extstats = get_extent_stats(extlist)
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
                 f.write(h+extlist.toStr())
+                for pair in extstats.items():
+                    pair = [str(x) for x in pair]
+                    line = '='.join(pair) +  ' DATAMARKER_extfinestats\n'
+                    #print line
+                    f.write( line )
 
             ######################
-            # e2freefrag
-            frag = self.e2freefrag()
-            if savedata and frag != None:
-                frag0_header    = "-----------  Extent summary  -------------\n"
-                frag1_header    = "----------- Extent Histogram   -------------\n"
-                f.write(frag0_header + frag["FragSummary"].toStr())
-                f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
+            #e2freefrag
+            #frag = self.e2freefrag()
+            #if savedata and frag != None:
+                #frag0_header    = "-----------  Extent summary  -------------\n"
+                #frag1_header    = "----------- Extent Histogram   -------------\n"
+                #f.write(frag0_header + frag["FragSummary"].toStr())
+                #f.write(frag1_header + frag["ExtSizeHistogram"].toStr())
 
             ######################
-            # dumpfs
-            freespaces = self.dumpfs()
-            if savedata and frag != None:
-                dumpfs_header   = "----------- Dumpfs Header ------------\n"
-                f.write(dumpfs_header + freespaces['freeblocks'].toStr())
-                f.write(dumpfs_header + freespaces['freeinodes'].toStr())
+            #dumpfs
+            #freespaces = self.dumpfs()
+            #if savedata and frag != None:
+                #dumpfs_header   = "----------- Dumpfs Header ------------\n"
+                #f.write(dumpfs_header + freespaces['freeblocks'].toStr())
+                #f.write(dumpfs_header + freespaces['freeinodes'].toStr())
 
         elif self.filesystem == 'xfs':
             df_ext = self.xfs_getExtentList_of_a_dir()
@@ -755,8 +761,31 @@ def get_all_paths(mountpoint, dir):
 
 
 
+def get_extent_stats(df_ext):
+    """
+    Get number of files
+    Get nuber of data extents
+    Get top 20 largest extents
+    """
+    ret_dic = {"nfiles":-1,
+               "nextents": len(df_ext.table),
+               "largest_extents":[]
+                }
+    hdr = df_ext.header
 
+    files = set()
+    ext_lengths = []
+    for row in df_ext.table:
+        files.add( row[hdr.index('filepath')] )
+        ext_lengths.append( int(row[hdr.index('Length')]) )
 
+    ext_lengths.sort(reverse=True)
+    ext_lengths = ext_lengths[0:20]
+    ret_dic['largest_extents'] = ext_lengths
+
+    ret_dic['nfiles'] = len( files )
+
+    return ret_dic
 
 
 

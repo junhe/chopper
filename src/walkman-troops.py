@@ -870,7 +870,6 @@ class Troops:
             cparser.set( 'workload', 'sopath', sopath )
             
             self._walkman_walk(cparser)
-            exit(1)
             
 def main(args):
     if len(args) != 2:
