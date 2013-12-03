@@ -1,9 +1,9 @@
 import itertools
-import re
 import producer
 import re
 import random
 import pprint
+import subprocess
 
 N_OPERATIONS = 4 # OPEN FSYNC CLOSE SYNC
 
@@ -295,7 +295,35 @@ def GenWorkloadFromChunksOfFiles(  chks_ops,
     prd.saveWorkloadToFile()
     return True
 
+def regldg(max_length, num_words_output, regstr):
+    #./regldg --debug-code=1 --universe-set=7 --universe-checking=3 --max-length=8 --readable-output --num-words-output=100 "(a|b)[cd]{2}\1"
+    cmd = [
+            './regldg-1.0.0/regldg', 
+            '--debug-code=1', 
+            '--universe-set=33', 
+            '--universe-checking=3',
+            '--max-length='+str(max_length),
+            '--readable-output',
+            '--num-words-output='+str(num_words_output),
+            regstr
+            ]
+    proc = subprocess.Popen(cmd, 
+                    stdout = subprocess.PIPE)
+    proc.wait()
 
+    wordlist = []
+    for line in proc.stdout:
+        wordlist.append(line.strip())
+    
+    pprint.pprint( wordlist )
+    return wordlist
+
+
+#regldg(max_length = 30, 
+       #num_words_output=100,
+       ##regstr="(a|b)[cd]{4}\\1")
+       ##regstr="(\((C+F?)+\)S?)+")
+       #regstr="(CF?)+")
 
 #pprint.pprint( list(pattern_iter_nfiles(2, 900, 300)) )
 
