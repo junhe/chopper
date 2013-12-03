@@ -1,0 +1,29 @@
+/* regldg version 1.0.0
+** a regular expression grammar language dictionary generator
+** (c) Patrick Cronin 2004-2006
+** pcronin@loyola.edu
+**
+** Permission is granted to use, alter, and distribute this
+** code under the terms of the GNU Public License.  A copy
+** of this license should have been included with this
+** software in the file gpl.txt.  If you need a copy, please
+** visit http://www.gnu.org/copyleft/gpl.html.
+**
+** README
+
+Compilation, installation, and documentation inforamtion:
+
+Compile:
+make
+
+Install:
+Don't; just run from here!
+
+HELP! What do I do?
+Point a web browser to ./docs/index.html.  All the documentation you should
+need is there. Everything will work except the download link, and the "try it"
+box on every page, unless you configure the variable $regldg in ./docs/tryit.php
+to the regldg executable directory, and you have a PHP-enabled web server
+running on your computer.
+
+Enjoy!

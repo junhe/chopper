@@ -1,0 +1,567 @@
+<html>
+
+<head>
+
+<title>regldg home</title>
+
+<style type="text/css">
+h2 { font-family: optima,tahoma; font-size: 15pt; color: #3c2168 }
+h3 { font-family: optima,tahoma; font-size: 13pt; color: #3c2168; font-style: italic }
+td { font-family: garamond; font-size: 12pt; color: #000 }
+.version { font-family: garamond; font-size: 9pt; color: #fff }
+a { color: #f3eb1c }
+a:visited { color: #3c2168 }
+</style>
+
+</head>
+
+<body bgcolor="#43AFCA">
+
+<table border=0 cellpadding=0 cellspacing=0 width=760 align="center">
+<tr>
+	<td rowspan=11 valign="top" align="right" width=144><img src="../regldg_header_left.gif"><br></td>
+	<td colspan=2 height=6></td> <!-- top blue stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=3 bgcolor="#ffffff"></td> <!-- top white stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=105 valign="middle" align="center"><img src="../regldg_header_name.gif"><br></td> <!-- second blue stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=22><img src="../regldg_header_description.gif"><br></td>
+</tr>
+<tr>
+	<td rowspan=7 height=149 width=207 valign="top" valign="left"><img src="../regldg_header_book.gif"><br></td>
+	<td height=13></td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td height=56>
+	
+	<!-- Info, Download, Documentation, Contact table -->
+	<table border=0 cellpadding=0 cellspacing=0 width="100%" height="100%" valign="middle" align="center">
+	<tr>
+		<td rowspan=2 width="15%">&nbsp;</td>
+		<td width="40%"><a href="../index.html"><img src="../regldg_header_info.gif" border=0></a><br></td>
+		<td rowspan=2 width="10%">&nbsp;</td>
+		<td width="45%"><a href="../download.html"><img src="../regldg_header_download.gif" border=0></a><br></td>
+	</tr>
+	<tr>
+		<td><a href="index.html"><img src="../regldg_header_documentation.gif" border=0></a><br></td>
+		<td><a href="../contact.html"><img src="../regldg_header_contact.gif" border=0></a><br></td>
+	</tr>
+	</table>
+	
+	</td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td height="33">
+	
+	<!-- Try it -->
+	<table border=0 cellpadding=0 cellspacing=0 width="100%" height="100%" valign="middle" align="center">
+	<form method="post" action="../tryit.php">
+	<tr>
+		<td width="15%">&nbsp;</td>
+		<td width="15%" valign="middle"><img src="../regldg_header_tryit.gif"></td>
+		<td width="40%" valign="middle"><input type="text" size=20 name="regex" value="(a|b)[cd]{2}\1"></td>
+		<td width="30%" valign="middle">&nbsp; <input type="submit" value="generate"></td>
+	</tr>
+	</form>
+	</table>
+	
+	</td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td align="right" valign="middle" class="version">Current version: 1.0.0</td>
+</tr>
+<tr>
+	<td colspan=3>
+	<h2>Regular Expression Capabilities</h2><hr>
+	The following is a comprehensive list of the regular expression language that regldg will understand.
+	<p>
+	<table border=0 cellspacing=0 cellpadding=5 align="center" width="80%">
+	<tr>
+		<td><a href="#individualcharacters">Individual Characters</a><br>
+			&nbsp; <a href="#metacharacters">Meta-characters</a><br>
+			<a href="#metacharacterclasses">Meta-character classes</a>
+		</td>
+		<td width="10%"></td>
+		<td><a href="#groupings">Groupings</a><br>
+			<a href="#alternations">Alternations</a><br>
+			<a href="#backreferences">Backreferences</a>
+		</td>
+		<td width="10%"></td>
+		<td valign="top"><a href="#characterclasses">Character classes</a><br>
+			<a href="#quantifiers">Quantifiers</a><br>
+		</td>
+	</tr>
+	</table>
+	<p><br>
+	<a name="individualcharacters"><h3>Individual characters</h3></a><hr width="45%" align="left">
+	You can enter individual characters in a few methods.  regldg operates on characters in the ASCII and extended ASCII system, values 0 through
+	255.<br><br>
+	<table border=0 bgcolor="#ffffff" cellpadding=8 cellspacing=2 align="center">
+	<tr>
+		<th>Regular Expression</th><th>Meaning</th><th>Example</th><th>Produces</th>
+	</tr>
+	<tr>
+		<td><b>p</b> (any printable character)</td><td>p (that printable character)</td><td><b>p</b></td><td align="center"><b>p</b></td>
+	</tr>
+	<tr>
+		<td><b>\a</b></td><td>Bell character (ASCII 7)</td><td><b>\a</b></td><td align="center"><b>[BEL]</b></td>
+	</tr>
+	<tr>
+		<td><b>\b</b></td><td>Backspace character (ASCII 8)</td><td><b>\b</b></td><td align="center"><b>[BS]</b></td>
+	</tr>
+	<tr>
+		<td><b>\t</b></td><td>Horizontal tab character (ASCII 9)</td><td><b>\t</b></td><td align="center"><b>[HT]</b></td>
+	</tr>
+	<tr>
+		<td><b>\n</b></td><td>Newline character (ASCII 10)</td><td><b>\n</b></td><td align="center"><b>[NL]</b></td>
+	</tr>
+	<tr>
+		<td><b>\v</b></td><td>Vertical tab character (ASCII 11)</td><td><b>\v</b></td><td align="center"><b>[VT]</b></td>
+	</tr>
+	<tr>
+		<td><b>\f</b></td><td>Form feed character (ASCII 12)</td><td><b>\f</b></td><td align="center"><b>[FF]</b></td>
+	</tr>
+	<tr>
+		<td><b>\r</b></td><td>Carriage return character (ASCII 13)</td><td><b>\r</b></td><td align="center"><b>[CR]</b></td>
+	</tr>
+	<tr>
+		<td><b>\e</b></td><td>Escape character (ASCII 27)</td><td><b>\e</b></td><td align="center"><b>[ESC]</b></td>
+	</tr>
+	<tr>
+		<td><b>\zNNN</b></td><td>A character specified by the ASCII code NNN (decimal). NNN can be 1, 2, or 3 digits, less than 256.</td><td><b>\z49</b></td><td align="center"><b>1</b></td>
+	</tr>
+	<tr>
+		<td><b>\z{NNN}</b></td><td>A character specified by the ASCII code NNN (decimal). NNN can be 1, 2, or 3 digits, less than 256.<br>The { and } help to avoid confusion.  See <a href="#confusion">note</a> below.</td><td><b>\z{119}</b></td><td align="center"><b>w</b></td>
+	</tr>
+	<tr>
+		<td><b>\oNNN</b></td><td>A character specified by the ASCII code NNN (octal). NNN can be 1, 2, or 3 digits, less than 400 (octal).</td><td><b>\o072</b></td><td align="center"><b>:</b></td>
+	</tr>
+	<tr>
+		<td><b>\o{NNN}</b></td><td>A character specified by the ASCII code NNN (octal). NNN can be 1, 2, or 3 digits, less than 400 (octal).<br>The { and } help to avoid confusion.  See <a href="#confusion">note</a> below.</td><td><b>\o{12}</b></td><td align="center"><b>[NL]</b></td>
+	</tr>
+	<tr>
+		<td><b>\xNN</b></td><td>A character specified by the ASCII code NN (hexadecimal). NN can be 1 or 2 digits, less than FF (hexadecimal).</td><td><b>\x5D</b></td><td align="center"><b>]</b></td>
+	</tr>
+	<tr>
+		<td><b>\x{NN}</b></td><td>A character specified by the ASCII code NN (hexadecimal). NN can be 1 or 2 digits, less than FF (hexadecimal).<br>The { and } help to avoid confusion.  See <a href="#confusion">note</a> below.</td><td><b>\x{26}</b></td><td align="center"><b>&amp;</b></td>
+	</tr>
+	</table>
+	<a name="confusion"><h3>Possible confusion with numerically-specified characters</h3></a>
+	Numerically-specified characters (using the constructs <b>\zNNN</b>, <b>\oNNN</b>, and <b>\xNNN</b> are a source of possible confusion.
+	Consider the regular expression <b>\z1234</b>.  Does it mean <b>\z1</b> 234, <b>\z12</b> 34, or <b>\z123</b> 4?  Who's to say?  regldg will interpret
+	it as the last case, because it will continue to build numerically specified characters until the limits of its type are reached. Here, a decimal
+	numerically specified character can use up to three numbers, and since they were available, it used all three.  To avoid possible confusion, use
+	the { and } characters to tell regldg exactly which numbers to use in your numerically specified characters.
+	<p>
+	<a name="metacharacters"><h3>Meta-characters</h3></a>
+	Certain characters have two meanings in regular expressions.  Alone, their meaning is not what they look like.  See
+	below on this page in other sections for each meta-characters special meaning.  To use a meta-character's printed
+	meaning, just put a <b>\</b> before it (this is called &quot;escaping&quot; it). A list of these characters are as
+	follows:
+	<p>
+	<table border=0 bgcolor="#ffffff" cellpadding=8 cellspacing=2 align="center">
+	<tr>
+		<th colspan=4>Meta-characters which must be escaped</th>
+	</tr>
+	<tr>
+		<th>\</th><th>|</th><th>*</th><th>?</th>
+	</tr>
+	<tr>
+		<th>+</th><th>.</th><th>(</th><th>)</th>
+	</tr>
+	<tr>
+		<th>[</th><th>]</th><th>{</th><th>}</th>
+	</tr>
+	</table>
+	<p>
+	An example regular expression is <b>1+1</b>.  This does not mean 1+1 as it looks, because the <b>+</b> is a
+	quantifier (see the section <a href="#quantifiers">Quantifiers</a> below).  To make 1+1, you must escape the <b>+</b> in the regular
+	expression, making the proper regular expression <b>1\+1</b>.
+	<p><br>
+	
+	<a name="metacharacterclasses"><h3>Meta-character classes</h3></a><hr width="45%" align="left">
+	regldg understands the basic meta-character classes in perl.  In regldg, however, meta-character classes are
+	subject to the constraints of the character universe and the strictness of checking	the character universe.
+	For more information about the character universe, see <a href="character_universe.html">character universes</a>.
+	<p>
+	<table border=0 bgcolor="#ffffff" cellpadding=8 cellspacing=2 align="center">
+	<tr>
+		<th>Meta-character class</th><th>Characters included</th><th>Description</th>
+	</tr>
+	<tr>
+		<td><b>.</b></td><td colspan=2>Any character in the current character universe (including \n)</td>
+	</tr>
+	<tr>
+		<td><b>\d</b></td><td>0123456789</td><td>Digits</td>
+	</tr>
+	<tr>
+		<td><b>\D</b></td><td colspan=2>Any character in the current character universe, excluding the members of <b>\d</b></td>
+	</tr>
+	<tr>
+		<td><b>\s</b></td><td>[SPACE][HT][VT][NL][FF]</td><td>Whitespaces</td>
+	</tr>
+	<tr>
+		<td><b>\S</b></td><td colspan=2>Any character in the current character universe, excluding the members of <b>\s</b></td>
+	</tr>
+	<tr>
+		<td><b>\w</b></td><td>ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz0123456789_</td><td>Alphanumerics and _</td>
+	</tr>
+	<tr>
+		<td><b>\W</b></td><td colspan=2>Any character in the current character universe, excluding the members of <b>\w</b></td>
+	</tr>
+	<tr>
+		<td><b>\u{1}</b></td><td>ABCDEFGHIJKLMNOPQRSTUVWXYZ</td><td>Uppercase letters</td>
+	</tr>
+	<tr>
+		<td><b>\u{2}</b></td><td>abcdefghijklmnopqrstuvwxyz</td><td>Lowercase letters</td>
+	</tr>
+	<tr>
+		<td><b>\u{4}</b></td><td>0123456789</td><td>Digits</td>
+	</tr>
+	<tr>
+		<td><b>\u{8}</b></td><td>!@#$%^&amp;*</td><td>Shift-with-numbers</td>
+	</tr>
+	<tr>
+		<td><b>\u{16}</b></td><td>;`:'[SPACE],&quot;.?_</td><td>Punctuation</td>
+	</tr>
+	<tr>
+		<td><b>\u{32}</b></td><td>(){}[]</td><td>Closures</td>
+	</tr>
+	<tr>
+		<td><b>\u{64}</b></td><td>~\/|</td><td>Others</td>
+	</tr>
+	<tr>
+		<td><b>\u{128}</b></td><td>+-=&lt;&gt;</td><td>Math</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>\u{NNN}</b></td><td colspan=2>NNN is a number in decimal between 0 and 255, representing the sum of the pre-defined universe character class numbers.
+		The resulting character class will be the union of all the included pre-defined character universes.<br><br>
+		Example: \u{233}<br>
+		233 = 128 + 64 + 32 + 8 + 1<br>
+		So, \u{233} will be the union of \u{1}, \u{8}, \u{32}, \u{64}, and \u{128}
+		</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>\U{NNN}</b></td><td colspan=2>NNN is a number in decimal between 0 and 255, representing the sum of the pre-defined universe character class numbers.
+		The resulting character class will be any character in the current universe, excluding the members of the union of all the included pre-defined universe character classes.<br><br>
+		Example: \U{189}<br>
+		189 = 128 + 32 + 16 + 8 + 4 + 1<br>
+		So, \U{189} will be any character in the current character universe, excluding the members of the union of \u{1}, \u{4}, \u{8}, \u{32}, and \u{128}
+		</td>
+	</tr>
+	
+	</table>
+	<p><br>
+	
+	<a name="groupings"><h3>Groupings</h3></a><hr width="45%" align="left">
+	Groupings, nested groupings, and backreferences to the groupings are supported.  Grouping characters together helps clarify
+	<a href="#alternations">alternations</a>, and allows repeating of past patterns (using <a href="#backreferences">backreferences</a>
+	and <a href="#quantifiers">quantifiers</a>)	in a singular regular expression output.
+	<p>
+
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg -m 35 &quot;(firstpart)anotherpart(second(third)part)&quot;<br>
+		firstpartanotherpartsecondthirdpart
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p><br>
+	
+	<a name="alternations"><h3>Alternations</h3></a><hr width="45%" align="left">
+	Alternations allow you to use &quot;this&quot; or &quot;that&quot;.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;ab|cd&quot;<br>
+		ab<br>cd
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	Alternations are often used with groupings when there are things in the regular expression which are not to be involved in the
+	&quot;this&quot; or &quot;that&quot; game.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;fla(t|pper)&quot;<br>
+		flat<br>flapper
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	regldg can also use multiple alternations to use &quot;this&quot; or &quot;that&quot; or &quot;that&quot; or &quot;that&quot;
+	or &quot;that&quot;.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;(spl|th|fl|r)at&quot;<br>
+		splat<br>
+		that<br>
+		flat<br>
+		rat
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p><br>
+	
+	<a name="backreferences"><h3>Backreferences</h3></a><hr width="45%" align="left">
+	Backreferences are placeholders used to repeat a grouping from before in the same pattern.  Groupings are numbers by their starting
+	<b>(</b> and can be referred to only after they have been closed with a <b>)</b>.
+	<p>
+	
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg -us 19 -m 46 &quot;(Pat|Grandma) went to school today in \1's car\.&quot;
+		<br>Pat went to school today in Pat's car.<br>Grandma went to school today in Grandma's car.
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+
+	<p>
+
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg -m 9 -us 19 &quot;(a(b)c) \1 \2&quot;<br>abc abc b
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	regldg includes an alternative method to use backreferences.  Instead of <b>\1</b> to mean
+	a backreference to grouping 1, you can use <b>\!{1}</b>.  This will completely avoid the ambiguity
+	of whether it is a backreference or an octally-specified character.  (This is, of course, as long as
+	you know this syntax.  Otherwise, you might be completely confused as to what it is!)  In action:
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg -m 9 -us 19 &quot;(a(b)c) \\!{1} \\!{2}&quot;<br>abc abc b
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	Note the double-\s... these were required for me to enter this regex in a tcsh.  To avoid this problem,
+	you could use the command line option <b>--file=-</b> and enter the regex directly into the program instead.
+	<p><br>
+	
+	<a name="characterclasses"><h3>Character classes</h3></a><hr width="45%" align="left">
+	Character classes represent all possible characters for a single location.
+	<p>
+	
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;[ab][cd]&quot;<br>ac<br>bc<br>ad<br>bd
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	
+	<p>
+	Some meta-characters don't need to be escaped while in character classes.  These are <b>(</b>, <b>*</b>,
+	<b>+</b>, <b>?</b>, <b>{</b>, <b>[</b>, <b>|</b>, <b>)</b>, and <b>}</b>.  The <b>\</b> and <b>.</b> characters definitely
+	need to be escaped in a character class.  The range character <b>-</b> and
+	the end-character-class character <b>]</b> must be escaped unless they are the only character in the character class.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg -uc 0 &quot;[(*+?{[|)}\\\-\]\.]&quot;<br>
+		(<br>*<br>+<br>?<br>{<br>[<br>|<br>)<br>}<br>\<br>-<br>]<br>.
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	regldg is also capable of negated character classes, that is, character classes starting with the <b>^</b>
+	character. A negated character class represents all characters in the current character universe, execpt those
+	explicitly written in the negated character class.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg -us 2 &quot;[^abcde]&quot;<br>
+		f<br>g<br>h<br>i<br>j<br>k<br>l<br>m<br>n<br>o<br>p<br>q<br>...
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	<b>[-]</b> and <b>[]]</b> are both handled correctly: <b>[-]</b> is a character class containing only
+	a <b>-</b> character, and <b>[]]</b> is a character class containing only a <b>]</b> character.  Both
+	are actually silly, because a one-element character class could instead be just that character. In any other
+	character class, the <b>-</b> and <b>]</b> characters are meta-characters, and need to be escaped.
+	<p><br>
+	
+	<a name="quantifiers"><h3>Quantifiers</h3></a><hr width="45%" align="left">
+	Quantifiers will allow you to write a character, character class, meta-character class or group once, and have it occur
+	a specifed (possibly variable) number of times.
+	<p>
+	<table border=0 bgcolor="#ffffff" cellpadding=8 cellspacing=2 align="center">
+	<tr>
+		<th>Quantifier</th><th>Meaning</th>
+	</tr>
+	<tr>
+		<td><b>*</b></td><td>The previous character, character class, meta-character class or group occurs between 0 to unlimited times (inclusive).  (Unlimited is controlled
+		by the maximum word length of the program.)
+		</td>
+	</tr>
+	<tr>
+		<td><b>+</b></td><td>The previous character, character class, meta-character class or group occurs between 1 to unlimited times (inclusive).  (Unlimited is controlled
+		by the maximum word length of the program.)
+		</td>
+	</tr>
+	<tr>
+		<td><b>?</b></td><td>The previous character, character class, meta-character class or group occurs between 0 to 1 time (inclusive).
+		</td>
+	</tr>
+	<tr>
+		<td><b>{2}</b></td><td>The previous character, character class, meta-character class or group occurs 2 times.
+		</td>
+	</tr>
+	<tr>
+		<td><b>{1,3}</b></td><td>The previous character, character class, meta-character class or group occurs between 1 to 3 times (inclusive).
+		</td>
+	</tr>
+	<tr>
+		<td><b>{4,}</b></td><td>The previous character, character class, meta-character class or group occurs between 4 and unlimited times (inclusive).  (Unlimitied is controlled
+		by the maximum word length of the program.)
+		</td>
+	</tr>
+	</table>
+	<p>
+	It is assumed that you have a good understanding of the usage of these items. A very important example, however, is when a quantifier
+	acts on groups containing alternations.  In a single word of output, any number of sides
+	of the alternation could be used.  The regular expression <b>[a|b]{2}</b> will produce <b>aa</b>,
+	<b>bb</b>, AND <b>ab</b> and <b>ba</b>.	Shown in an explicit example:
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;(ab|cd){2}&quot;<br>abab<br>cdab<br>abcd<br>cdcd
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	</td>
+</tr>
+</table>
+
+</body>
+
+</html>
