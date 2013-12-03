@@ -1,0 +1,203 @@
+<html>
+
+<head>
+
+<title>regldg home</title>
+
+<style type="text/css">
+h2 { font-family: optima,tahoma; font-size: 15pt; color: #3c2168 }
+td { font-family: garamond; font-size: 12pt; color: #000 }
+.version { font-family: garamond; font-size: 9pt; color: #fff }
+a { color: #f3eb1c }
+a:visited { color: #3c2168 }
+</style>
+
+</head>
+
+<body bgcolor="#43AFCA">
+
+<table border=0 cellpadding=0 cellspacing=0 width=760 align="center">
+<tr>
+	<td rowspan=11 valign="top" align="right" width=144><img src="../regldg_header_left.gif"><br></td>
+	<td colspan=2 height=6></td> <!-- top blue stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=3 bgcolor="#ffffff"></td> <!-- top white stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=105 valign="middle" align="center"><img src="../regldg_header_name.gif"><br></td> <!-- second blue stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=22><img src="../regldg_header_description.gif"><br></td>
+</tr>
+<tr>
+	<td rowspan=7 height=149 width=207 valign="top" valign="left"><img src="../regldg_header_book.gif"><br></td>
+	<td height=13></td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td height=56>
+	
+	<!-- Info, Download, Documentation, Contact table -->
+	<table border=0 cellpadding=0 cellspacing=0 width="100%" height="100%" valign="middle" align="center">
+	<tr>
+		<td rowspan=2 width="15%">&nbsp;</td>
+		<td width="40%"><a href="../index.html"><img src="../regldg_header_info.gif" border=0></a><br></td>
+		<td rowspan=2 width="10%">&nbsp;</td>
+		<td width="45%"><a href="../download.html"><img src="../regldg_header_download.gif" border=0></a><br></td>
+	</tr>
+	<tr>
+		<td><a href="index.html"><img src="../regldg_header_documentation.gif" border=0></a><br></td>
+		<td><a href="../contact.html"><img src="../regldg_header_contact.gif" border=0></a><br></td>
+	</tr>
+	</table>
+	
+	</td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td height="33">
+	
+	<!-- Try it -->
+	<table border=0 cellpadding=0 cellspacing=0 width="100%" height="100%" valign="middle" align="center">
+	<form method="post" action="../tryit.php">
+	<tr>
+		<td width="15%">&nbsp;</td>
+		<td width="15%" valign="middle"><img src="../regldg_header_tryit.gif"></td>
+		<td width="40%" valign="middle"><input type="text" size=20 name="regex" value="(a|b)[cd]{2}\1"></td>
+		<td width="30%" valign="middle">&nbsp; <input type="submit" value="generate"></td>
+	</tr>
+	</form>
+	</table>
+	
+	</td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td align="right" valign="middle" class="version">Current version: 1.0.0</td>
+</tr>
+<tr>
+	<td colspan=3>
+	<h2>Command line options</h2><hr>
+	<table border=0 cellpadding=0 cellspacing=4 align="center" width="100%">
+	<tr><td colspan=2>-d NNN<br>--debug-code=NNN</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Set the debugging code to NNN.  NNN is an integer, currently between 0 and 31
+		(inclusive).  This would probably be better named &quot;verbose-code&quot;, as
+		it allows you to turn on and off the verboseness of different program sections.
+		<p>
+		1 = Errors<br>
+		2 = Program Arguments<br>
+		4 = Character Set Actions<br>
+		8 = General Regex Parsing<br>
+		16 = Detailed Regex Parsing<br>
+		<br>
+		You can decide which sections you want to be verbose by adding only those numbers, and
+		giving the sum to --debug-code.  The default value is <b>1</b>.
+		</td>
+	</tr>
+	<tr><td colspan=2>-f filename<br>--file=filename</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Read in the regular expression from the file filename.  The regular expression
+		should be given on one line in the file, with or without an ending
+		carriage return (ASCII 10).  If the special filename <b>-</b> is given,
+		regldg will finish parsing the command line arguments and then wait for you
+		to enter the regular expression.  This wait will occur without a prompt, so
+		that expected output isn't altered.
+		</td>
+	</tr>
+	<tr><td colspan=2>-m NNN<br>--max-length=NNN</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Set the maximum length of the &quot;words&quot; output to NNN. NNN is an
+		integer, currently 0 or more.  If your regular expression has open-ended
+		quantifiers like <b>*</b>, <b>+</b>, or <b>{3,}</b>, you'll want to keep
+		the maximum length of the words output in check.  Otherwise, there'll be
+		no problems setting it very high.
+		</td>
+	</tr>
+	<tr><td colspan=2>-n NNN<br>--num-words-output=NNN</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Limit the number of words output to NNN.  NNN is an integer.  Negative
+		values mean no limit.  The default is <b>-1</b>.
+		</td>
+	</tr>
+
+	<tr><td colspan=2>-p<br>--parse-only</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Tells regldg to parse the regular expression verbosely, then quit.
+		</td>
+	</tr>
+	<tr><td colspan=2>-r<br>--readable-output</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Replace any &quot;non-printable&quot; character (as defined by isprint()
+		in the ctype.h library,	<b>man isprint</b>) with it's ASCII decimal
+		equivalent surrounded by <b>{</b> and <b>}</b>.  This will allow you to
+		use non-printable characters in your regular expressions, and see what will
+		happen in the output.  You can avoid things like printing system bells,
+		unintended newline characters, backspaces, and any other non-printable character.
+		</td>
+	</tr>
+	<tr><td colspan=2>-uc NNN<br>--universe-checking=NNN</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Set the character universe checking code to NNN.  NNN is an integer, currently
+		between 0 and 3 (inclusive).  Following are descriptions of the character universe
+		checking options:
+		<p>
+		1 = Prevent characters which are not in the character universe to be included when
+			explicitly stated. Without this, you are allowed to use &quot;foreign&quot; characters
+			in your regular expression without modifying the character universe.<br>
+		2 = Prevent character and meta-character classes from being intersected with
+			the current character universe.  Without this, <b>.</b> would
+			represent ASCII characters 0-255, instead of only those in the current character
+			universe.<br>
+		<br>
+		You can combine the character universe checking codes by adding their
+		numbers, and giving the sum to --universe-checking.  The default value
+		is <b>3</b> (strict character universe checking).
+		</td>
+	</tr>
+	<tr><td colspan=2>-us NNN<br>--universe-set=NNN</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Set the character universe to pre-defined set NNN.  NNN is an integer, currently
+		between 0 and 255 (inclusive).  Following are descriptions of the pre-defined
+		universe sets:
+		<p>
+		1 = Uppercase letters A-Z<br>
+		2 = Lowercase letters a-z<br>
+		4 = Digits 0-9<br>
+		8 = Shift-digits !@#$%^&amp;*<br>
+		16 = Punctuation &quot;,'.:;?_` and [space]<br>
+		32 = Parens, brackets and braces ()[]{}<br>
+		64 = Other stuff ~/|\<br>
+		128 = Math +-=<br>
+		<br>
+		You can combine the universe sets by adding their numbers, and
+		giving the sum to --universe-set.  The default value is <b>7</b>.  This
+		will override any previous -u or -us arguments.
+		</td>
+	</tr>
+	<tr><td colspan=2>-u [UNIVERSE]<br>--universe=[UNIVERSE]</td></tr>
+	<tr><td width="10%">&nbsp;</td><td>
+		Explicitly specify the character universe as a character class.  This will
+		override any previous -u or -us arguments.  Note: this
+		does not take into account any previously defined universe or universe set.
+		Any meta-characters specified here will be fully included - <b>.</b> will
+		include all ASCII characters 0-255.
+		Negated character classes (those with <b>^</b> as the first character) will
+		be calculated from the full set of ASCII characters 0-255.
+		</td>
+	</tr>
+	</table>
+	</td>
+</tr>
+</table>
+
+</body>
+
+</html>

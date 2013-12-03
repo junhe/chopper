@@ -1,0 +1,170 @@
+<html>
+
+<head>
+
+<title>regldg home</title>
+
+<style type="text/css">
+h2 { font-family: optima,tahoma; font-size: 15pt; color: #3c2168 }
+td { font-family: garamond; font-size: 12pt; color: #000 }
+.version { font-family: garamond; font-size: 9pt; color: #fff }
+a { color: #f3eb1c }
+a:visited { color: #3c2168 }
+</style>
+
+</head>
+
+<body bgcolor="#43AFCA">
+
+<table border=0 cellpadding=0 cellspacing=0 width=760 align="center">
+<tr>
+	<td rowspan=11 valign="top" align="right" width=144><img src="regldg_header_left.gif"><br></td>
+	<td colspan=2 height=6></td> <!-- top blue stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=3 bgcolor="#ffffff"></td> <!-- top white stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=105 valign="middle" align="center"><img src="regldg_header_name.gif"><br></td> <!-- second blue stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=22><img src="regldg_header_description.gif"><br></td>
+</tr>
+<tr>
+	<td rowspan=7 height=149 width=207 valign="top" valign="left"><img src="regldg_header_book.gif"><br></td>
+	<td height=13></td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td height=56>
+	
+	<!-- Info, Download, Documentation, Contact table -->
+	<table border=0 cellpadding=0 cellspacing=0 width="100%" height="100%" valign="middle" align="center">
+	<tr>
+		<td rowspan=2 width="15%">&nbsp;</td>
+		<td width="40%"><a href="index.html"><img src="regldg_header_info.gif" border=0></a><br></td>
+		<td rowspan=2 width="10%">&nbsp;</td>
+		<td width="45%"><a href="download.html"><img src="regldg_header_download.gif" border=0></a><br></td>
+	</tr>
+	<tr>
+		<td><a href="docs/index.html"><img src="regldg_header_documentation.gif" border=0></a><br></td>
+		<td><a href="contact.html"><img src="regldg_header_contact.gif" border=0></a><br></td>
+	</tr>
+	</table>
+	
+	</td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td height="33">
+	
+	<!-- Try it -->
+	<table border=0 cellpadding=0 cellspacing=0 width="100%" height="100%" valign="middle" align="center">
+	<form method="post" action="tryit.php">
+	<tr>
+		<td width="15%">&nbsp;</td>
+		<td width="15%" valign="middle"><img src="regldg_header_tryit.gif"></td>
+		<td width="40%" valign="middle"><input type="text" size=20 name="regex" value="(a|b)[cd]{2}\1"></td>
+		<td width="30%" valign="middle">&nbsp; <input type="submit" value="generate"></td>
+	</tr>
+	</form>
+	</table>
+	
+	</td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td align="right" valign="middle" class="version">Current version: 1.0.0</td>
+</tr>
+<tr>
+	<td colspan=3>
+	<h2>What is regldg?</h2><hr>
+	<b>regldg</b>, as it says above, is a <b>regular expression grammar language dictionary
+	generator</b>.  This means regldg can generate all possible strings of text that match
+	a given pattern.  This is opposite the usual use of regular expressions in several
+	languages, most notably <b>perl</b>: in these languages, regular expressions are used
+	to see if a string you have can match a pattern. To see the difference another way, in
+	regldg, you give it a pattern, and it will create all the strings of text which
+	match it.  In perl, you give it a pattern and a string to test, and perl
+	will tell you if your string matches your pattern.
+	<p>
+	A regular expression is a concise way to define a pattern of text.  As a simple example,
+	let's say you have an English dictionary file on your computer, and you want to see all
+	of the words that start with <i>a</i> and also have a <i>p</i> in them somewhere.  Or,
+	you want to list all words containing adjacent, duplicate letters.  These two examples
+	are very easy to accomplish using regular expressions.
+	<p>
+	In computer science speak, a regular expression pattern defines a <b>grammar</b>.  All
+	<b>words</b> (in the above paragraph, &quot;strings&quot;), which match the
+	pattern are said to be in the <b>language</b> defined by the grammar.  And as we all
+	know, a book containing the words of a language is called a dictionary.  Thus the
+	title and function of the program are now clarified.
+	<p>
+	This website will not teach regular expressions, but will focus on their use with the
+	regldg program.  For more information on regular expressions, a
+	<a target="_blank" href="http://www.google.com/search?rls=en&q=regular+expressions&ie=UTF-8&oe=UTF-8">simple google search</a>
+	will yield (at the time of this writing) 48,500,000 sites.  My source for learning
+	regular expressions was in the perl <a target="_blank" href="http://perldoc.perl.org/perl.html">man pages</a>.
+	(No, their not only for men, it's short for <i>manual</i>.)  Make sure to check out the
+	sections entitled &quot;perlrequick&quot;, &quot;perlretut&quot;, and &quot;perlre&quot;. On
+	*nix systems, try <b>man perlrequick</b> and <b>man perlreftut</b>. I can also recommend
+	O'Reilly's book &quot;<a target="_blank" href="http://www.oreilly.com/catalog/regex2/">Mastering Regular Expressions</a>&quot;.
+	<p>
+	regldg is written in c, and should be able to be run (but has not been tested) on
+	any platform which has a c compiler.  In other words, if you have a computer, you can use
+	regldg.
+	<p><br>
+	<h2>Before you begin</h2><hr>
+	Before you jump in, there are a few things to know.  First, there are some 
+	differences between the regular expressions you find in perl, and the regular expressions
+	this program understands.   Implementing all of perl's regular expressions either weren't
+	required for my uses, could be expressed in other ways, or just didn't make sense.  A brief
+	of the regular expression differences is given below, but for a more comprehensive list,
+	you'd do better to check out the documentation pages <a href="docs/regex_capabilities.html">regular expressions capabilities</a>
+	and <a href="docs/perl_regldg_regex_differences.html">regular expressions differences between
+	perl and regldg</a>.
+	<p>
+	Specific ASCII characters can be specified in perl in decimal, octal, hexadecimal, and wide
+	hex formats. regldg can do all these except wide hex, but in slightly different ways.  For example, in perl,
+	<b>\40</b> will produce a space character.  (40 in octal is 32 in decimal, and character 32 in
+	ASCII is a space). In regldg, you can use <b>\o40</b>, <b>\x20</b>, or <b>\z32</b> (z for decimal integer).  This was
+	done to remove the ambiguity of <b>\1</b> in perl-is it an ASCII 1 character, or is a backreference
+	to the first grouping? Some features of perl's regular expressions are missing. perl's or
+	POSIX's named character classes like <b>{IsUpper}</b> or <b>[:digit:]</b> are not implemented in regldg.
+	You can, however, create your own character classes like <b>[A-Z]</b> and <b>[0-9]</b>, so that shouldn't
+	be a big deal.  Also currently missing are advanced regular expressions features like non-
+	capturing groupings, zero-width assertions, and probably a bunch more things that I don't know
+	about.  These weren't necessary for my own applications, and could be added in later versions
+	if necessary.  Finally, some regular expressions features just don't make sense for use in
+	regldg.  What would you expect the difference in regldg's output to be for the regular expressions <b>a*?</b> and <b>a*</b> ?
+	I don't know either, so I didn't implement it.
+	<p>
+	As a final note, uniqueness in the output is not guaranteed.  Quite to the contrary,
+	regular expressions	like <b>a{2,3}a{3,2}</b> <i>are</i> guaranteed to produce duplicates.
+	<p><br>
+	<h2>Meaning of the logo</h2><hr>
+	O'Reilly's series of computer books use a different animal for each topic.  They use an owl
+	for the cover of Mastering Regular Expressions.  regldg uses regular expressions and processes
+	them to their bone to extract every possible thing they mean.  Thus the owl being processed in
+	a meat grinder, resulting in a dictionary.
+	<p><br>
+	<h2>Origins of regldg</h2><hr>
+	The development of regldg began under the hot Namibian sun for morally-correct reasons, which
+	include an unreasonable person in a position of authority.  She was in charge of a large branch
+	of a volunteer organization, and strangely lacked the right experience, common sense,
+	or concern for others.  I just wanted to check my email once a month, and specifically, I knew her
+	password started with <i>omu</i>, was 7 characters long, and I only had access to a very old
+	computer. Thus regldg was born.
+	</td>
+</tr>
+</table>
+
+</body>
+
+</html>

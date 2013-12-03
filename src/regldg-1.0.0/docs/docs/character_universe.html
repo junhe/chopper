@@ -1,0 +1,321 @@
+<html>
+
+<head>
+
+<title>regldg home</title>
+
+<style type="text/css">
+h2 { font-family: optima,tahoma; font-size: 15pt; color: #3c2168 }
+h3 { font-family: optima,tahoma; font-size: 13pt; color: #3c2168; font-style: italic }
+td { font-family: garamond; font-size: 12pt; color: #000 }
+.version { font-family: garamond; font-size: 9pt; color: #fff }
+a { color: #f3eb1c }
+a:visited { color: #3c2168 }
+</style>
+
+</head>
+
+<body bgcolor="#43AFCA">
+
+<table border=0 cellpadding=0 cellspacing=0 width=760 align="center">
+<tr>
+	<td rowspan=11 valign="top" align="right" width=144><img src="../regldg_header_left.gif"><br></td>
+	<td colspan=2 height=6></td> <!-- top blue stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=3 bgcolor="#ffffff"></td> <!-- top white stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=105 valign="middle" align="center"><img src="../regldg_header_name.gif"><br></td> <!-- second blue stripe -->
+</tr>
+<tr>
+	<td colspan=2 height=22><img src="../regldg_header_description.gif"><br></td>
+</tr>
+<tr>
+	<td rowspan=7 height=149 width=207 valign="top" valign="left"><img src="../regldg_header_book.gif"><br></td>
+	<td height=13></td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td height=56>
+	
+	<!-- Info, Download, Documentation, Contact table -->
+	<table border=0 cellpadding=0 cellspacing=0 width="100%" height="100%" valign="middle" align="center">
+	<tr>
+		<td rowspan=2 width="15%">&nbsp;</td>
+		<td width="40%"><a href="../index.html"><img src="../regldg_header_info.gif" border=0></a><br></td>
+		<td rowspan=2 width="10%">&nbsp;</td>
+		<td width="45%"><a href="../download.html"><img src="../regldg_header_download.gif" border=0></a><br></td>
+	</tr>
+	<tr>
+		<td><a href="index.html"><img src="../regldg_header_documentation.gif" border=0></a><br></td>
+		<td><a href="../contact.html"><img src="../regldg_header_contact.gif" border=0></a><br></td>
+	</tr>
+	</table>
+	
+	</td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td height="33">
+	
+	<!-- Try it -->
+	<table border=0 cellpadding=0 cellspacing=0 width="100%" height="100%" valign="middle" align="center">
+	<form method="post" action="../tryit.php">
+	<tr>
+		<td width="15%">&nbsp;</td>
+		<td width="15%" valign="middle"><img src="../regldg_header_tryit.gif"></td>
+		<td width="40%" valign="middle"><input type="text" size=20 name="regex" value="(a|b)[cd]{2}\1"></td>
+		<td width="30%" valign="middle">&nbsp; <input type="submit" value="generate"></td>
+	</tr>
+	</form>
+	</table>
+	
+	</td>
+</tr>
+<tr>
+	<td height=3 bgcolor="#ffffff"></td>
+</tr>
+<tr>
+	<td align="right" valign="middle" class="version">Current version: 1.0.0</td>
+</tr>
+<tr>
+	<td colspan=3>
+	<h2>Character universe introduction</h2><hr>
+	<ul>
+	<li><a href="#characteruniversespecification">Character universe specification</a>
+	<li><a href="#characteruniversechecking">Character universe checking</a>
+	</ul>
+	<p><br>
+	<a name="characteruniversespecification"><h3>Character universe specification</h3></a>
+	<hr width="45%" align="left">
+	The character universe is the central topic to understanding how and why regldg
+	does what it does with character and meta-character classes.  The character
+	universe is the group of characters that regldg is allowed to use to make the
+	words of the output dictionary.
+	
+	Lets look at an example. Given the regular expression <b>.</b> , what do
+	you expect the output of regldg to be?  Well, it is clear that each word output
+	will be only one character long, but which characters will those be?  Could they
+	be only uppercase letters?  Could they include lowercase letters too?  Numbers?
+	Other symbols on the keyboard?  Or, maybe they could be all the possible characters
+	from the ASCII and extended ASCII character sets (0-255)?  The set of possible
+	characters is called the character universe, and you can decide what it should
+	be for each run of regldg.
+	<p>
+	There are two command line options to set the character universe.  Firstly, there
+	are a number of common, pre-defined character universe sets.  These are:
+	<p>
+	1. Uppercase letters A-Z<br>
+	2. Lowercase letters a-z<br>
+	4. Digits 0-9<br>
+	8. Shift-digits !@#$%^&amp;*<br>
+	16. Punctuation &quot;,'.:;?_` and [space]<br>
+	32. Parentheses, brackets, and braces ()[]{}<br>
+	64. Other stuff ~/|\<br>
+	128. Math +-=
+	<p>
+	To use any one of these pre-defined character universe sets, specify the <b>-us NNN</b>
+	or <b>--universe-set=NNN</b> option on the command line, where NNN is the number of
+	the universe set.
+	<p>
+	You've probably noticed that the number of each pre-defined character universe
+	set is a power of 2.  This is so that you can combine universe sets simply by
+	adding their numbers.  If you want the character universe to have letters (upper-
+	and lowercase), numbers, and punctuation, you can specify universe set number <b>
+	23</b> (1 + 2 + 4 + 16).
+	<p>
+	The second way to specify the character universe is explicitly in a character class.
+	You can put whatever characters you'd like in it using the formats shown in
+	regldg's <a href="regex_capabilities.html">regular expression
+	capabilities</a>.  You can specify the character class on the command line with
+	option <b>-u [UNIVERSE]</b> or <b>--universe=[UNIVERSE]</b>.  Be sure to start
+	the character class with <b>[</b> and end with <b>]</b>.  It will be parsed
+	exactly like a character class, so if you make it a negated character class, it
+	will be negated from the default character universe (universe set 7), or, if you
+	already specified a different universe on the command line with <b>-u</b> or <b>-us</b>,
+	it will be negated from that universe.
+	<p>
+	Here's an example: use regldg to generate all possible combinations of two-letter
+	words using only the characters A, B, and C.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;--universe=[ABC]&quot; &quot;.{2}&quot;<br>
+		AA<br>BA<br>CA<br>AB<br>BB<br>CB<br>AC<br>BC<br>CC 
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	To show that regldg is not afraid to be complex, let's do the same thing
+	using the negated character class method.  First, we set the character universe
+	to uppercase letters.  Then, we take out D-Z (leaving A-C).  Finally, using
+	the remaining characters, we output all possible two-letter words.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg --universe-set=1 &quot;--universe=[^D-\z{90}]&quot; &quot;.{2}&quot;<br>
+		AA<br>BA<br>CA<br>AB<br>BB<br>CB<br>AC<br>BC<br>CC 
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p><br>
+	<a name="characteruniversechecking"><h3>Character universe checking</h3></a>
+	<hr width="45%" align="left">
+	While parsing a regular expression, there are two areas where the character universe
+	must be controlled.  regldg allows the control in both of these areas to be strict (on)
+	or lax (off) for each run, determined by a single command line option.
+	<p>
+	The first area where controlling the character universe is important is in the explicit
+	entry of characters.  If the character universe is set to the uppercase letters <b>A-Z</b>,
+	and a regular expression contains a space, should it result in an error (strict), or should it
+	be allowed in only that place (lax)?  This can be controlled by using the command line option
+	<b>-uc N</b> or <b>--universe-checking=N</b>.  Setting this value to <b>1</b> will
+	enable strict checking of explicitly entered characters.
+	<p>
+	The second area where controlling the character universe is important is character
+	and meta-character classes.  If the character universe is set to the digits <b>0-4</b> only,
+	and a regular expression contains a <b>\d</b> meta-character, should the resulting
+	character class contain only the digits 0-4 (strict), or should it contain all the digits
+	according to the full specification of <b>\d</b> (lax)?  This behavior can also
+	be controlled by using the command line option <b>-uc N</b> or <b>--universe-checking=N</b>.
+	Setting this value to <b>2</b> will enable strict checking of the contents of
+	character and meta-character classes.
+	<p>
+	To enable both types of strictness, 1 + 2 = <b>3</b>, so set <b>-uc 3</b> or
+	<b>--universe-checking=3</b>.  To disable both types of strictness, use
+	<b>-uc 0</b> or <b>--universe-checking=0</b>.
+	<p>
+	Lets see these in action with an example. If you are using a character universe
+	of only the letters A-E, and generating all possible words, but you want each
+	word of output to start with Z, you'd like to be able to use
+	<b>regldg -u &quot;[ABCDE]&quot; "Z.*"</b>.  Here we go:
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;--universe=[ABCDE]&quot; "Z.*"<br>
+		regldg: (Error) Z.*<br>
+		regldg: (Error) ^<br>
+		regldg: (Error) parse_regex_pass_char: specified character is not in the universe!
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	It didn't work! regldg got angry because we tried to use <b>Z</b>, but <b>Z</b> isn't
+	in the character universe <b>[ABCDE]</b>.  Ok, so lets turn off universe checking
+	and see what happens.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;--universe=[ABCDE]&quot; --universe-checking=0 &quot;Z.*&quot;<br>
+		Z<br>Z<br>Z<br>Z<br>Z<br>Z<br>Z<br>Z<br>Z<br>Z<br>Z<br>Z<br>Z<br><br>Z<br><br>Z<br>...
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	Hmmm.  Unexpected results!  And wonderful system bells!  Lets turn on <b>--readable-output</b>
+	to see what happened.
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;--universe=[ABCDE]&quot; --universe-checking=0 --readable-output &quot;Z.*&quot;<br>
+		Z<br>Z{000}<br>Z{001}<br>Z{002}<br>Z{003}<br>Z{004}<br>Z{005}<br>Z{006}<br>
+		Z{007}<br>Z{008}<br>Z{009}<br>Z{010}<br>Z{011}<br>Z{012}<br>Z{013}<br>...
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>	
+	It did allow us to start words with Z, which wasn't in the character universe,
+	but why are we getting ASCII characters starting from 0?  The problem is the <b>.</b>
+	metacharacter.  As explained above, regldg allows you to make metacharacters retain
+	all their characters (lax checking), or have the classes they represent thinned
+	according to the current character universe (strict checking).  (Technically: the
+	character or meta-character class can be intersected with the character universe.)
+	In the above example, the <b>.</b> metacharacter was allowed to represent all
+	ASCII values 0-255, so we didn't get only the expected ZA, ZB, and ZC.  Since we
+	want <b>.</b> to represent only those charaters in the current character universe,
+	we should turn on this type of strict character universe checking by adding a <b>2</b>
+	to the <b>--universe-checking</b> option. So, using this information:
+	<p>
+	<table border=0 cellpadding=0 cellspacing=0 width=533 align="center">
+	<tr>
+		<td colspan=4 width=533 valign="top" height=29><img src="../terminal_top.gif"><br></td>
+	</tr>
+	<tr>
+		<td width=15 background="../terminal_left.gif">&nbsp;</td>
+		<td width=4 bgcolor="#ffffff"></td>
+		<td width=499 bgcolor="#ffffff" style="font-family: monaco; font-size: 9pt">
+		&gt; regldg &quot;--universe=[ABCDE]&quot; --universe-checking=2 &quot;Z.*&quot;<br>
+		Z<br>ZA<br>ZB<br>ZC<br>ZD<br>ZE<br>ZAA<br>ZBA<br>ZCA<br>ZDA<br>ZEA<br>ZAB<br>
+		ZBB<br>ZCB<br>ZDB<br>ZEB<br>ZAC<br>ZBC<br>ZCC<br>ZDC<br>ZEC<br>ZAD<br>...
+		</td>
+		<td width=15 background="../terminal_right.gif">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan=4 width=512 height=24><img src="../terminal_bottom.gif"></td>
+	</tr>
+	</table>
+	<p>
+	All set!  That is what we wanted.
+	<p>
+	</td>
+</tr>
+</table>
+
+</body>
+
+</html>
