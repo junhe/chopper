@@ -412,8 +412,8 @@ class Walkman:
                                              'chunks_and_ops')
         chunks_and_ops = literal_eval(chunks_and_ops)
 
-        print "------------------------------------------"
-        pprint.pprint( chunks_and_ops )
+        #print "------------------------------------------"
+        #pprint.pprint( chunks_and_ops )
 
         pyWorkload.pattern_iter.GenWorkloadFromChunksOfFiles(
                 chunks_and_ops,
@@ -679,7 +679,7 @@ class Troops:
 
         self.confparser.set('workload', 'name', 'manyfiletraverse')
 
-        filesize = 64*1024*1024
+        filesize = 8*1024*1024
         chunk_size = 1024*1024
 
         self.confparser.add_section(self.confparser.get('workload','name'))
@@ -689,19 +689,18 @@ class Troops:
                             'chunk_size', str(chunk_size))
         
         for entry in pyWorkload.pattern_iter.pattern_iter_nfiles(
-                                  nfiles     =20,
+                                  nfiles     =2,
                                   filesize   =filesize, 
                                   chunksize  =chunk_size):
             #pprint.pprint( entry )
             chunks_and_ops = str(entry)
-            print "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
-            print chunks_and_ops
+            #print "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
+            #print chunks_and_ops
             self.confparser.set(self.confparser.get('workload','name'),
                                 'chunks_and_ops',
                                 chunks_and_ops)
 
             self._walkman_walk(self.confparser)
-            exit(1)
             #time.sleep(1)
 
 def main(args):
@@ -725,6 +724,7 @@ def main(args):
     #walkman = Walkman(confparser, 'recorder')
     #walkman._RecordStatus(0, 0)
     walkmanlog.close()
+    exit(0)
 
 if __name__ == "__main__":
     main(sys.argv)

@@ -749,7 +749,7 @@ def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
     phy_blocks = []
     for row in df_ext.table:
         if filter_str in row[hdr.index('filepath')]:
-            print row
+            #print row
             physical_start = int(row[hdr.index('Physical_start')])
             physical_end = int(row[hdr.index('Physical_end')])
         
@@ -800,7 +800,7 @@ def get_d_span_from_extent_list(df_ext, filepath):
         if row[hdr.index('filepath')] == filepath and \
            row[hdr.index('Level_index')] != '-1'  and \
            row[hdr.index('Level_index')] == row[hdr.index('Max_level')]:
-            print row
+            #print row
             physical_start = int(row[hdr.index('Physical_start')])
             physical_end = int(row[hdr.index('Physical_end')])
             mmin = min(physical_start, physical_end)
@@ -811,9 +811,9 @@ def get_d_span_from_extent_list(df_ext, filepath):
             if mmax > block_max:
                 block_max = mmax
 
-            print mmin, mmax
-            print physical_start, physical_end
-            print block_min, block_max
+            #print mmin, mmax
+            #print physical_start, physical_end
+            #print block_min, block_max
 
     if block_max == -1:
         # no extent found

@@ -87,7 +87,10 @@ def pattern_iter_nfiles(nfiles, filesize, chunksize):
     # the n files
     ## pick n
     for j in range(10):
-        ops_for_files = random.sample( possible_ops, nfiles )
+        #ops_for_files = random.sample( possible_ops, nfiles )
+        print 'len', len(possible_ops)
+        ops_for_files = [random.choice( possible_ops ) for i in range(nfiles)]
+        pprint.pprint( ops_for_files )
         #ops_for_files = list(possible_ops[0]) * nfiles 
         chks_ops_of_files = zip (file_chunks, ops_for_files)
         chks_ops_of_files = [ dict( zip( ['chunks', 'operations'], FileEntry) ) \
@@ -97,8 +100,8 @@ def pattern_iter_nfiles(nfiles, filesize, chunksize):
         chks_ops_of_files = [ merge_chks_ops( fentry ) for fentry in chks_ops_of_files]
         chks_ops_of_files = zip( *chks_ops_of_files )
         chks_ops_of_files = [y for x in chks_ops_of_files for y in x]
-        print "pppppppppppppppppppppp"
-        pprint.pprint( chks_ops_of_files )
+        #print "pppppppppppppppppppppp"
+        #pprint.pprint( chks_ops_of_files )
         yield chks_ops_of_files
 
 def merge_chks_ops ( chks_ops ):
@@ -148,7 +151,9 @@ def operations_iter(num_of_chunks, method='fixed'):
         closes[-1] = True
 
         # 2. no fsync
-        fsyncs = [False] * num_of_chunks
+        #fsyncs = [False] * num_of_chunks
+        fsyncs_iter = itertools.product([False, True],
+                            repeat=num_of_chunks)
         # 3. always fsync
         #fsyncs = [True] * num_of_chunks
 
@@ -156,10 +161,9 @@ def operations_iter(num_of_chunks, method='fixed'):
         syncs = [False] * num_of_chunks
         #syncs[-1] = True
 
-        wrappers = zip( opens, fsyncs, closes, syncs )
-        wrappers = [y for x in wrappers for y in x]
-
-        for i in range(100):
+        for fsyncs in fsyncs_iter:
+            wrappers = zip( opens, fsyncs, closes, syncs )
+            wrappers = [y for x in wrappers for y in x]
             yield wrappers
 
     elif method == 'sample':
@@ -261,7 +265,7 @@ def GenWorkloadFromChunksOfFiles(  chks_ops,
                                    rootdir,
                                    tofile
                                 ):
-    print "888888888888888888888888888888888888"
+    #print "888888888888888888888888888888888888"
     #pprint.pprint( chks_ops_of_files )
 
     prd = producer.Producer(
@@ -270,7 +274,7 @@ def GenWorkloadFromChunksOfFiles(  chks_ops,
     prd.addDirOp('mkdir', pid=0, dirid=0)
 
     for entry in chks_ops:
-        pprint.pprint(entry)
+        #pprint.pprint(entry)
         if entry['operations']['OPEN']:
             prd.addUniOp('open', pid=0, dirid=0, fileid=entry['chunk']['fileid'])
         
