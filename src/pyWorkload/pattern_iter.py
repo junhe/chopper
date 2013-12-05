@@ -188,6 +188,29 @@ def split_a_file_to_chunks(filesize, chunksize, fileid=0):
                                                     for c in chunks ]
     return ret
 
+def chunk_order( chunks ):
+    chunk_indice = []
+    for off, len in chunks:
+        index = off/len
+        chunk_indice.append(index)
+    return chunk_indice
+
+def pattern_string( chunks, wrappers ):
+    chunk_indice = chunk_order(chunks)
+    wrappers = [ int(x) for x in wrappers]
+    
+    n = len(wrappers)
+    o = [ wrappers[i] for i in range(0, n, N_OPERATIONS) ]
+    f = [ wrappers[i] for i in range(1, n, N_OPERATIONS) ]
+    c = [ wrappers[i] for i in range(2, n, N_OPERATIONS) ]
+    s = [ wrappers[i] for i in range(3, n, N_OPERATIONS) ]
+
+    mix = zip(o,chunk_indice,f,c,s) 
+    mix = [ str(j) for x in mix for j in x ]
+    mix = "".join( mix )
+
+    return mix
+
 def pattern_iter(nfiles, filesize, chunksize):
     num_of_chunks = filesize / chunksize
     chunksize = filesize / num_of_chunks

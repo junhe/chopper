@@ -302,86 +302,129 @@ class Walkman:
                 # however, sometimes it is useful to record faulty ones
                 print 'Return of _play_workload_wrapper() =', ret
                 if ret == 0:
-                    global feedback_dic
                     ret_record = self._RecordStatus(year=year,season=season+1, 
                                                     savedata=False)
-                    # initialize feedback_dic as needed
-                    for k in ret_record.keys():
-                        if not feedback_dic.has_key(k):
-                            feedback_dic[k] = []
+                    self._post_run_processing(ret_record, year, season)
+                else:
+                    walkmanlog.write('>>>>>>>> One Failed walkman <<<<<<<<<<<<')
+                    confparser.write( walkmanlog )
 
-                    #print ['*'] * 100
-                    print ret_record
-                    print feedback_dic
-                    #feedback_inuse = 'd_span'
-                    feedback_inuse = 'physical_layout_hash'
-                    print feedback_inuse
+    def _post_run_processing(self, ret_record, year, season):
+        self._record_ext_stats(ret_record, year, season)
+    
+    def _record_ext_stats(self, ret_record, year, season):
+        if ret_record.has_key('d_span'):
+            # The returned d_span is good.
+            d_span = ret_record['d_span']
+            if d_span != 'NA':
+                d_span = int(ret_record['d_span'])
+            self.confparser.set(
+                                self.confparser.get('workload', 'name'),
+                                'd_span',
+                                str(d_span))
 
-                    if ret_record[feedback_inuse] in feedback_dic[feedback_inuse]:
-                        # already has it, skip recording
-                        print 'skip'
-                        continue
-                    print 'going to record'
+        if ret_record.has_key('physical_layout_hash'): 
+            # has this key in ret_record 
+            self.confparser.set(
+                                self.confparser.get('workload', 'name'),
+                                #'workload_many_file_traverse',
+                                'physical_layout_hash', str(ret_record['physical_layout_hash']) )
+ 
+        # save wrappers sequence ((()))
+        if self.confparser.get('workload', 'name') == 'singlefiletraverse':
+            wps = self.confparser.get(
+                                'singlefiletraverse',
+                                'wrappers')
+            wps = literal_eval(wps)
+            self.confparser.set(
+                                'singlefiletraverse',
+                                'pattern_symbols',
+                            pyWorkload.pattern_iter.wrappers_to_symbols(wps))
 
-                    if ret_record.has_key('d_span') and ret_record['d_span'] == 'NA':
-                        walkmanlog.write('d_span is NA. Or d_span key does not exist. \n')
+        self.confparser.remove_option('singlefiletraverse', 'chunks')
+        self.confparser.remove_option('singlefiletraverse', 'wrappers')
 
-                        if self.confparser.get('workload', 'name') == 'singlefiletraverse':
-                            walkmanlog.write(
-                                self.confparser.get('singlefiletraverse',
-                                                    'wrappers') + " " + \
-                                self.confparser.get('singlefiletraverse',
-                                                    'chunks') )
+        self._RecordWalkmanConfig()
+        
+    def _record_feedback(self, ret_record, year, season):
+        global feedback_dic
 
-                    elif ret_record.has_key('d_span'):
-                        d_span = int(ret_record['d_span'])
-                        if not d_span in feedback_dic['d_span']:
-                            print ['findone']*100
-                            feedback_dic['d_span'].append(d_span)
-                            
-                            self.confparser.set(
-                                                self.confparser.get('workload', 'name'),
-                                                'd_span',
-                                                str(d_span))
-                            # save wrappers sequence ((()))
-                            if self.confparser.get('workload', 'name') == 'singlefiletraverse':
-                                wps = self.confparser.get(
-                                                    'singlefiletraverse',
-                                                    'wrappers')
-                                wps = literal_eval(wps)
-                                self.confparser.set(
-                                                    'singlefiletraverse',
-                                                    'pattern_symbols',
-                                                pyWorkload.pattern_iter.wrappers_to_symbols(wps))
+        # initialize feedback_dic as needed
+        for k in ret_record.keys():
+            if not feedback_dic.has_key(k):
+                feedback_dic[k] = []
+        
+        #print ['*'] * 100
+        print ret_record
+        print feedback_dic
+        #feedback_inuse = 'd_span'
+        #feedback_inuse = 'physical_layout_hash'
+        #print feedback_inuse
 
+        #if ret_record[feedback_inuse] in feedback_dic[feedback_inuse]:
+            ## already has it, skip recording
+            #print 'skip'
+            #return
+        #print 'going to record'
 
+        if ret_record.has_key('d_span') and ret_record['d_span'] == 'NA':
+            # The returned d_span is NA. Record this incident
+            walkmanlog.write('d_span is NA. Or d_span key does not exist. \n')
+            if self.confparser.get('workload', 'name') == 'singlefiletraverse':
+                walkmanlog.write(
+                    self.confparser.get('singlefiletraverse',
+                                        'wrappers') + " " + \
+                    self.confparser.get('singlefiletraverse',
+                                        'chunks') )
+        elif ret_record.has_key('d_span'):
+            # The returned d_span is good.
+            d_span = int(ret_record['d_span'])
+            if not d_span in feedback_dic['d_span']:
+                # record it if it is not in feedback_dic
+                print ['findone']*100
+                feedback_dic['d_span'].append(d_span)
+                
+                self.confparser.set(
+                                    self.confparser.get('workload', 'name'),
+                                    'd_span',
+                                    str(d_span))
+                # save wrappers sequence ((()))
+                if self.confparser.get('workload', 'name') == 'singlefiletraverse':
+                    wps = self.confparser.get(
+                                        'singlefiletraverse',
+                                        'wrappers')
+                    wps = literal_eval(wps)
+                    self.confparser.set(
+                                        'singlefiletraverse',
+                                        'pattern_symbols',
+                                    pyWorkload.pattern_iter.wrappers_to_symbols(wps))
 
-                    if not ret_record.has_key('physical_layout_hash') or \
-                            ret_record['physical_layout_hash'] == hash( str([]) ): # no physical block found
-                        walkmanlog.write('physical_layout_hash does not exist or it is a hash of empty list')
-                    else:
-                        # has this key in ret_record 
-                        
-                        if not ret_record['physical_layout_hash'] in feedback_dic['physical_layout_hash']:
-                            feedback_dic['physical_layout_hash'].append( ret_record['physical_layout_hash'] )
-                        
-                            self.confparser.set(
-                                                self.confparser.get('workload', 'name'),
-                                                #'workload_many_file_traverse',
-                                                'physical_layout_hash', str(ret_record['physical_layout_hash']) )
+        if not ret_record.has_key('physical_layout_hash') or \
+                ret_record['physical_layout_hash'] == hash( str([]) ): 
+            # no physical block found. Record this incident to log
+            walkmanlog.write('physical_layout_hash does not exist or it is a hash of empty list')
+        else:
+            # has this key in ret_record 
+            if not ret_record['physical_layout_hash'] in feedback_dic['physical_layout_hash']:
+                feedback_dic['physical_layout_hash'].append( ret_record['physical_layout_hash'] )
+            
+                self.confparser.set(
+                                    self.confparser.get('workload', 'name'),
+                                    #'workload_many_file_traverse',
+                                    'physical_layout_hash', str(ret_record['physical_layout_hash']) )
 
-                            # save wrappers sequence ((()))
-                            if self.confparser.get('workload', 'name') == 'singlefiletraverse':
-                                wps = self.confparser.get('singlefiletraverse', 'wrappers')
-                                wps = literal_eval(wps)
-                                self.confparser.set(
-                                                    'singlefiletraverse',
-                                                    'pattern_symbols',
-                                                pyWorkload.pattern_iter.wrappers_to_symbols(wps))
+                # save wrappers sequence ((()))
+                if self.confparser.get('workload', 'name') == 'singlefiletraverse':
+                    wps = self.confparser.get('singlefiletraverse', 'wrappers')
+                    wps = literal_eval(wps)
+                    self.confparser.set(
+                                        'singlefiletraverse',
+                                        'pattern_symbols',
+                                    pyWorkload.pattern_iter.wrappers_to_symbols(wps))
 
-                    self._RecordWalkmanConfig()
-                    self._RecordStatus(year=year,season=season+1, 
-                                                    savedata=True)
+        self._RecordWalkmanConfig()
+        self._RecordStatus(year=year,season=season+1, 
+                                        savedata=True)
 
     def _play_workload_wrapper(self, year, season):
         """
@@ -627,8 +670,8 @@ class Troops:
         return self._test018()
 
     def march_wrapper(self):
-        self._march_many()
-        #self._march_single()
+        #self._march_many()
+        self._march_single()
 
     def _march_traditional(self):
         """
@@ -649,31 +692,45 @@ class Troops:
             self._walkman_walk(cparser)
 
     def _march_single(self):
-        filesize = 96*1024
-        chunk_size = 32*1024
 
         self.confparser.set('workload', 'name', 'singlefiletraverse')
         self.confparser.add_section( self.confparser.get('workload','name') )
-        self.confparser.set(self.confparser.get('workload','name'), 
-                            'filesize', str(filesize))
-        self.confparser.set(self.confparser.get('workload','name'),
-                            'chunk_size', str(chunk_size))
-        
-        print "Before iterate..."
-        for entry in pyWorkload.pattern_iter.pattern_iter(nfiles     =1, 
-                                  filesize   =filesize, 
-                                  chunksize  =chunk_size):
-            chunks = str(entry['chunks'])
-            wrappers = str(entry['wrappers'])
-            self.confparser.set(self.confparser.get('workload','name'),
-                                'chunks',
-                                chunks)
-            self.confparser.set(self.confparser.get('workload','name'),
-                                'wrappers',
-                                wrappers)
 
-            self._walkman_walk(self.confparser)
-            #time.sleep(1)
+        filesizes = [4*1024*3*x for x in range(1,2)] 
+
+        for filesize in filesizes:
+            chunk_size = filesize / 3
+
+            self.confparser.set(self.confparser.get('workload','name'), 
+                                'filesize', str(filesize))
+            self.confparser.set(self.confparser.get('workload','name'),
+                                'chunk_size', str(chunk_size))
+            
+            print "Before iterate..."
+            for entry in pyWorkload.pattern_iter.pattern_iter(nfiles     =1, 
+                                      filesize   =filesize, 
+                                      chunksize  =chunk_size):
+                chunks = str(entry['chunks'])
+                wrappers = str(entry['wrappers'])
+                self.confparser.set(self.confparser.get('workload','name'),
+                                    'chunks',
+                                    chunks)
+                self.confparser.set(self.confparser.get('workload','name'),
+                                    'wrappers',
+                                    wrappers)
+                wrappers01 = "".join( [str(int(x)) for x in entry['wrappers']] )
+                self.confparser.set(self.confparser.get('workload','name'),
+                                    'wrappers01',
+                                    wrappers01)
+                patternstring = pyWorkload.pattern_iter.pattern_string( entry['chunks'], entry['wrappers'] )
+                self.confparser.set(self.confparser.get('workload','name'),
+                                    'patternstring', patternstring)
+                print patternstring
+                self._walkman_walk(self.confparser)
+                #print 'my end'
+                #exit(1)
+
+                #time.sleep(1)
 
     def _march_many(self):
 
