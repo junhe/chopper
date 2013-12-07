@@ -697,7 +697,7 @@ class Troops:
         self.confparser.add_section( self.confparser.get('workload','name') )
 
         exps = [2**x for x in range(15)]
-        filesizes = [4*1024*3*x for x in exps] 
+        filesizes = [5*1024*3*x for x in exps] 
 
         for filesize in filesizes:
             chunk_size = filesize / 3
