@@ -12,8 +12,8 @@ fi
 #sleep 1
 sudo rm -rf $resultdir \
     && sudo python walkman-feedback.py ../conf/h0.conf \
-    && sleep 1 \
-    && sudo python ../scripts/result-parser-faster.py $resultdir $host  
+    && sleep 1 
+sudo python ../scripts/result-parser-faster.py $resultdir $host  
 sudo rm ${testname}.tar.gz 
 sudo rm -rf ${testname}
 sudo mv $resultdir ${testname}
