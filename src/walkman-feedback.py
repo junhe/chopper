@@ -277,6 +277,13 @@ class Walkman:
             print "making fragments....."
             self._makeFragmentsOnFS()
 
+        # At least put some files there
+        if self.confparser.get('system', 'copybootfiles').lower() == 'yes':
+            print "copying some boot files to the mount point"
+            pyWorkload.misc.copy_boot(
+                    self.confparser.get('system', 'mountpoint') )
+
+
     def walk(self):
         self._wrapper()
     
@@ -696,7 +703,7 @@ class Troops:
         self.confparser.set('workload', 'name', 'singlefiletraverse')
         self.confparser.add_section( self.confparser.get('workload','name') )
 
-        filesizes = [4*1024*3*x for x in range(1,8)] 
+        filesizes = [4*1024*3*x for x in range(1,20)] 
 
         for filesize in filesizes:
             chunk_size = filesize / 3

@@ -471,8 +471,7 @@ class FSMonitor:
 
     def getAllInodePaths(self, rootdir="."):
         "it returns paths of all files and diretories"
-        rootpath = os.path.join(self.mountpoint, rootdir)
-
+        rootpath = os.path.join(self.mountpoint)
         paths = []
         with cd(rootpath):
             cmd = ['find', rootdir]
@@ -489,6 +488,8 @@ class FSMonitor:
             return 
 
         files = self.getAllInodePaths(rootdir)
+        #print files
+        #exit(1)
         df = dataframe.DataFrame()
         for f in files:
             if len(df.header) == 0:
@@ -597,7 +598,7 @@ class FSMonitor:
             
             ######################
             # get extents of all files
-            extlist = self.getExtentList_of_a_dir()
+            extlist = self.getExtentList_of_a_dir(rootdir='./pid00000.dir00000')
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
                 f.write(extlist.toStr())
