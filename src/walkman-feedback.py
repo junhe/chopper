@@ -706,10 +706,10 @@ class Troops:
 
         #filesizes = [4*1024*3*x for x in range(1,20)] 
 
-        #exps = [2**x for x in range(15)]
-        #filesizes = [4*1024*3*x for x in exps] 
+        exps = [2**x for x in range(15)]
+        filesizes = [4*1024*3*x for x in exps] 
         #filesizes = [4*1024*3*x for x in range(1,20)] 
-        filesizes = [4*1024*3*x for x in range(1,2)] 
+        #filesizes = [4*1024*3*x for x in range(1,2)] 
 
         for filesize in filesizes:
             chunk_size = filesize / 3
