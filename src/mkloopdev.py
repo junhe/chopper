@@ -1,5 +1,6 @@
 import MWpyFS
 import os
+import sys
 
 if not os.path.exists("/mnt/mytmpfs"):
     print "/mnt/mytmpfs does not exist. Creating..."
@@ -14,6 +15,10 @@ print "Loop device has been made :)"
 if not os.path.exists("/mnt/scratch"):
     print "/mnt/scratch does not exist. Creating..."
     os.mkdir("/mnt/scratch")
+
+if len(sys.argv) == 2 and sys.argv[1] == 'nofs':
+    # stop here, don't make file system
+    exit(0) 
 
 fs_choice = raw_input(
         "What file system do you want to mount on the device?\n"\
