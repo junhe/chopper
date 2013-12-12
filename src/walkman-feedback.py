@@ -311,6 +311,7 @@ class Walkman:
                 if ret == 0:
                     ret_record = self._RecordStatus(year=year,season=season+1, 
                                                     savedata=False)
+                    print 'ret_record', ret_record
                     self._post_run_processing(ret_record, year, season)
                 else:
                     walkmanlog.write('>>>>>>>> One Failed walkman <<<<<<<<<<<<')
@@ -707,7 +708,8 @@ class Troops:
 
         #exps = [2**x for x in range(15)]
         #filesizes = [4*1024*3*x for x in exps] 
-        filesizes = [4*1024*3*x for x in range(1,20)] 
+        #filesizes = [4*1024*3*x for x in range(1,20)] 
+        filesizes = [4*1024*3*x for x in range(1,2)] 
 
         for filesize in filesizes:
             chunk_size = filesize / 3

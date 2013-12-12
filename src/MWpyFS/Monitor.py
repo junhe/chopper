@@ -651,26 +651,36 @@ class FSMonitor:
             df_ext = df_dic['extents']
             df_chunk = df_dic['chunks']
             df_map = btrfs_db_parser.get_filepath_inode_map(self.mountpoint, "./")
-            
-            df_ext.addColumns(keylist=["HEADERMARKER_extlistraw",
-                                     "monitor_time",
-                                     "jobid"],
-                              valuelist=["DATAMARKER_extlistraw",
-                                     self.monitor_time,
-                                     self.jobid])
-            df_chunk.addColumns(keylist=["HEADERMARKER_chunks",
-                                     "monitor_time",
-                                     "jobid"],
-                              valuelist=["DATAMARKER_chunks",
-                                     self.monitor_time,
-                                     self.jobid])
-            df_map.addColumns(keylist=["HEADERMARKER_pathinodemap",
-                                     "monitor_time",
-                                     "jobid"],
-                              valuelist=["DATAMARKER_pathinodemap",
-                                     self.monitor_time,
-                                     self.jobid])
+
+            #print df_ext.toStr()
+            #print df_chunk.toStr()
+
+            ret_dict['d_span'] = btrfs_get_d_span_of_a_file(
+                                       filepath  ='./pid00000.dir00000/pid.00000.file.00000', 
+                                       df_rawext =df_ext, 
+                                       df_chunk  =df_chunk, 
+                                       df_map    =df_map)
+
             if savedata:
+                df_ext.addColumns(keylist=["HEADERMARKER_extlistraw",
+                                         "monitor_time",
+                                         "jobid"],
+                                  valuelist=["DATAMARKER_extlistraw",
+                                         self.monitor_time,
+                                         self.jobid])
+                df_chunk.addColumns(keylist=["HEADERMARKER_chunks",
+                                         "monitor_time",
+                                         "jobid"],
+                                  valuelist=["DATAMARKER_chunks",
+                                         self.monitor_time,
+                                         self.jobid])
+                df_map.addColumns(keylist=["HEADERMARKER_pathinodemap",
+                                         "monitor_time",
+                                         "jobid"],
+                                  valuelist=["DATAMARKER_pathinodemap",
+                                         self.monitor_time,
+                                         self.jobid])
+
                 h = "---------------- extent list -------------------\n"
                 f.write( h + df_ext.toStr())
                 h = "---------------- chunks  -------------------\n"
@@ -790,7 +800,55 @@ def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
 
     return hash( str(phy_blocks) )
 
+def get_inode_num_from_dfmap(filepath, df_map):
+    hdr = df_map.header
+    for row in df_map.table:
+        if row[hdr.index('filepath')] == filepath:
+            return row[hdr.index('inode_number')]
 
+    return None
+
+def get_all_vir_ranges_of_an_inode(inode_number, df_rawext):
+    hdr = df_rawext.header
+
+    ranges = []
+    for row in df_rawext.table:
+        if str(row[hdr.index('inode_number')]) == str(inode_number):
+            d = {
+                    'virtual_start': int(row[hdr.index('Virtual_start')]),
+                    'length': int(row[hdr.index('Length')])
+                }
+            ranges.append( d )
+
+    return ranges
+
+
+
+def btrfs_get_d_span_of_a_file(filepath, df_rawext, df_chunk, df_map):
+    inode_number = get_inode_num_from_dfmap(filepath, df_map)
+    #print inode_number
+
+    ranges = get_all_vir_ranges_of_an_inode( inode_number, df_rawext )
+
+    #print ranges
+
+    devices = set()
+    phy_addrs = set() 
+    for seg in ranges:
+        phy_loc =  btrfs_db_parser.virtual_to_physical( seg['virtual_start'], df_chunk )
+
+        for stripe in phy_loc:
+            devices.add( stripe['devid'] )
+            assert len(devices) == 1, 'we only allow one device at this time'
+            phy_addrs.add( stripe['physical_addr'] )
+            phy_addrs.add( stripe['physical_addr'] + seg['length'] )
+
+    #print phy_addrs
+
+    d_span = max(phy_addrs) - min(phy_addrs)
+    #print d_span
+
+    return d_span
 
 def get_d_span_from_extent_list(df_ext, filepath):
     hdr = df_ext.header

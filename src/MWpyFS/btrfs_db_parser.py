@@ -39,21 +39,26 @@ def virtual_to_physical(virtual_addr, df_chunk):
     chunk_vaddrs = set(chunk_vaddrs)
     chunk_vaddrs = list(chunk_vaddrs)
     
-    chunk_vaddrs.sort()
+    chunk_vaddrs.sort(reverse=True)
     stripe_vaddr = -1
-    for addr in chunk_vaddrs:
-        if virtual_addr > addr:
-            stripe_vaddr = addr
+    for cur in chunk_vaddrs:
+        if virtual_addr >= cur:
+            stripe_vaddr = cur
             break
     assert stripe_vaddr != -1, 'cannot find virtual_addr in chunk map'
 
-    print chunk_vaddrs
-    pprint.pprint( chunk_map )
+    #print chunk_vaddrs
+    #pprint.pprint( chunk_map )
 
+    #print chunk_map[stripe_vaddr]
     ret = []
     for stripe in chunk_map[stripe_vaddr]:
         physical_addr = stripe['physical_offset'] + (virtual_addr - stripe_vaddr)
-        ret.append( physical_addr )
+        d = {
+                'devid': stripe['devid'],
+                'physical_addr':physical_addr
+            }
+        ret.append( d )
         
     return ret
 
