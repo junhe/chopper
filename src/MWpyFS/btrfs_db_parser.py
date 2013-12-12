@@ -17,6 +17,45 @@ def btrfs_debug_tree(partition):
     proc.wait()
     return db_tree_lines
 
+def virtual_to_physical(virtual_addr, df_chunk):
+    hdr = df_chunk.header
+
+    chunk_vaddrs = []
+    chunk_map = {} # {vaddr:[stripe0, stripe1]}
+                   # stripe is a dictionary, include 
+                   # all info about that dict
+    for row in df_chunk.table:
+        d = {}
+        for name in hdr:
+            d[name] = int(row[hdr.index(name)])
+
+        vaddr = int(row[hdr.index('chunk_virtual_off_start')])
+        chunk_vaddrs.append(vaddr)
+        if not chunk_map.has_key(vaddr):
+            chunk_map[vaddr] = []
+        chunk_map[vaddr].append(d)
+
+    # remove the replicas by set
+    chunk_vaddrs = set(chunk_vaddrs)
+    chunk_vaddrs = list(chunk_vaddrs)
+    
+    chunk_vaddrs.sort()
+    stripe_vaddr = -1
+    for addr in chunk_vaddrs:
+        if virtual_addr > addr:
+            stripe_vaddr = addr
+            break
+    assert stripe_vaddr != -1, 'cannot find virtual_addr in chunk map'
+
+    print chunk_vaddrs
+    pprint.pprint( chunk_map )
+
+    ret = []
+    for stripe in chunk_map[stripe_vaddr]:
+        physical_addr = stripe['physical_offset'] + (virtual_addr - stripe_vaddr)
+        ret.append( physical_addr )
+        
+    return ret
 
 #pprint.pprint(btrfs_debug_tree('/dev/loop0'))
 #print btrfs_debug_tree('/dev/loop0')
