@@ -648,18 +648,27 @@ class FSMonitor:
 
             tree_parser = btrfs_db_parser.TreeParser(tree_lines)
             df_dic = tree_parser.parse()
-            df_ext = df_dic['extents']
+            df_rawext = df_dic['extents']
             df_chunk = df_dic['chunks']
             df_map = btrfs_db_parser.get_filepath_inode_map(self.mountpoint, "./")
 
             #print df_ext.toStr()
             #print df_chunk.toStr()
 
-            ret_dict['d_span'] = btrfs_get_d_span_of_a_file(
-                                       filepath  ='./pid00000.dir00000/pid.00000.file.00000', 
-                                       df_rawext =df_ext, 
-                                       df_chunk  =df_chunk, 
-                                       df_map    =df_map)
+            #ret_dict['d_span'] = btrfs_get_d_span_of_a_file(
+                                       #filepath  ='./pid00000.dir00000/pid.00000.file.00000', 
+                                       #df_rawext =df_rawext, 
+                                       #df_chunk  =df_chunk, 
+                                       #df_map    =df_map)
+
+            df_ext = btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map)
+
+            ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
+                                            './pid00000.dir00000/pid.00000.file.00000')
+            ret_dict['physical_layout_hash'] \
+                    = get_physical_layout_hash(df_ext, 
+                                               'file', 
+                                               merge_contiguous=True)
 
             if savedata:
                 df_ext.addColumns(keylist=["HEADERMARKER_extlistraw",
@@ -668,26 +677,9 @@ class FSMonitor:
                                   valuelist=["DATAMARKER_extlistraw",
                                          self.monitor_time,
                                          self.jobid])
-                df_chunk.addColumns(keylist=["HEADERMARKER_chunks",
-                                         "monitor_time",
-                                         "jobid"],
-                                  valuelist=["DATAMARKER_chunks",
-                                         self.monitor_time,
-                                         self.jobid])
-                df_map.addColumns(keylist=["HEADERMARKER_pathinodemap",
-                                         "monitor_time",
-                                         "jobid"],
-                                  valuelist=["DATAMARKER_pathinodemap",
-                                         self.monitor_time,
-                                         self.jobid])
 
                 h = "---------------- extent list -------------------\n"
                 f.write( h + df_ext.toStr())
-                h = "---------------- chunks  -------------------\n"
-                f.write( h + df_chunk.toStr() )
-                h = "---------------- inode map  -------------------\n"
-                f.write( h + df_map.toStr() )
-
 
         else:
             print "Unsupported file system."
@@ -849,6 +841,70 @@ def btrfs_get_d_span_of_a_file(filepath, df_rawext, df_chunk, df_map):
     #print d_span
 
     return d_span
+
+
+def btrfs_df_map_to_dic(df_map):
+    d = {}
+    hdr = df_map.header
+    
+    for row in df_map.table:
+        filepath = row[hdr.index('filepath')]
+        inode_number = row[hdr.index('inode_number')]
+
+        d[str(inode_number)] = filepath
+
+    return d
+
+
+def btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map):
+    print df_rawext.toStr()
+    print df_chunk.toStr()
+    print df_map.toStr()
+
+
+    dic_map = btrfs_df_map_to_dic(df_map)
+
+    hdr = df_rawext.header
+
+    devices = set()
+    df_ext = dataframe.DataFrame()
+    df_ext.header = ['Level_index',
+                    'Max_level',
+                    'Entry_index',
+                    'N_Entry',
+                    'Virtual_start',
+                    'Logical_start',
+                    'Logical_end',
+                    'Physical_start',
+                    'Physical_end',
+                    'Length',
+                    'Flag',
+                    'filepath']
+    for row in df_rawext.table:
+        rowdic = {}
+        for col in hdr:
+            rowdic[col] = row[hdr.index(col)]
+        print rowdic
+
+        phy_starts = btrfs_db_parser.virtual_to_physical( rowdic['Virtual_start'], df_chunk ) 
+        
+        for stripe in phy_starts:
+            devices.add( stripe['devid'] )
+            assert len(devices) == 1, 'we only allow one device at this time'
+            rowdic['Physical_start'] = stripe['physical_addr']
+            rowdic['Physical_end'] = stripe['physical_addr'] + int( rowdic['Length'] ) - 1
+            rowdic['Logical_end'] = int(rowdic['Logical_start']) + int( rowdic['Length'] ) - 1
+            rowdic['Level_index'] = 0
+            rowdic['Max_level'] = 0
+            rowdic['Entry_index'] = 0
+            rowdic['N_Entry'] = 0
+            rowdic['filepath'] = dic_map[str( rowdic['inode_number'] )]
+            rowdic['Flag'] = "NA"
+
+            df_ext.addRowByDict( rowdic )
+
+    return df_ext
+
 
 def get_d_span_from_extent_list(df_ext, filepath):
     hdr = df_ext.header

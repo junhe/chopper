@@ -64,8 +64,8 @@ class DataFrame:
             self.table.append( row )
         except:
             print "failed to add row:"
-            print "rowdic:", rowdic
-            print "header:", self.header
+            print "rowdic:", sorted(rowdic.keys())
+            print "header:", sorted(self.header)
     
     def addColumn(self, key, value):
         """
