@@ -681,6 +681,29 @@ class FSMonitor:
                 h = "---------------- extent list -------------------\n"
                 f.write( h + df_ext.toStr())
 
+
+                df_chunk.addColumns(keylist=["HEADERMARKER_extlist",
+                                         "monitor_time",
+                                         "jobid"],
+                                  valuelist=["DATAMARKER_extlist",
+                                         self.monitor_time,
+                                         self.jobid])
+
+                h = "---------------- chunk list -------------------\n"
+                f.write( h + df_chunk.toStr())
+
+                df_map.addColumns(keylist=["HEADERMARKER_extlist",
+                                         "monitor_time",
+                                         "jobid"],
+                                  valuelist=["DATAMARKER_extlist",
+                                         self.monitor_time,
+                                         self.jobid])
+
+                h = "---------------- map list -------------------\n"
+                f.write( h + df_map.toStr())
+
+
+
         else:
             print "Unsupported file system."
             exit(1)
