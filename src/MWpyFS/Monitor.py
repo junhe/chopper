@@ -671,10 +671,10 @@ class FSMonitor:
                                                merge_contiguous=True)
 
             if savedata:
-                df_ext.addColumns(keylist=["HEADERMARKER_extlistraw",
+                df_ext.addColumns(keylist=["HEADERMARKER_extlist",
                                          "monitor_time",
                                          "jobid"],
-                                  valuelist=["DATAMARKER_extlistraw",
+                                  valuelist=["DATAMARKER_extlist",
                                          self.monitor_time,
                                          self.jobid])
 
