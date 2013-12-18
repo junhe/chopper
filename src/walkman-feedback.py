@@ -22,6 +22,7 @@ from ConfigParser import SafeConfigParser
 import itertools
 import pprint
 import itertools
+import random
 from ast import literal_eval
 
 walkmanlog = None
@@ -370,6 +371,15 @@ class Walkman:
         feedback_inuse = 'physical_layout_hash'
         #print feedback_inuse
 
+
+        print 'd_span', ret_record['d_span']
+        print 'filesize', self.confparser.getint(self.confparser.get('workload','name'), 'filesize')
+
+        if ret_record['d_span'] <  \
+                1.5 * self.confparser.getint(self.confparser.get('workload','name'), 'filesize'):
+            return
+
+
         if ret_record[feedback_inuse] in feedback_dic[feedback_inuse]:
             # already has it, skip recording
             print 'skip'
@@ -656,10 +666,14 @@ class Troops:
         #filesizes = [4*1024*3*x for x in exps] 
         #filesizes = [4*1024*3*x for x in range(1,20)] 
         #filesizes = [4*1024*3*x for x in range(1,2)] 
-        filesizes = [12*1024*1024]
+        #filesizes = [12*1024*1024]
+        chunksizes = [16*1024*x for x in range(1, 1000)]
 
-        for filesize in filesizes:
-            chunk_size = filesize / 3
+        for chunk_size in chunksizes:
+            #chunk_size = filesize / 3
+            filesize = chunk_size * 3
+            #print ['input filesize']*100,filesize
+            #continue
 
             self.confparser.set(self.confparser.get('workload','name'), 
                                 'filesize', str(filesize))
@@ -686,6 +700,7 @@ class Troops:
                 self.confparser.set(self.confparser.get('workload','name'),
                                     'patternstring', patternstring)
                 print patternstring
+                     
                 self._walkman_walk(self.confparser)
                 #print 'my end'
                 #exit(1)
