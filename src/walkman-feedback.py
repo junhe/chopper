@@ -376,7 +376,7 @@ class Walkman:
         print 'filesize', self.confparser.getint(self.confparser.get('workload','name'), 'filesize')
 
         if ret_record['d_span'] <  \
-                1.5 * self.confparser.getint(self.confparser.get('workload','name'), 'filesize'):
+                2 * self.confparser.getint(self.confparser.get('workload','name'), 'filesize'):
             return
 
 
@@ -656,56 +656,65 @@ class Troops:
             self._walkman_walk(cparser)
 
     def _march_single(self):
+        
+        filesystems = ['btrfs', 'xfs', 'ext4']
 
         self.confparser.set('workload', 'name', 'singlefiletraverse')
         self.confparser.add_section( self.confparser.get('workload','name') )
 
-        #filesizes = [4*1024*3*x for x in range(1,20)] 
+        for fs in filesystems:
+            self.confparser.set('system', 'filesystem', fs)
 
-        #exps = [2**x for x in range(15)]
-        #filesizes = [4*1024*3*x for x in exps] 
-        #filesizes = [4*1024*3*x for x in range(1,20)] 
-        #filesizes = [4*1024*3*x for x in range(1,2)] 
-        #filesizes = [12*1024*1024]
-        chunksizes = [16*1024*x for x in range(1, 1000)]
 
-        for chunk_size in chunksizes:
-            #chunk_size = filesize / 3
-            filesize = chunk_size * 3
-            #print ['input filesize']*100,filesize
-            #continue
+            #filesizes = [4*1024*3*x for x in range(1,20)] 
 
-            self.confparser.set(self.confparser.get('workload','name'), 
-                                'filesize', str(filesize))
-            self.confparser.set(self.confparser.get('workload','name'),
-                                'chunk_size', str(chunk_size))
-            
-            print "Before iterate..."
-            for entry in pyWorkload.pattern_iter.pattern_iter(nfiles     =1, 
-                                      filesize   =filesize, 
-                                      chunksize  =chunk_size):
-                chunks = str(entry['chunks'])
-                wrappers = str(entry['wrappers'])
+            #exps = [2**x for x in range(15)]
+            #filesizes = [4*1024*3*x for x in exps] 
+            filesizes = [4*1024*3*x for x in range(1,20)] 
+            #filesizes = [4*1024*3*x for x in range(1,2)] 
+            #filesizes = [12*1024*1024]
+            #chunksizes = [16*1024*x for x in range(1, 1000)]
+
+            #for chunk_size in chunksizes:
+            for filesize in filesizes:
+                chunk_size = filesize / 3
+                #filesize = chunk_size * 3
+                #print ['input filesize']*100,filesize
+                #continue
+
+                self.confparser.set(self.confparser.get('workload','name'), 
+                                    'filesize', str(filesize))
                 self.confparser.set(self.confparser.get('workload','name'),
-                                    'chunks',
-                                    chunks)
-                self.confparser.set(self.confparser.get('workload','name'),
-                                    'wrappers',
-                                    wrappers)
-                wrappers01 = "".join( [str(int(x)) for x in entry['wrappers']] )
-                self.confparser.set(self.confparser.get('workload','name'),
-                                    'wrappers01',
-                                    wrappers01)
-                patternstring = pyWorkload.pattern_iter.pattern_string( entry['chunks'], entry['wrappers'] )
-                self.confparser.set(self.confparser.get('workload','name'),
-                                    'patternstring', patternstring)
-                print patternstring
-                     
-                self._walkman_walk(self.confparser)
-                #print 'my end'
-                #exit(1)
+                                    'chunk_size', str(chunk_size))
+                
+                print "Before iterate..."
+                for entry in pyWorkload.pattern_iter.pattern_iter(nfiles     =1, 
+                                          filesize   =filesize, 
+                                          chunksize  =chunk_size):
+                    chunks = str(entry['chunks'])
+                    wrappers = str(entry['wrappers'])
+                    self.confparser.set(self.confparser.get('workload','name'),
+                                        'chunks',
+                                        chunks)
+                    self.confparser.set(self.confparser.get('workload','name'),
+                                        'wrappers',
+                                        wrappers)
+                    wrappers01 = "".join( [str(int(x)) for x in entry['wrappers']] )
+                    self.confparser.set(self.confparser.get('workload','name'),
+                                        'wrappers01',
+                                        wrappers01)
+                    patternstring = pyWorkload.pattern_iter.pattern_string( entry['chunks'], entry['wrappers'] )
+                    self.confparser.set(self.confparser.get('workload','name'),
+                                        'patternstring', patternstring)
+                    print patternstring
+                         
+                    self._walkman_walk(self.confparser)
+                    #print 'my end'
+                    #exit(1)
+                    #break
 
                 #time.sleep(1)
+                #break
 
     def _march_many(self):
 
@@ -714,11 +723,7 @@ class Troops:
         filesize = 8*1024*1024
         chunk_size = 1024*1024
 
-        self.confparser.add_section(self.confparser.get('workload','name'))
-        self.confparser.set(self.confparser.get('workload','name'), 
-                            'filesize', str(filesize))
-        self.confparser.set(self.confparser.get('workload','name'),
-                            'chunk_size', str(chunk_size))
+    
         
         for entry in pyWorkload.pattern_iter.pattern_iter_nfiles(
                                   nfiles     =2,

@@ -146,7 +146,8 @@ def makeXFS(devname, blocksize=4096):
 def makeExt4(devname, blockscount=16777216, blocksize=4096):
     cmd = ["mkfs.ext4", 
            "-b", blocksize,
-           "-O", "has_journal,extent,huge_file,flex_bg,^uninit_bg,dir_nlink,extra_isize",
+           #"-O", "has_journal,extent,huge_file,flex_bg,^uninit_bg,dir_nlink,extra_isize",
+           "-O", "has_journal,extent,huge_file,flex_bg,uninit_bg,dir_nlink,extra_isize",
            devname, blockscount]
     cmd = [str(x) for x in cmd]
     p = subprocess.Popen(cmd)
