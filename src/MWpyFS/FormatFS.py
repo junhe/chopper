@@ -33,8 +33,9 @@ def mountTmpfs(mountpoint, size):
 
 def mkImageFile(filepath, size):
     "size is in MB" 
-    cmd = ['dd', 'if=/dev/zero', 'of='+filepath,
-           'bs=1M', 'count='+str(size)]
+    #cmd = ['dd', 'if=/dev/zero', 'of='+filepath,
+           #'bs=1M', 'count='+str(size)]
+    cmd = ['truncate', '-s', str(size*1024*1024), filepath]
     print " ".join(cmd), "......"
     proc = subprocess.Popen(cmd)
     proc.wait()
