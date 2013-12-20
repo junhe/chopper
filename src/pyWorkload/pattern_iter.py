@@ -211,11 +211,14 @@ def pattern_string( chunks, wrappers ):
 
     return mix
 
-def pattern_iter(nfiles, filesize, chunksize):
-    num_of_chunks = filesize / chunksize
-    chunksize = filesize / num_of_chunks
+def pattern_iter(nfiles, filesize, chunksize, num_of_chunks=3):
     chunk_sizes = [chunksize] * num_of_chunks
-    offsets = range(0, filesize, chunksize)
+    # we want the last chunk at the end of the file
+    stridesize = (filesize - chunksize) / (num_of_chunks - 1) 
+    
+    assert (filesize - chunksize) % (num_of_chunks - 1) == 0, 'chunks cannot be evenly distributed'
+
+    offsets = range(0, filesize, stridesize)
     chunks = zip(offsets, chunk_sizes)
 
     chunk_iter = itertools.permutations(chunks)

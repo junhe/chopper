@@ -678,7 +678,7 @@ class Troops:
 
                 #for chunk_size in chunksizes:
                 for filesize in filesizes:
-                    chunk_size = filesize / 3
+                    chunk_size = 4096
                     #filesize = chunk_size * 3
                     #print ['input filesize']*100,filesize
                     #continue
@@ -691,7 +691,14 @@ class Troops:
                     print "Before iterate..."
                     for entry in pyWorkload.pattern_iter.pattern_iter(nfiles     =1, 
                                               filesize   =filesize, 
-                                              chunksize  =chunk_size):
+                                              chunksize  =chunk_size,
+                                              num_of_chunks = 3):
+                        print '----------------------------------------------------------'
+                        print '----------------------------------------------------------'
+                        print '----------------------------------------------------------'
+                        print '----------------------------------------------------------'
+                        print '----------------------------------------------------------'
+                        print entry
                         chunks = str(entry['chunks'])
                         wrappers = str(entry['wrappers'])
                         self.confparser.set(self.confparser.get('workload','name'),
