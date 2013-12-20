@@ -129,7 +129,7 @@ class Walkman:
             MWpyFS.FormatFS.makeLoopDevice(
                     devname=self.confparser.get('system', 'partition'),
                     tmpfs_mountpoint=self.confparser.get('system', 'tmpfs_mountpoint'),
-                    sizeMB=loodevsizeBytes)
+                    sizeMB=loodevsizeBytes/(1024*1024))
 
         if not os.path.exists(self.confparser.get('system','mountpoint')):
             os.makedirs(self.confparser.get('system','mountpoint'))
