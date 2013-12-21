@@ -672,9 +672,9 @@ class Troops:
             for fsizemode in ['incr', 'exp']:
                 self.confparser.set('singlefiletraverse', 'fsizemode', fsizemode)
                 if fsizemode == 'incr':
-                    filesizes = filesizes1
-                else:
                     filesizes = filesizes2
+                else:
+                    filesizes = filesizes1
 
                 #for chunk_size in chunksizes:
                 for filesize in filesizes:
