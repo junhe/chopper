@@ -39,7 +39,7 @@ def IsLegal( wrappers ):
     #mo = re.match(r'^(\((C+F)+\))S$', seq, re.M) # always Fsync, only one open-close, must sync
     mo = re.match(r'^(\((C+F?)+\)S)+$', seq, re.M)
     if mo:
-        print "good match!", seq
+        #print "good match!", seq
         return True
     else:
         #print 'BAD match!', seq
@@ -211,6 +211,28 @@ def pattern_string( chunks, wrappers ):
 
     return mix
 
+def pattern_iter_files(nfiles, filesize, chunksize, num_of_chunks):
+    patterns = list(pattern_iter(nfiles, filesize, chunksize, num_of_chunks))
+    for i,p in enumerate(patterns):
+        p['id'] = i
+
+    # get all possible mix
+    file_chunk_tags = range(nfiles) * num_of_chunks
+    chunkmix = list(set(list(itertools.permutations(file_chunk_tags)))) # improve this!
+    #pprint.pprint( list(chunkmix) )
+
+    #pprint.pprint( patterns )
+    for p in itertools.product( patterns, repeat=nfiles ):
+        pprint.pprint( p )
+        # p is a tuple with nfiles files
+        # now we have different way of mixing them
+        for mix in chunkmix:
+
+            cur_pos = [0] * nfiles
+            for c in mix:
+
+        
+
 def pattern_iter(nfiles, filesize, chunksize, num_of_chunks=3):
     chunk_sizes = [chunksize] * num_of_chunks
     # we want the last chunk at the end of the file
@@ -348,6 +370,13 @@ def regldg(max_length, num_words_output, regstr):
     pprint.pprint( wordlist )
     return wordlist
 
+def perm_with_repeats(seq):
+    "This algorithm is NOT efficient in larger scale!"
+    return list(set(list(itertools.permutations(seq))))
+
+#print perm_with_repeats([0,0,0,1,1,1])
+
+pattern_iter_files(nfiles=2, filesize=12, chunksize=4, num_of_chunks=3)
 
 #regldg(max_length = 30, 
        #num_words_output=100,
