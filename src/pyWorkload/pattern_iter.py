@@ -4,6 +4,8 @@ import re
 import random
 import pprint
 import subprocess
+import pat_data_struct
+import copy
 
 N_OPERATIONS = 4 # OPEN FSYNC CLOSE SYNC
 
@@ -211,29 +213,43 @@ def pattern_string( chunks, wrappers ):
 
     return mix
 
+
 def pattern_iter_files(nfiles, filesize, chunksize, num_of_chunks):
+    # get all ways of writing one file
     patterns = list(pattern_iter(nfiles, filesize, chunksize, num_of_chunks))
+    pat_list = []
     for i,p in enumerate(patterns):
-        p['id'] = i
+        p_chkseq = pat_data_struct.chunkop_to_chunkseq(p)
+        for c_chkbox in p_chkseq['seq']:
+            c_chkbox['attrs']['single_file_write_patternid'] = i
+        pat_list.append(p_chkseq)
 
     # get all possible mix
+    # this is different ways of mixing different files
     file_chunk_tags = range(nfiles) * num_of_chunks
     chunkmix = list(set(list(itertools.permutations(file_chunk_tags)))) # improve this!
-    #pprint.pprint( list(chunkmix) )
 
-    #pprint.pprint( patterns )
-    for p in itertools.product( patterns, repeat=nfiles ):
-        pprint.pprint( p )
-        # p is a tuple with nfiles files
-        # now we have different way of mixing them
+    # now fill the chunk placeholders with real chunks
+    for p in itertools.product( pat_list, repeat=nfiles ):
+        # p = (ChunkSeq0, ChunkSeq1, ..)
+        # p is a mix of patterns of writing one file
         for mix in chunkmix:
-
+            # mix is a mix of different ways of mixing
+            # single file writting patterns
             cur_pos = [0] * nfiles
-            for c in mix:
+            files_chkseq = pat_data_struct.get_empty_ChunkSeq()
+            for fileid in mix:
+                cur_chkseq = copy.deepcopy(p[fileid])
+                cur_chkbox = cur_chkseq['seq'][ cur_pos[fileid] ]
+                cur_chkbox['attrs']['fileid'] = fileid
+                files_chkseq['seq'].append(copy.deepcopy(cur_chkbox))
+                cur_pos[fileid] += 1
+            yield files_chkseq
 
-        
+
 
 def pattern_iter(nfiles, filesize, chunksize, num_of_chunks=3):
+    "Note that nfiles is NOT used"
     chunk_sizes = [chunksize] * num_of_chunks
     # we want the last chunk at the end of the file
     stridesize = (filesize - chunksize) / (num_of_chunks - 1) 
@@ -376,7 +392,7 @@ def perm_with_repeats(seq):
 
 #print perm_with_repeats([0,0,0,1,1,1])
 
-pattern_iter_files(nfiles=2, filesize=12, chunksize=4, num_of_chunks=3)
+pattern_iter_files(nfiles=2, filesize=12, chunksize=6, num_of_chunks=2)
 
 #regldg(max_length = 30, 
        #num_words_output=100,
