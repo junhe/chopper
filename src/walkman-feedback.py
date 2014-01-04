@@ -351,8 +351,8 @@ class Walkman:
                                 'pattern_symbols',
                             pyWorkload.pattern_iter.wrappers_to_symbols(wps))
 
-        self.confparser.remove_option('singlefiletraverse', 'chunks')
-        self.confparser.remove_option('singlefiletraverse', 'wrappers')
+            self.confparser.remove_option('singlefiletraverse', 'chunks')
+            self.confparser.remove_option('singlefiletraverse', 'wrappers')
 
         self._RecordWalkmanConfig()
         
@@ -728,13 +728,25 @@ class Troops:
     def _march_many(self):
        self.confparser.set('workload', 'name', 'manyfiletraverse2')
        self.confparser.add_section( self.confparser.get('workload','name') )
+
+
+       filesize = 4096*3
+       chunk_size = 4096 
+       num_of_chunks = 3
        for files_chkseq in pyWorkload.pattern_iter.pattern_iter_files(nfiles=2,
-                                              filesize=12,
-                                              chunksize=6,
-                                              num_of_chunks=2):
+                                              filesize=filesize,
+                                              chunksize=chunk_size,
+                                              num_of_chunks=num_of_chunks):
            self.confparser.set('manyfiletraverse2', 
                                'files_chkseq', 
                                str(files_chkseq))
+           self.confparser.set(self.confparser.get('workload','name'), 
+                                'filesize', str(filesize))
+           self.confparser.set(self.confparser.get('workload','name'),
+                                'chunk_size', str(chunk_size))
+           self.confparser.set(self.confparser.get('workload','name'),
+                                'num_of_chunks', str(num_of_chunks))
+
            self._walkman_walk(self.confparser)
            exit(1)
 

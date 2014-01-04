@@ -603,7 +603,7 @@ class FSMonitor:
                 h = "---------------- extent list -------------------\n"
                 f.write(extlist.toStr())
             ret_dict['d_span'] = get_d_span_from_extent_list(extlist, 
-                                    './pid00000.dir00000/pid.00000.file.00000')
+                                    './pid00000.dir00000/pid.00000.file.')
             ret_dict['physical_layout_hash'] = \
                 get_physical_layout_hash(extlist, 
                                          'file', 
@@ -638,7 +638,7 @@ class FSMonitor:
                 h = "---------------- extent list -------------------\n"
                 f.write( h + df_ext.toStr() )
             ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
-                                            './pid00000.dir00000/pid.00000.file.00000')
+                                            './pid00000.dir00000/pid.00000.file.')
             ret_dict['physical_layout_hash'] \
                     = get_physical_layout_hash(df_ext, 
                                                'file', 
@@ -650,7 +650,8 @@ class FSMonitor:
             df_dic = tree_parser.parse()
             df_rawext = df_dic['extents']
             df_chunk = df_dic['chunks']
-            df_map = btrfs_db_parser.get_filepath_inode_map(self.mountpoint, "./")
+            df_map = btrfs_db_parser.get_filepath_inode_map(
+                        self.mountpoint, "./")
 
             #print df_ext.toStr()
             #print df_chunk.toStr()
@@ -664,7 +665,7 @@ class FSMonitor:
             df_ext = btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map)
 
             ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
-                                            './pid00000.dir00000/pid.00000.file.00000')
+                                    './pid00000.dir00000/pid.00000.file.')
             ret_dict['physical_layout_hash'] \
                     = get_physical_layout_hash(df_ext, 
                                                'file', 
@@ -935,7 +936,7 @@ def get_d_span_from_extent_list(df_ext, filepath):
     block_max = -1
     block_min = float('Inf')
     for row in df_ext.table:
-        if row[hdr.index('filepath')] == filepath and \
+        if filepath in row[hdr.index('filepath')] and \
            row[hdr.index('Level_index')] != '-1'  and \
            row[hdr.index('Level_index')] == row[hdr.index('Max_level')]:
             #print row
