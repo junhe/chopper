@@ -1,4 +1,5 @@
 import pprint
+import producer
 
 # {
 #   'class':   'ChunkBox',
@@ -72,6 +73,71 @@ def chunkop_to_chunkseq ( chunkop ):
     return cseq
 
 def ChunkSeq_to_workload(chkseq, rootdir, tofile):
+    assert chkseq['!class'] == 'ChunkSeq'
 
+    prd = producer.Producer(
+            rootdir = rootdir,
+            tofile = tofile)
+    prd.addDirOp('mkdir', pid=0, dirid=0)
+
+    for chkbox in chkseq['seq']:
+        fileid = chkbox['attrs']['fileid']
+
+        # pre operations
+        for op in chkbox['pre_ops']:
+            if op['opname'] == 'open':
+                prd.addUniOp('open', pid=0, dirid=0, fileid=fileid)
+            else:
+                print 'Unrecognized operation'
+                exit(1)
+
+        # write the chunk
+        prd.addReadOrWrite('write', pid=0, dirid=0,
+                           fileid=fileid, 
+                           off=chkbox['chunk']['offset'], 
+                           len=chkbox['chunk']['length'])
+        
+        # post operations
+        for op in chkbox['post_ops']:
+            if op['opname'] == 'fsync':
+                prd.addUniOp('fsync', pid=0, dirid=0, fileid=fileid)
+            elif op['opname'] == 'close':
+                prd.addUniOp('close', pid=0, dirid=0, fileid=fileid)
+            elif op['opname'] == 'sync':
+                prd.addOSOp('sync', pid=0)
+
+    prd.display()
+    prd.saveWorkloadToFile()
+    return True
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
         
 

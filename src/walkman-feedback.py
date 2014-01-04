@@ -423,11 +423,11 @@ class Walkman:
         #pprint.pprint( files_chkseq )
         #exit(1)
 
-        pyWorkload.pattern_iter.GenWorkloadFromChunksOfFiles(
-                chunks_and_ops,
+        pyWorkload.pat_data_struct.ChunkSeq_to_workload(
+                files_chkseq,
                 rootdir  = self.confparser.get('system', 'mountpoint'),
                 tofile   = self.confparser.get('system', 'workloadbufpath'))
-       
+
         # find out how many proc we need
         max_rank = 0
         with open( self.confparser.get('system', 'workloadbufpath') ) as f:
