@@ -354,6 +354,9 @@ class Walkman:
             self.confparser.remove_option('singlefiletraverse', 'chunks')
             self.confparser.remove_option('singlefiletraverse', 'wrappers')
 
+        if self.confparser.get('workload', 'name') == 'manyfiletraverse2':
+            self.confparser.remove_option('manyfiletraverse2', 'files_chkseq')
+            
         self._RecordWalkmanConfig()
         
     def _record_details(self, ret_record, year, season):
@@ -726,29 +729,44 @@ class Troops:
                     #break
 
     def _march_many(self):
-       self.confparser.set('workload', 'name', 'manyfiletraverse2')
-       self.confparser.add_section( self.confparser.get('workload','name') )
+        filesystems = ['btrfs', 'xfs', 'ext4']
 
+        self.confparser.set('workload', 'name', 'manyfiletraverse2')
+        self.confparser.add_section( self.confparser.get('workload','name') )
 
-       filesize = 4096*3
-       chunk_size = 4096 
-       num_of_chunks = 3
-       for files_chkseq in pyWorkload.pattern_iter.pattern_iter_files(nfiles=2,
-                                              filesize=filesize,
-                                              chunksize=chunk_size,
-                                              num_of_chunks=num_of_chunks):
-           self.confparser.set('manyfiletraverse2', 
-                               'files_chkseq', 
-                               str(files_chkseq))
-           self.confparser.set(self.confparser.get('workload','name'), 
-                                'filesize', str(filesize))
-           self.confparser.set(self.confparser.get('workload','name'),
-                                'chunk_size', str(chunk_size))
-           self.confparser.set(self.confparser.get('workload','name'),
-                                'num_of_chunks', str(num_of_chunks))
+        for fs in filesystems:
+            self.confparser.set('system', 'filesystem', fs)
 
-           self._walkman_walk(self.confparser)
-           exit(1)
+            exps = [2**x for x in range(10)]
+            filesizes1 = [4*1024*3*x for x in exps] 
+            filesizes2 = [4*1024*3*x for x in range(1,10)] 
+
+            for fsizemode in ['incr', 'exp']:
+                self.confparser.set('manyfiletraverse2', 'fsizemode', fsizemode)
+                if fsizemode == 'incr':
+                    filesizes = filesizes2
+                else:
+                    filesizes = filesizes1
+
+                num_of_chunks = 3
+                for filesize in filesizes:
+                    chunk_size = filesize / num_of_chunks
+
+                    for files_chkseq in pyWorkload.pattern_iter.pattern_iter_files(nfiles=2,
+                                                          filesize=filesize,
+                                                          chunksize=chunk_size,
+                                                          num_of_chunks=num_of_chunks):
+                        self.confparser.set('manyfiletraverse2', 
+                                           'files_chkseq', 
+                                           str(files_chkseq))
+                        self.confparser.set(self.confparser.get('workload','name'), 
+                                            'filesize', str(filesize))
+                        self.confparser.set(self.confparser.get('workload','name'),
+                                            'chunk_size', str(chunk_size))
+                        self.confparser.set(self.confparser.get('workload','name'),
+                                            'num_of_chunks', str(num_of_chunks))
+
+                        self._walkman_walk(self.confparser)
 
 
 def main(args):
