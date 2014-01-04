@@ -254,13 +254,6 @@ class Walkman:
                     )
         return ret
 
-    def _RecordFSSummary(self):
-        # save the fs summary so I can traceback if needed
-        fssumpath = os.path.join(self.confparser.get('system', 'resultdir'),
-                        "walkmanJOB-"+self.confparser.get('system','jobid')+".FS-summary")
-        with open(fssumpath, 'w') as f:
-            f.write( str(self.monitor.dumpfsSummary() ))
-
     def _SetupEnv(self):
         # Make loop device
         if self.confparser.get('system', 'makeloopdevice') == 'yes'\
@@ -307,7 +300,7 @@ class Walkman:
                 ret = self._play_workload_wrapper(year=year, season=season)
 
                 # do not record faulty status of the file system
-                # however, sometimes it is useful to record faulty ones
+                # (however, sometimes it is useful to record faulty ones)
                 print 'Return of _play_workload_wrapper() =', ret
                 if ret == 0:
                     ret_record = self._RecordStatus(year=year,season=season+1, 
@@ -337,7 +330,6 @@ class Walkman:
             # has this key in ret_record 
             self.confparser.set(
                                 self.confparser.get('workload', 'name'),
-                                #'workload_many_file_traverse',
                                 'physical_layout_hash', str(ret_record['physical_layout_hash']) )
  
         # save wrappers sequence ((()))
@@ -756,6 +748,11 @@ class Troops:
                                                           filesize=filesize,
                                                           chunksize=chunk_size,
                                                           num_of_chunks=num_of_chunks):
+                        pprint.pprint(files_chkseq)
+                        pyWorkload.pat_data_struct.ChunkSeq_to_strings( files_chkseq )
+                        exit(1)
+
+
                         self.confparser.set('manyfiletraverse2', 
                                            'files_chkseq', 
                                            str(files_chkseq))

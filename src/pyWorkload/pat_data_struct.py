@@ -110,34 +110,76 @@ def ChunkSeq_to_workload(chkseq, rootdir, tofile):
     prd.saveWorkloadToFile()
     return True
 
-            
+def ChunkSeq_to_strings(chkseq):
+    """
+    It returns:
+        slotnames: it is operation name and chunk name for operation or chunk
+        values: it is a values to indicate if an operation has been conducted
+                or not. 
+        fileids: it indicates the fileid corresponding to
+                each slot
+        types:  what type it is. 'O':for operations, 'C':for chunks
+    slots and fileids have the same length
+    """
+    assert chkseq['!class'] == 'ChunkSeq'
 
+    symbol_dict = {
+                    'open' :'(',
+                    'chunk':'C',
+                    'fsync':'F',
+                    'close':')',
+                    'sync' :'S'
+                   }
+    offsets = set()
+    for chkbox in chkseq['seq']:
+        offsets.add( chkbox['chunk']['offset'] )
+    offsets = list(offsets)
+    offsets.sort()
+    off_dict = {}
+    l = len(offsets)
+    for i in range(l):
+        off_dict[ offsets[i] ] = i
 
+    slotnames = []
+    values = []
+    fileids = []
+    types = []
+    for chkbox in chkseq['seq']:
+        # pre operations
+        for op in chkbox['pre_ops']:
+            slotnames.append( symbol_dict[op['opname']] )
+            values.append( op['opvalue'] )
+            fileids.append( chkbox['attrs']['fileid'] )
+            types.append('O')
 
+        # chunk info
+        slotnames.append( symbol_dict['chunk'] )
+        values.append( off_dict[ chkbox['chunk']['offset'] ] )
+        fileids.append( chkbox['attrs']['fileid'] )
+        types.append('C')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+        # post operations
+        for op in chkbox['post_ops']:
+            slotnames.append( symbol_dict[op['opname']] )
+            values.append( op['opvalue'] )
+            fileids.append( chkbox['attrs']['fileid'] )
+            types.append('O')
         
+    
+    ret = {
+            'slotnames':slotnames,
+            'values': values,
+            'fileids': fileids,
+            'types': types
+          }
+    print ret
+
+
+
+
+
+
+
+
+
 
