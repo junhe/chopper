@@ -71,6 +71,7 @@ def chunkop_to_chunkseq ( chunkop ):
         cseq['seq'].append(cbox)
     return cseq
 
-        
+def ChunkSeq_to_workload(chkseq, rootdir, tofile):
+
         
 

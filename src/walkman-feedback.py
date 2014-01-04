@@ -399,8 +399,8 @@ class Walkman:
             return self._play_ibench(year, season)
         elif self.confparser.get('workload', 'name') == 'singlefiletraverse':
             return self._play_single_file_traverse()
-        elif self.confparser.get('workload', 'name') == 'manyfiletraverse':
-            return self._play_many_file_traverse()
+        elif self.confparser.get('workload', 'name') == 'manyfiletraverse2':
+            return self._play_many_file_traverse2()
         elif self.confparser.get('workload', 'name') == 'fbworkload':
             # fbworkload is the one with segment, write size,
             # write direction...
@@ -414,13 +414,14 @@ class Walkman:
             print "BAD BAD, you are using a workload name that does not exist"
             exit(1)
 
-    def _play_many_file_traverse(self):
-        chunks_and_ops = self.confparser.get(self.confparser.get('workload','name'),
-                                             'chunks_and_ops')
-        chunks_and_ops = literal_eval(chunks_and_ops)
+    def _play_many_file_traverse2(self):
+        files_chkseq = self.confparser.get(self.confparser.get('workload','name'),
+                                             'files_chkseq')
+        files_chkseq = literal_eval(files_chkseq)
 
         #print "------------------------------------------"
-        #pprint.pprint( chunks_and_ops )
+        #pprint.pprint( files_chkseq )
+        #exit(1)
 
         pyWorkload.pattern_iter.GenWorkloadFromChunksOfFiles(
                 chunks_and_ops,
@@ -634,8 +635,8 @@ class Troops:
         return self._test018()
 
     def march_wrapper(self):
-        #self._march_many()
-        self._march_single()
+        self._march_many()
+        #self._march_single()
 
     def _march_traditional(self):
         """
@@ -725,28 +726,18 @@ class Troops:
                     #break
 
     def _march_many(self):
+       self.confparser.set('workload', 'name', 'manyfiletraverse2')
+       self.confparser.add_section( self.confparser.get('workload','name') )
+       for files_chkseq in pyWorkload.pattern_iter.pattern_iter_files(nfiles=2,
+                                              filesize=12,
+                                              chunksize=6,
+                                              num_of_chunks=2):
+           self.confparser.set('manyfiletraverse2', 
+                               'files_chkseq', 
+                               str(files_chkseq))
+           self._walkman_walk(self.confparser)
+           exit(1)
 
-        self.confparser.set('workload', 'name', 'manyfiletraverse')
-
-        filesize = 8*1024*1024
-        chunk_size = 1024*1024
-
-    
-        
-        for entry in pyWorkload.pattern_iter.pattern_iter_nfiles(
-                                  nfiles     =2,
-                                  filesize   =filesize, 
-                                  chunksize  =chunk_size):
-            #pprint.pprint( entry )
-            chunks_and_ops = str(entry)
-            #print "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
-            #print chunks_and_ops
-            self.confparser.set(self.confparser.get('workload','name'),
-                                'chunks_and_ops',
-                                chunks_and_ops)
-
-            self._walkman_walk(self.confparser)
-            #time.sleep(1)
 
 def main(args):
     if len(args) != 2:
