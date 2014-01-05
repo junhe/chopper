@@ -705,8 +705,7 @@ class Troops:
                     #break
 
     def _march_many(self):
-        #filesystems = ['btrfs', 'xfs', 'ext4']
-        filesystems = ['ext4']
+        filesystems = ['btrfs', 'xfs', 'ext4']
 
         self.confparser.set('workload', 'name', 'manyfiletraverse2')
         self.confparser.add_section( self.confparser.get('workload','name') )

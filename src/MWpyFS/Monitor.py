@@ -600,7 +600,7 @@ class FSMonitor:
             # get extents of all files
             extlist = self.getExtentList_of_a_dir(rootdir='./pid00000.dir00000')
             extlist = extlist_translate_new_format(extlist)
-            print extlist.toStr()
+
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
                 f.write(extlist.toStr())
@@ -610,8 +610,6 @@ class FSMonitor:
                 get_physical_layout_hash(extlist, 
                                          'file', 
                                          merge_contiguous=True)
-            print ret_dict
-            exit(1)
 
             ######################
             # e2freefrag
@@ -682,29 +680,6 @@ class FSMonitor:
 
                 h = "---------------- extent list -------------------\n"
                 f.write( h + df_ext.toStr())
-
-
-                df_chunk.addColumns(keylist=["HEADERMARKER_extlist",
-                                         "monitor_time",
-                                         "jobid"],
-                                  valuelist=["DATAMARKER_extlist",
-                                         self.monitor_time,
-                                         self.jobid])
-
-                h = "---------------- chunk list -------------------\n"
-                f.write( h + df_chunk.toStr())
-
-                df_map.addColumns(keylist=["HEADERMARKER_extlist",
-                                         "monitor_time",
-                                         "jobid"],
-                                  valuelist=["DATAMARKER_extlist",
-                                         self.monitor_time,
-                                         self.jobid])
-
-                h = "---------------- map list -------------------\n"
-                f.write( h + df_map.toStr())
-
-
 
         else:
             print "Unsupported file system."
