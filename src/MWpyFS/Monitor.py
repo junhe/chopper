@@ -237,10 +237,10 @@ class FSMonitor:
         "This function only gets ext list for this file"
         if self.filesystem != 'ext4':
             return 
-        print "filepath:", filepath 
+        #print "filepath:", filepath 
         #cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         cmd = ['debugfs', self.devname, '-R', 'dump_extents "' + filepath + '"']
-        print cmd, '......'
+        #print cmd, '......'
         #cmd = shlex.split(cmd)
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
@@ -358,7 +358,7 @@ class FSMonitor:
         #cmd = "debugfs " + self.devname + " -R 'dump_extents " + filepath + "'"
         #cmd = ['debugfs', self.devname, '-R', '"dump_extents ' + filepath + '"']
         cmd = ['debugfs', self.devname, '-R', 'dump_extents "' + filepath + '"']
-        print cmd, "........."
+        #print cmd, "........."
         #cmd = shlex.split(cmd)
 
         proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
@@ -405,9 +405,9 @@ class FSMonitor:
                 n_entries[ int(d["Level_index"]) ] = int( d["N_Entry"] )
                 max_level = int( d["Max_level"] )
                 
-        print "..... finished stdout parsing .... "
+        #print "..... finished stdout parsing .... "
         proc.terminate()
-        print "..... after terminating .... "
+        #print "..... after terminating .... "
 
 
 
@@ -441,7 +441,7 @@ class FSMonitor:
         else:
             dumpdict["filebytes"] = 'NA'
     
-        print "Reached end of debugfs...."
+        #print "Reached end of debugfs...."
         return dumpdict
 
     def filefrag(self, filepath):
@@ -450,7 +450,7 @@ class FSMonitor:
 
         fullpath = os.path.join(self.mountpoint, filepath)  
         cmd = ["filefrag", "-sv", fullpath]
-        print cmd
+        #print cmd
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         mydict = {}
@@ -599,6 +599,8 @@ class FSMonitor:
             ######################
             # get extents of all files
             extlist = self.getExtentList_of_a_dir(rootdir='./pid00000.dir00000')
+            extlist = extlist_translate_new_format(extlist)
+            print extlist.toStr()
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
                 f.write(extlist.toStr())
@@ -608,6 +610,8 @@ class FSMonitor:
                 get_physical_layout_hash(extlist, 
                                          'file', 
                                          merge_contiguous=True)
+            print ret_dict
+            exit(1)
 
             ######################
             # e2freefrag
@@ -628,6 +632,8 @@ class FSMonitor:
 
         elif self.filesystem == 'xfs':
             df_ext = self.xfs_getExtentList_of_a_dir()
+            df_ext = extlist_translate_new_format(df_ext)
+            
             if savedata and df_ext != None:
                 df_ext.addColumns(keylist=["HEADERMARKER_extlist",
                                          "monitor_time",
@@ -656,11 +662,6 @@ class FSMonitor:
             #print df_ext.toStr()
             #print df_chunk.toStr()
 
-            #ret_dict['d_span'] = btrfs_get_d_span_of_a_file(
-                                       #filepath  ='./pid00000.dir00000/pid.00000.file.00000', 
-                                       #df_rawext =df_rawext, 
-                                       #df_chunk  =df_chunk, 
-                                       #df_map    =df_map)
 
             df_ext = btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map)
 
@@ -759,7 +760,6 @@ class FSMonitor:
 
 
 ############################################
-
 def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
     """
     It only cares about physical block positions.
@@ -838,35 +838,6 @@ def get_all_vir_ranges_of_an_inode(inode_number, df_rawext):
 
     return ranges
 
-
-
-def btrfs_get_d_span_of_a_file(filepath, df_rawext, df_chunk, df_map):
-    inode_number = get_inode_num_from_dfmap(filepath, df_map)
-    #print inode_number
-
-    ranges = get_all_vir_ranges_of_an_inode( inode_number, df_rawext )
-
-    #print ranges
-
-    devices = set()
-    phy_addrs = set() 
-    for seg in ranges:
-        phy_loc =  btrfs_db_parser.virtual_to_physical( seg['virtual_start'], df_chunk )
-
-        for stripe in phy_loc:
-            devices.add( stripe['devid'] )
-            assert len(devices) == 1, 'we only allow one device at this time'
-            phy_addrs.add( stripe['physical_addr'] )
-            phy_addrs.add( stripe['physical_addr'] + seg['length'] )
-
-    #print phy_addrs
-
-    d_span = max(phy_addrs) - min(phy_addrs)
-    #print d_span
-
-    return d_span
-
-
 def btrfs_df_map_to_dic(df_map):
     d = {}
     hdr = df_map.header
@@ -881,10 +852,9 @@ def btrfs_df_map_to_dic(df_map):
 
 
 def btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map):
-    print df_rawext.toStr()
-    print df_chunk.toStr()
-    print df_map.toStr()
-
+    #print df_rawext.toStr()
+    #print df_chunk.toStr()
+    #print df_map.toStr()
 
     dic_map = btrfs_df_map_to_dic(df_map)
 
@@ -908,7 +878,7 @@ def btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map):
         rowdic = {}
         for col in hdr:
             rowdic[col] = row[hdr.index(col)]
-        print rowdic
+        #print rowdic
 
         phy_starts = btrfs_db_parser.virtual_to_physical( rowdic['Virtual_start'], df_chunk ) 
         
@@ -916,8 +886,10 @@ def btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map):
             devices.add( stripe['devid'] )
             assert len(devices) == 1, 'we only allow one device at this time'
             rowdic['Physical_start'] = stripe['physical_addr']
-            rowdic['Physical_end'] = stripe['physical_addr'] + int( rowdic['Length'] ) - 1
-            rowdic['Logical_end'] = int(rowdic['Logical_start']) + int( rowdic['Length'] ) - 1
+            rowdic['Physical_end'] = stripe['physical_addr'] + \
+                                      int( rowdic['Length'] ) 
+            rowdic['Logical_end'] = int(rowdic['Logical_start']) + \
+                                      int( rowdic['Length'] )
             rowdic['Level_index'] = 0
             rowdic['Max_level'] = 0
             rowdic['Entry_index'] = 0
@@ -929,12 +901,69 @@ def btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map):
 
     return df_ext
 
+def extlist_translate_new_format(df_ext):
+    """
+    Use ending of file and new unit(byte)
+    Only df_ext of ext4 and xfs need this, btrfs already
+    uses byte as unit. 
+    But does btrfs use the new style of ending?
+    """
+    df_ext = extlist_lastblock_to_nextblock(df_ext)
+    df_ext = extlist_block_to_byte(df_ext)
+    return df_ext
+
+def extlist_lastblock_to_nextblock(df_ext):
+    """
+    for ext4 and xfs, the Logical_end and Physical_end point
+    to the last block of the file. This is not convenient when
+    we translate the unit from block to byte. 
+    so in this function, we shift the _end to point to the
+    next block of the file (out of the file), kind of like
+    the .end() of iterator in C++.
+    For example, it was 8,8 for a file, indicating, the first
+    and the last block of the file is 8.
+    After the translating of this file, it is 8,9.
+    """
+    colnames = ['Logical_end', 'Physical_end']
+
+    hdr = df_ext.header
+    for row in df_ext.table:
+        for col in colnames:
+            x = row[hdr.index(col)]
+            if x != 'NA':
+                x = int(x) + 1 
+            row[hdr.index(col)] = x
+    return df_ext
+
+
+def extlist_block_to_byte(df_ext):
+    """
+    Translate the unit from block to byte for extent list
+    Translated:
+        Logical_start Logical_end Physical_start Physical_end
+    This function should be used as soon as the df_ext is created
+    so all the later functions that use this df_ext can treat it
+    as byte.
+    """
+    BLOCKSIZE = 4096
+
+    colnames = ['Logical_start', 'Logical_end', 
+                'Physical_start', 'Physical_end']
+
+    hdr = df_ext.header
+    for row in df_ext.table:
+        for col in colnames:
+            x = row[hdr.index(col)]
+            if x != 'NA':
+                x = int(x) * BLOCKSIZE
+            row[hdr.index(col)] = x
+    return df_ext
 
 def get_d_span_from_extent_list(df_ext, filepath):
     hdr = df_ext.header
 
-    block_max = -1
-    block_min = float('Inf')
+    byte_max = -1
+    byte_min = float('Inf')
     for row in df_ext.table:
         if filepath in row[hdr.index('filepath')] and \
            row[hdr.index('Level_index')] != '-1'  and \
@@ -945,21 +974,16 @@ def get_d_span_from_extent_list(df_ext, filepath):
             mmin = min(physical_start, physical_end)
             mmax = max(physical_start, physical_end)
 
-            if mmin < block_min:
-                block_min = mmin
-            if mmax > block_max:
-                block_max = mmax
+            if mmin < byte_min:
+                byte_min = mmin
+            if mmax > byte_max:
+                byte_max = mmax
 
-            #print mmin, mmax
-            #print physical_start, physical_end
-            #print block_min, block_max
-
-    if block_max == -1:
+    if byte_max == -1:
         # no extent found
         return 'NA'
     else:
-        #print mmax - mmin + 1 
-        return block_max - block_min + 1
+        return byte_max - byte_min 
 
 def stat_a_file(filepath):
     filepath = os.path.join(filepath)
@@ -978,7 +1002,7 @@ def stat_a_file(filepath):
             continue
         mo = re.search( r'Inode:\s(\d+)', line, re.M)
         if mo:
-            print mo.group(1)
+            #print mo.group(1)
             inode_number = mo.group(1)
             stat_dict['inode_number'] = inode_number
     return stat_dict

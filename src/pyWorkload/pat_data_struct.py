@@ -106,7 +106,7 @@ def ChunkSeq_to_workload(chkseq, rootdir, tofile):
             elif op['opname'] == 'sync':
                 prd.addOSOp('sync', pid=0)
 
-    prd.display()
+    #prd.display()
     prd.saveWorkloadToFile()
     return True
 

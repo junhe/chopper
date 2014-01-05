@@ -359,16 +359,12 @@ class Walkman:
             if not feedback_dic.has_key(k):
                 feedback_dic[k] = []
         
-        #print ['*'] * 100
         print ret_record
         print feedback_dic
         #feedback_inuse = 'd_span'
         feedback_inuse = 'physical_layout_hash'
         #print feedback_inuse
 
-
-        print 'd_span', ret_record['d_span']
-        print 'filesize', self.confparser.getint(self.confparser.get('workload','name'), 'filesize')
 
         if ret_record['d_span'] <  \
                 2 * self.confparser.getint(self.confparser.get('workload','name'), 'filesize'):
@@ -451,9 +447,6 @@ class Walkman:
         wrappers = self.confparser.get(self.confparser.get('workload','name'),
                                         'wrappers')
         wrappers = literal_eval(wrappers)
-
-        print chunks
-        print wrappers
 
         pyWorkload.pattern_iter.GenWorkloadFromChunks(
                 chunks, wrappers,
@@ -676,7 +669,6 @@ class Troops:
                 for filesize in filesizes:
                     chunk_size = 4096
                     #filesize = chunk_size * 3
-                    #print ['input filesize']*100,filesize
                     #continue
 
                     self.confparser.set(self.confparser.get('workload','name'), 
@@ -689,12 +681,6 @@ class Troops:
                                               filesize   =filesize, 
                                               chunksize  =chunk_size,
                                               num_of_chunks = 3):
-                        print '----------------------------------------------------------'
-                        print '----------------------------------------------------------'
-                        print '----------------------------------------------------------'
-                        print '----------------------------------------------------------'
-                        print '----------------------------------------------------------'
-                        print entry
                         chunks = str(entry['chunks'])
                         wrappers = str(entry['wrappers'])
                         self.confparser.set(self.confparser.get('workload','name'),
@@ -710,10 +696,8 @@ class Troops:
                         patternstring = pyWorkload.pattern_iter.pattern_string( entry['chunks'], entry['wrappers'] )
                         self.confparser.set(self.confparser.get('workload','name'),
                                             'patternstring', patternstring)
-                        print patternstring
                              
                         self._walkman_walk(self.confparser)
-                        #print 'my end'
                         #exit(1)
                         #break
 
@@ -721,7 +705,8 @@ class Troops:
                     #break
 
     def _march_many(self):
-        filesystems = ['btrfs', 'xfs', 'ext4']
+        #filesystems = ['btrfs', 'xfs', 'ext4']
+        filesystems = ['ext4']
 
         self.confparser.set('workload', 'name', 'manyfiletraverse2')
         self.confparser.add_section( self.confparser.get('workload','name') )
@@ -729,9 +714,9 @@ class Troops:
         for fs in filesystems:
             self.confparser.set('system', 'filesystem', fs)
 
-            exps = [2**x for x in range(10)]
+            exps = [2**x for x in range(4)]
             filesizes1 = [4*1024*3*x for x in exps] 
-            filesizes2 = [4*1024*3*x for x in range(1,10)] 
+            filesizes2 = [4*1024*3*x for x in range(1,5)] 
 
             for fsizemode in ['incr', 'exp']:
                 self.confparser.set('manyfiletraverse2', 'fsizemode', fsizemode)
@@ -764,9 +749,6 @@ class Troops:
                                             'num_of_chunks', str(num_of_chunks))
 
                         self._walkman_walk(self.confparser)
-                        break
-                    break
-                break
 
 
 def main(args):
