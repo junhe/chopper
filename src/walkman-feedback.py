@@ -748,10 +748,10 @@ class Troops:
                                                           filesize=filesize,
                                                           chunksize=chunk_size,
                                                           num_of_chunks=num_of_chunks):
-                        pprint.pprint(files_chkseq)
-                        pyWorkload.pat_data_struct.ChunkSeq_to_strings( files_chkseq )
-                        exit(1)
-
+                        chkseq_strs = pyWorkload.pat_data_struct.ChunkSeq_to_strings( 
+                                                                        files_chkseq )
+                        for k,v in chkseq_strs.items():
+                            self.confparser.set('manyfiletraverse2', k, v)
 
                         self.confparser.set('manyfiletraverse2', 
                                            'files_chkseq', 
@@ -764,6 +764,9 @@ class Troops:
                                             'num_of_chunks', str(num_of_chunks))
 
                         self._walkman_walk(self.confparser)
+                        break
+                    break
+                break
 
 
 def main(args):

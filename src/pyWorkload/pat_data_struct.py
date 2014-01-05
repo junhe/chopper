@@ -164,7 +164,21 @@ def ChunkSeq_to_strings(chkseq):
             values.append( op['opvalue'] )
             fileids.append( chkbox['attrs']['fileid'] )
             types.append('O')
-        
+    
+    # slotnames
+    slotnames = ''.join(slotnames)
+    fileids = [str(x) for x in fileids]
+    fileids = ''.join(fileids)
+    types = ''.join(types)
+
+    # values
+    for i,v in enumerate(values):
+        if v == False:
+            values[i] = 0
+        elif v == True:
+            values[i] = 1
+    values = [str(x) for x in values]
+    values = ''.join(values)
     
     ret = {
             'slotnames':slotnames,
@@ -172,14 +186,7 @@ def ChunkSeq_to_strings(chkseq):
             'fileids': fileids,
             'types': types
           }
-    print ret
 
-
-
-
-
-
-
-
+    return ret
 
 
