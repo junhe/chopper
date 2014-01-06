@@ -724,7 +724,7 @@ class Troops:
                 else:
                     filesizes = filesizes1
 
-                num_of_chunks = 3
+                num_of_chunks = 2 
                 for filesize in filesizes:
                     chunk_size = filesize / num_of_chunks
 
