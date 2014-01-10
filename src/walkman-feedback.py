@@ -46,7 +46,6 @@ def ParameterCominations(parameter_dict):
     d = parameter_dict
     return [dict(zip(d, v)) for v in itertools.product(*d.values())]
 
-
 class Walkman:
     """
     Ideally, Walkman class should be just a wrapper. It 
@@ -728,7 +727,9 @@ class Troops:
                 num_of_chunks = 2 
                 for filesize in filesizes:
                     chunk_size = filesize / num_of_chunks
-
+                    self.confparser.set('system', 
+                                        'makeloopdevice',
+                                        'yes')
                     for files_chkseq in pyWorkload.pattern_iter.pattern_iter_files(nfiles=2,
                                                           filesize=filesize,
                                                           chunksize=chunk_size,
@@ -749,6 +750,14 @@ class Troops:
                                             'num_of_chunks', str(num_of_chunks))
 
                         self._walkman_walk(self.confparser)
+
+
+                        self.confparser.set('system', 
+                                            'makeloopdevice',
+                                            'no')
+                    break
+                break
+            break
 
 
 def main(args):
