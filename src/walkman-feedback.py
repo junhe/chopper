@@ -745,9 +745,10 @@ class Troops:
                         self.confparser.set('system', 
                                             'makeloopdevice',
                                             'no')
+                        break
                     break
                 break
-            break
+            #break
 
 
 def main(args):

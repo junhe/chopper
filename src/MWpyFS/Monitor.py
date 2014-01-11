@@ -599,17 +599,11 @@ class FSMonitor:
             ######################
             # get extents of all files
             extlist = self.getExtentList_of_a_dir(rootdir='./pid00000.dir00000')
-            extlist = extlist_translate_new_format(extlist)
+            df_ext = extlist_translate_new_format(extlist)
 
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
                 f.write(extlist.toStr())
-            ret_dict['d_span'] = get_d_span_from_extent_list(extlist, 
-                                    './pid00000.dir00000/pid.00000.file.')
-            ret_dict['physical_layout_hash'] = \
-                get_physical_layout_hash(extlist, 
-                                         'file', 
-                                         merge_contiguous=True)
 
             ######################
             # e2freefrag
@@ -641,12 +635,7 @@ class FSMonitor:
                                          self.jobid])
                 h = "---------------- extent list -------------------\n"
                 f.write( h + df_ext.toStr() )
-            ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
-                                            './pid00000.dir00000/pid.00000.file.')
-            ret_dict['physical_layout_hash'] \
-                    = get_physical_layout_hash(df_ext, 
-                                               'file', 
-                                               merge_contiguous=True)
+
         elif self.filesystem == 'btrfs':
             tree_lines = btrfs_db_parser.btrfs_debug_tree(self.devname)
 
@@ -662,13 +651,6 @@ class FSMonitor:
 
 
             df_ext = btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map)
-
-            ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
-                                    './pid00000.dir00000/pid.00000.file.')
-            ret_dict['physical_layout_hash'] \
-                    = get_physical_layout_hash(df_ext, 
-                                               'file', 
-                                               merge_contiguous=True)
 
             if savedata:
                 df_ext.addColumns(keylist=["HEADERMARKER_extlist",
@@ -689,6 +671,17 @@ class FSMonitor:
             f.flush()
             f.close()
         
+        # calculate return value
+        ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
+                                        './pid00000.dir00000/pid.00000.file.')
+        ret_dict['physical_layout_hash'] \
+                = get_physical_layout_hash(df_ext, 
+                                           'file', 
+                                           merge_contiguous=True)
+
+
+
+
         return ret_dict
 
     def stat_a_file(self, filepath):
