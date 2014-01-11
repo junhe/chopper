@@ -21,12 +21,12 @@ sudo rm -f $resultparent/${testname}.tar.gz
 sudo rm -rf $resultparent/${testname}
 sudo mv $resultdir $resultparent/${testname}
 echo Compressing z files
-tar zcvf $resultparent/${testname}.tar.gz $resultparent/${testname}/z*
+sudo tar zcvf $resultparent/${testname}.tar.gz $resultparent/${testname}/z*
 
 echo copying $testname to NFS
-rm -rf ./${testname}-$host
+sudo rm -rf ./${testname}-$host
 cp -r $resultparent/${testname} ./${testname}-$host
 echo copying $testname.tar.gz file to NFS
-rm -f ./${testname}-$host.tar.gz
+sudo rm -f ./${testname}-$host.tar.gz
 cp $resultparent/${testname}.tar.gz ./${testname}-$host.tar.gz
 

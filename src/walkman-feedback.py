@@ -315,21 +315,11 @@ class Walkman:
         self._record_details(ret_record, year, season)
     
     def _record_config(self, ret_record, year, season):
-        if ret_record.has_key('d_span'):
-            # The returned d_span is good.
-            d_span = ret_record['d_span']
-            if d_span != 'NA':
-                d_span = int(ret_record['d_span'])
+        # save the key/value in ret_record to config
+        for k,v in ret_record.items():
             self.confparser.set(
                                 self.confparser.get('workload', 'name'),
-                                'd_span',
-                                str(d_span))
-
-        if ret_record.has_key('physical_layout_hash'): 
-            # has this key in ret_record 
-            self.confparser.set(
-                                self.confparser.get('workload', 'name'),
-                                'physical_layout_hash', str(ret_record['physical_layout_hash']) )
+                                k, str(v))
  
         # save wrappers sequence ((()))
         if self.confparser.get('workload', 'name') == 'singlefiletraverse':
