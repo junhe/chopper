@@ -674,6 +674,18 @@ class FSMonitor:
         # calculate return value
         ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
                                         './pid00000.dir00000/pid.00000.file.')
+        myfiles = [
+                    './pid00000.dir00000/pid.00000.file.00000',
+                    './pid00000.dir00000/pid.00000.file.00001'
+                  ]
+        ret_dict['datafiles'] = '|'.join( myfiles )
+
+        dspans = []
+        for f in myfiles:
+            dspans.append( get_d_span_from_extent_list(df_ext, f) )
+        dspans = [str(x) for x in dspans]
+        ret_dict['datafiles_dspan'] = '|'.join( dspans )
+
         ret_dict['physical_layout_hash'] \
                 = get_physical_layout_hash(df_ext, 
                                            'file', 

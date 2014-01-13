@@ -694,18 +694,24 @@ class Troops:
                     #break
 
     def _march_many(self):
-        filesystems = ['btrfs', 'xfs', 'ext4']
-        #filesystems = ['ext4']
-
         self.confparser.set('workload', 'name', 'manyfiletraverse2')
         self.confparser.add_section( self.confparser.get('workload','name') )
 
+        shorthostname = socket.gethostname().split('.')[0]
+        assignment = { 'h0':'ext4',
+                       'h1':'xfs',
+                       'h2':'btrfs'}
+        
+        #filesystems = ['btrfs', 'xfs', 'ext4']
+        filesystems = [assignment[shorthostname]]
+
         for fs in filesystems:
+            print fs
             self.confparser.set('system', 'filesystem', fs)
 
-            exps = [2**x for x in range(4)]
+            exps = [2**x for x in range(4, 10)]
             filesizes1 = [4*1024*3*x for x in exps] 
-            filesizes2 = [4*1024*3*x for x in range(1,5)] 
+            filesizes2 = [4*1024*3*x for x in range(5,10)] 
 
             for fsizemode in ['incr', 'exp']:
                 self.confparser.set('manyfiletraverse2', 'fsizemode', fsizemode)
@@ -745,9 +751,9 @@ class Troops:
                         self.confparser.set('system', 
                                             'makeloopdevice',
                                             'no')
-                        break
-                    break
-                break
+                        #break
+                    #break
+                #break
             #break
 
 

@@ -23,8 +23,9 @@ sufixs = [
 sufixs = [ 'zparsed.'+x for x in sufixs ]
 
 zdir = testname+"_z"
-if not os.path.exists( zdir ):
-    os.makedirs( zdir )
+if os.path.exists( zdir ):
+    os.rmdir( zdir )
+os.makedirs( zdir )
 
 dirs = glob.glob( testname+"-*" )
 
@@ -51,5 +52,8 @@ for suf in sufixs:
                     of.write( line )
     of.close()
 print "tar ing ......"
-subprocess.call( ['tar', '-zcvf', zdir+'.tar.gz', zdir] )
+ztar = zdir+'.tar.gz'
+if os.path.exists( ztar ):
+    os.remove( ztar )
+subprocess.call( ['tar', '-zcvf', ztar, zdir] )
 
