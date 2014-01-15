@@ -1,4 +1,5 @@
 import subprocess,os,sys
+import fnmatch
 import glob
 
 if len(sys.argv) != 2:
@@ -22,12 +23,24 @@ sufixs = [
     ]
 sufixs = [ 'zparsed.'+x for x in sufixs ]
 
-zdir = testname+"_z"
+nfsdir = testname
+zdir = os.path.join( nfsdir, testname+"_z" )
 if os.path.exists( zdir ):
     os.rmdir( zdir )
 os.makedirs( zdir )
 
-dirs = glob.glob( testname+"-*" )
+#dirs = glob.glob( testname+"-*" )
+for dirpath, dirnames, filenames in os.walk( nfsdir ):
+    dirs = fnmatch.filter( dirnames, testname+"-*" )
+    break
+
+newdirs = []
+for dir in dirs:
+    if not dir.endswith( '.tar.gz' ):
+        newdirs.append( os.path.join( nfsdir, dir ) )
+dirs = newdirs
+print dirs
+
 
 #for suf in sufixs:
     #subprocess.call( "cat "+testname+"-*/"+suf+" >"+zdir+"/"+suf, shell=True)
@@ -38,8 +51,6 @@ for suf in sufixs:
     of = open( ofpath, 'w' )
     headprinted = False
     for dir in dirs:
-        if dir.endswith('tar.gz'):
-            continue
         zfpath = os.path.join( dir, suf )
         print zfpath
         with open(zfpath, 'r') as zf:
