@@ -12,7 +12,13 @@ then
 fi
 #sleep 1
 
-sudo rm -rf $resultdir
+# mkdir the nfs dir first, otherwise there might be
+# some problems
+nfsdir=$testname
+sudo rm -rf $nfsdir
+mkdir $nfsdir
+
+
 sudo python walkman-feedback.py ../conf/h0.conf 
 sleep 1 
 sudo python ../scripts/result-parser-faster.py $resultdir $host  
@@ -25,11 +31,19 @@ cd $resultparent
 sudo tar zcvf ${testname}.tar.gz ${testname}/z*
 cd -
 
-echo copying $testname.tar.gz file to NFS
-sudo rm -f ./${testname}-$host.tar.gz
-cp $resultparent/${testname}.tar.gz ./${testname}-$host.tar.gz
+sync
+sleep 5 
 
-echo copying $testname to NFS
-sudo rm -rf ./${testname}-$host
-cp -r $resultparent/${testname} ./${testname}-$host
+echo copying $testname.tar.gz file to NFS dir $nfsdir
+sudo rm -f ./$nfsdir/${testname}-$host.tar.gz
+echo cp $resultparent/${testname}.tar.gz ./$nfsdir/${testname}-$host.tar.gz
+cp $resultparent/${testname}.tar.gz ./$nfsdir/${testname}-$host.tar.gz
+echo $?
+
+echo copying $testname to NFS dir $nfsdir
+sudo rm -rf ./$nfsdir/${testname}-$host
+mkdir ./$nfsdir/${testname}-$host
+echo cp $resultparent/${testname}/z* ./$nfsdir/${testname}-$host/
+cp $resultparent/${testname}/z* ./$nfsdir/${testname}-$host/
+echo $?
 

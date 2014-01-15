@@ -709,9 +709,18 @@ class Troops:
             print fs
             self.confparser.set('system', 'filesystem', fs)
 
-            exps = [2**x for x in range(4, 10)]
+            fzranges = {
+                        0: range(0, 5),
+                        1: range(5, 10),
+                        2: range(10, 15)
+                        }
+            range_sel = self.confparser.getint('workload', 'fzrange')
+            fzrange = fzranges[range_sel]
+            print fzrange
+            
+            exps = [2**x for x in fzrange]
             filesizes1 = [4*1024*3*x for x in exps] 
-            filesizes2 = [4*1024*3*x for x in range(5,10)] 
+            filesizes2 = [4*1024*3*(x+1) for x in fzrange] 
 
             for fsizemode in ['incr', 'exp']:
                 self.confparser.set('manyfiletraverse2', 'fsizemode', fsizemode)
