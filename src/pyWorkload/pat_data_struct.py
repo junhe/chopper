@@ -13,7 +13,8 @@ def get_empty_ChunkBox():
       '!class':   'ChunkBox',
       'pre_ops': [], # [{'opname':NA, 'opvalue':TrueOrFalse},{},{}]
       'chunk':   {'offset':None,
-                  'length':None},
+                  'length':None,
+                  'fileid':None},
       'post_ops':[],
       'attrs':   {}
     }
@@ -81,7 +82,7 @@ def ChunkSeq_to_workload(chkseq, rootdir, tofile):
     prd.addDirOp('mkdir', pid=0, dirid=0)
 
     for chkbox in chkseq['seq']:
-        fileid = chkbox['attrs']['fileid']
+        fileid = chkbox['chunk']['fileid']
 
         # pre operations
         for op in chkbox['pre_ops']:
@@ -149,20 +150,20 @@ def ChunkSeq_to_strings(chkseq):
         for op in chkbox['pre_ops']:
             slotnames.append( symbol_dict[op['opname']] )
             values.append( op['opvalue'] )
-            fileids.append( chkbox['attrs']['fileid'] )
+            fileids.append( chkbox['chunk']['fileid'] )
             types.append('O')
 
         # chunk info
         slotnames.append( symbol_dict['chunk'] )
         values.append( off_dict[ chkbox['chunk']['offset'] ] )
-        fileids.append( chkbox['attrs']['fileid'] )
+        fileids.append( chkbox['chunk']['fileid'] )
         types.append('C')
 
         # post operations
         for op in chkbox['post_ops']:
             slotnames.append( symbol_dict[op['opname']] )
             values.append( op['opvalue'] )
-            fileids.append( chkbox['attrs']['fileid'] )
+            fileids.append( chkbox['chunk']['fileid'] )
             types.append('O')
     
     # slotnames

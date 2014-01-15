@@ -221,7 +221,7 @@ def pattern_iter_files(nfiles, filesize, chunksize, num_of_chunks):
     for i,p in enumerate(patterns):
         p_chkseq = pat_data_struct.chunkop_to_chunkseq(p)
         for c_chkbox in p_chkseq['seq']:
-            c_chkbox['attrs']['single_file_write_patternid'] = i
+            c_chkbox['chunk']['single_file_write_patternid'] = i
         pat_list.append(p_chkseq)
 
     # get all possible mix
@@ -241,7 +241,7 @@ def pattern_iter_files(nfiles, filesize, chunksize, num_of_chunks):
             for fileid in mix:
                 cur_chkseq = copy.deepcopy(p[fileid])
                 cur_chkbox = cur_chkseq['seq'][ cur_pos[fileid] ]
-                cur_chkbox['attrs']['fileid'] = fileid
+                cur_chkbox['chunk']['fileid'] = fileid
                 files_chkseq['seq'].append(copy.deepcopy(cur_chkbox))
                 cur_pos[fileid] += 1
             yield files_chkseq
@@ -390,9 +390,13 @@ def perm_with_repeats(seq):
     "This algorithm is NOT efficient in larger scale!"
     return list(set(list(itertools.permutations(seq))))
 
+def overwrite_iter(filesize):
+    nchunks = 6
+
+
 #print perm_with_repeats([0,0,0,1,1,1])
 
-pattern_iter_files(nfiles=2, filesize=12, chunksize=6, num_of_chunks=2)
+#pattern_iter_files(nfiles=2, filesize=12, chunksize=6, num_of_chunks=2)
 
 #regldg(max_length = 30, 
        #num_words_output=100,
