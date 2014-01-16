@@ -124,13 +124,6 @@ def ChunkSeq_to_strings(chkseq):
     """
     assert chkseq['!class'] == 'ChunkSeq'
 
-    symbol_dict = {
-                    'open' :'(',
-                    'chunk':'C',
-                    'fsync':'F',
-                    'close':')',
-                    'sync' :'S'
-                   }
     offsets = set()
     for chkbox in chkseq['seq']:
         offsets.add( chkbox['chunk']['offset'] )
@@ -141,46 +134,54 @@ def ChunkSeq_to_strings(chkseq):
     for i in range(l):
         off_dict[ offsets[i] ] = i
 
+    ret = None
+    for chkbox in chkseq['seq']:
+        chkbox_dic = ChunkBox_to_lists( chkbox )
+        chkbox_dic['used_ops'] = ChunkBox_filter_used_ops( chkbox_dic ) 
+        chkbox_dic = ChunkBox_lists_to_strings( chkbox_dic )
+        if ret == None:
+            ret = chkbox_dic
+        else:
+            for k,v in chkbox_dic.items():
+                ret[k] += v
+    print ret
+    exit(1)
+    return ret
+
+def ChunkBox_to_lists(chkbox):
+    symbol_dict = {
+                    'open' :'(',
+                    'chunk':'C',
+                    'fsync':'F',
+                    'close':')',
+                    'sync' :'S'
+                   }
+
     slotnames = []
     values = []
     fileids = []
     types = []
-    for chkbox in chkseq['seq']:
-        # pre operations
-        for op in chkbox['pre_ops']:
-            slotnames.append( symbol_dict[op['opname']] )
-            values.append( op['opvalue'] )
-            fileids.append( chkbox['chunk']['fileid'] )
-            types.append('O')
 
-        # chunk info
-        slotnames.append( symbol_dict['chunk'] )
-        values.append( off_dict[ chkbox['chunk']['offset'] ] )
+    # pre operations
+    for op in chkbox['pre_ops']:
+        slotnames.append( symbol_dict[op['opname']] )
+        values.append( op['opvalue'] )
         fileids.append( chkbox['chunk']['fileid'] )
-        types.append('C')
+        types.append('O')
 
-        # post operations
-        for op in chkbox['post_ops']:
-            slotnames.append( symbol_dict[op['opname']] )
-            values.append( op['opvalue'] )
-            fileids.append( chkbox['chunk']['fileid'] )
-            types.append('O')
-    
-    # slotnames
-    slotnames = ''.join(slotnames)
-    fileids = [str(x) for x in fileids]
-    fileids = ''.join(fileids)
-    types = ''.join(types)
+    # chunk info
+    slotnames.append( symbol_dict['chunk'] )
+    values.append( 'C' ) # Not know how to represent it here
+    fileids.append( chkbox['chunk']['fileid'] )
+    types.append('C')
 
-    # values
-    for i,v in enumerate(values):
-        if v == False:
-            values[i] = 0
-        elif v == True:
-            values[i] = 1
-    values = [str(x) for x in values]
-    values = ''.join(values)
-    
+    # post operations
+    for op in chkbox['post_ops']:
+        slotnames.append( symbol_dict[op['opname']] )
+        values.append( op['opvalue'] )
+        fileids.append( chkbox['chunk']['fileid'] )
+        types.append('O')
+
     ret = {
             'slotnames':slotnames,
             'values': values,
@@ -189,5 +190,30 @@ def ChunkSeq_to_strings(chkseq):
           }
 
     return ret
+
+def ChunkBox_filter_used_ops( chkbox_dic ):
+    used_ops = []
+    for name, value in zip( chkbox_dic['slotnames'], 
+                            chkbox_dic['values'] ):
+        if value != False:
+            used_ops.append( name )
+    return used_ops
+
+def ChunkBox_lists_to_strings( chkbox_dic ):
+    # values
+    values = chkbox_dic['values']
+    for i,v in enumerate(values):
+        if v == False:
+            values[i] = 0
+        elif v == True:
+            values[i] = 1
+    
+    for k,v in chkbox_dic.items():
+        s = [str(x) for x in v]
+        s = ''.join(s)
+        chkbox_dic[k] = s
+    
+    return chkbox_dic
+
 
 

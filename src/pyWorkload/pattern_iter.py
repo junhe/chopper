@@ -22,8 +22,9 @@ def wrappers_to_symbols( wrappers ):
     symbols = ['(', 'C', 'F', ')', 'S'] * num_of_chunks
 
     #TODO: this can go bad when the number of operations changes
-    choices = [ (wrappers[i], True, wrappers[i+1], wrappers[i+2], wrappers[i+3]) \
-                    for i in range(0, num_of_chunks*N_OPERATIONS, N_OPERATIONS) ]
+    choices = [ (wrappers[i], True, wrappers[i+1], 
+                 wrappers[i+2], wrappers[i+3]) \
+                 for i in range(0, num_of_chunks*N_OPERATIONS, N_OPERATIONS) ]
     choices = list(itertools.chain.from_iterable(choices))
     seq = map(Filter, symbols, choices)
     seq = ''.join(seq)
@@ -261,7 +262,8 @@ def pattern_iter(nfiles, filesize, chunksize, num_of_chunks=3):
 
     chunk_iter = itertools.permutations(chunks)
     for chks in chunk_iter:
-        wrapper_iter = itertools.product([False, True], repeat=num_of_chunks*N_OPERATIONS)
+        wrapper_iter = itertools.product([False, True], 
+                           repeat=num_of_chunks*N_OPERATIONS)
         for wraps in wrapper_iter:
             if not IsLegal(wraps):
                 # skip bad ones
@@ -390,6 +392,35 @@ def perm_with_repeats(seq):
     "This algorithm is NOT efficient in larger scale!"
     return list(set(list(itertools.permutations(seq))))
 
+def overwrite_workload_iter_simple(filesize):
+    cbox1 = pat_data_struct.get_empty_ChunkBox()
+    cbox1['chunk']['offset'] = 0
+    cbox1['chunk']['length'] = 4096
+    cbox1['chunk']['fileid'] = 0
+    cbox1['pre_ops'].append( {'opname':'open', 'opvalue':True} )    
+    cbox1['post_ops'].append( {'opname':'fsync', 'opvalue':True} )    
+    cbox1['post_ops'].append( {'opname':'close', 'opvalue':True} )    
+    cbox1['post_ops'].append( {'opname':'sync', 'opvalue':True} )    
+
+    cbox2 = pat_data_struct.get_empty_ChunkBox()
+    cbox2['chunk']['offset'] = 0
+    cbox2['chunk']['length'] = filesize
+    cbox2['chunk']['fileid'] = 0
+
+    #pat_data_struct.ChunkBox_filter_used_ops( 
+            #pat_data_struct.ChunkBox_to_lists(cbox1)) 
+    #pprint.pprint( pat_data_struct.ChunkBox_to_lists( cbox1 ) )
+    #pprint.pprint( pat_data_struct.ChunkBox_lists_to_strings(
+             #pat_data_struct.ChunkBox_to_lists( cbox1 ) ) )
+    
+    cseq = pat_data_struct.get_empty_ChunkSeq()
+    cseq['seq'] = [cbox1, cbox2]
+
+    print pat_data_struct.ChunkSeq_to_strings( cseq )
+
+
+overwrite_workload_iter_simple(12*1024)
+
 def overwrite_workload_iter(filesize):
     fileid = 0
     # round 1
@@ -424,9 +455,9 @@ def overwrite_workload_iter(filesize):
             chkseq_ret['seq'] = p1['seq'] + p2['seq']
             yield chkseq_ret
 
-for s in overwrite_workload_iter(12):
-    pprint.pprint(s)
-    break
+#for s in overwrite_workload_iter(12):
+    #pprint.pprint(s)
+    #break
 #print perm_with_repeats([0,0,0,1,1,1])
 
 #pattern_iter_files(nfiles=2, filesize=12, chunksize=6, num_of_chunks=2)
