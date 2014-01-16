@@ -32,7 +32,7 @@ sudo tar zcvf ${testname}.tar.gz ${testname}/z*
 cd -
 
 sync
-sleep 5 
+sleep 2
 
 echo copying $testname.tar.gz file to NFS dir $nfsdir
 sudo rm -f ./$nfsdir/${testname}-$host.tar.gz

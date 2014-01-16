@@ -390,10 +390,43 @@ def perm_with_repeats(seq):
     "This algorithm is NOT efficient in larger scale!"
     return list(set(list(itertools.permutations(seq))))
 
-def overwrite_iter(filesize):
-    nchunks = 6
+def overwrite_workload_iter(filesize):
+    fileid = 0
+    # round 1
+    num_of_chunks = 2 
+    chunksize = filesize/num_of_chunks
+    patterns = list(pattern_iter(1, filesize, chunksize, num_of_chunks))
+    pat_list1 = []
+    for i,p in enumerate(patterns):
+        p_chkseq = pat_data_struct.chunkop_to_chunkseq(p)
+        for c_chkbox in p_chkseq['seq']:
+            c_chkbox['chunk']['fileid']= fileid
+        pat_list1.append(p_chkseq)
 
+    # round 2
+    num_of_chunks = 3 
+    chunksize = filesize/num_of_chunks
+    patterns = list(pattern_iter(1, filesize, chunksize, num_of_chunks))
+    pat_list2 = []
+    for i,p in enumerate(patterns):
+        p_chkseq = pat_data_struct.chunkop_to_chunkseq(p)
+        for c_chkbox in p_chkseq['seq']:
+            c_chkbox['chunk']['fileid']= fileid
+        pat_list2.append(p_chkseq)
 
+    #print pat_list1[0:10]
+    #print '-------------'
+    #print pat_list2[0:10]
+
+    for p1 in pat_list1:
+        for p2 in pat_list2:
+            chkseq_ret = pat_data_struct.get_empty_ChunkSeq()
+            chkseq_ret['seq'] = p1['seq'] + p2['seq']
+            yield chkseq_ret
+
+for s in overwrite_workload_iter(12):
+    pprint.pprint(s)
+    break
 #print perm_with_repeats([0,0,0,1,1,1])
 
 #pattern_iter_files(nfiles=2, filesize=12, chunksize=6, num_of_chunks=2)
