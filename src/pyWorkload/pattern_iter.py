@@ -68,7 +68,7 @@ def create_workload():
     chunkseq = pat_data_struct.get_empty_ChunkSeq()
 
     for i in range(0, 3):
-        cbox = pat_data_struct.get_empty_ChunkBox()
+        cbox = pat_data_struct.get_empty_ChunkBox2()
         cbox['chunk']['offset'] = i
         chunkseq['seq'].append(cbox)
 
@@ -76,26 +76,37 @@ def create_workload():
                            slotnames=['(','C','F',')','S'], 
                            valid_regexp=r'^(\((C+F?)+\)S)+$')
     for workloaddic in wldic_iter:
-        merge_ChunkSeq_Operations( chunkseq, workloaddic )
-        exit(1)
+        for cseq in chunk_order_iterator(chunkseq):
+            cseq_cp = copy.deepcopy(cseq)
+            assign_operations_to_chunkseq( cseq_cp, workloaddic )
+            for cbox in cseq_cp['seq']:
+                print cbox['chunk']['offset'],
 
 
-def merge_ChunkSeq_Operations( chunkseq, workloaddic ):
-    "chunkseq and workloaddic has the same number of chunks"
+def assign_operations_to_chunkseq( chunkseq, workloaddic ):
+    """
+    chunkseq and workloaddic has the same number of chunks.
+    WARNING: chunkseq's operations should be empty! otherwise
+             they will be overwritten.
+    """
     nchunks = len( chunkseq['seq'] )
     assert nchunks == workloaddic['nchunks']
     
     seq = chunkseq['seq']
     nslots_per_chunk = len(workloaddic['slotnames']) / nchunks
     cnt = 0
-    for name, value in zip( workloaddic['slotnames'],
+    for symbol, value in zip( workloaddic['slotnames'],
                             workloaddic['values'] ):
-        opmod = 'pre'
-        chunkid = int( cnt / nslots_per_chunk )
-        seq[chunkid][
-
-
-
+        chunkid = int(cnt / nslots_per_chunk)
+        cbox = seq[chunkid]  
+        op = {
+                'opname': pat_data_struct.symbol2name(symbol),
+                'optype': pat_data_struct.symbol2type(symbol),
+                'opvalue': value
+             }      
+        cbox['opseq'].append( op )
+        cnt += 1
+    return chunkseq
 
 def chunk_order_iterator( chunkseq ):
     """
@@ -107,7 +118,6 @@ def chunk_order_iterator( chunkseq ):
     for seq in seq_iter:
         ret_chkseq['seq'] = seq
         yield ret_chkseq 
-        
 
 def single_file_workload_iterator(nchunks, slotnames, valid_regexp):
     """
