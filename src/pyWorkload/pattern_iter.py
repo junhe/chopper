@@ -77,30 +77,6 @@ import copy
 # existing ones to get new pattern.
 #
 
-def create_workload():
-    nchunks = 3
-
-    
-    # assign logical space #################
-    chunkseq = pat_data_struct.get_empty_ChunkSeq()
-    for i in range(0, 3):
-        cbox = pat_data_struct.get_empty_ChunkBox2()
-        cbox['chunk']['offset'] = i
-        chunkseq['seq'].append(cbox)
-
-    wldic_iter = single_file_workload_iterator(nchunks=3, 
-                           slotnames=['(','C','F',')','S'], 
-                           valid_regexp=r'^(\((C+F?)+\)S)+$')
-
-    for workloaddic in wldic_iter:
-        for cseq in chunk_order_iterator(chunkseq):
-            # order chunks (assign time) ###############
-            cseq_cp = copy.deepcopy(cseq)
-
-            # assign operation ############
-            assign_operations_to_chunkseq( cseq_cp, workloaddic )
-            for cbox in cseq_cp['seq']:
-                print cbox['chunk']['offset'],
 
 
 def assign_operations_to_chunkseq( chunkseq, workloaddic ):

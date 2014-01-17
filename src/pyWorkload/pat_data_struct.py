@@ -166,8 +166,6 @@ def ChunkSeq_to_strings(chkseq):
         else:
             for k,v in chkbox_dic.items():
                 ret[k] += v
-    print ret
-    exit(1)
     return ret
 
 #############################################
