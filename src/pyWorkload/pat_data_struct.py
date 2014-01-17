@@ -148,6 +148,25 @@ def ChunkSeq_to_strings(chkseq):
     exit(1)
     return ret
 
+symbol_dict = {
+                'open' :'(',
+                'chunk':'C',
+                'fsync':'F',
+                'close':')',
+                'sync' :'S'
+               }
+
+name_dict = {}
+for k,v in symbol_dict.items():
+    name_dict[v] = k
+
+def name2symbol(name):
+    return symbol_dict[name]
+
+def symbol2name(symbol):
+    return name_dict[symbol]
+
+
 def ChunkBox_to_lists(chkbox):
     symbol_dict = {
                     'open' :'(',

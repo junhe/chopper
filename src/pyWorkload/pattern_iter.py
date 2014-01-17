@@ -62,7 +62,54 @@ import copy
 # figure out the valid operations. 
 #
 
-def valid_pattern_iterator(nchunks, slotnames, valid_regexp):
+def create_workload():
+    nchunks = 3
+
+    chunkseq = pat_data_struct.get_empty_ChunkSeq()
+
+    for i in range(0, 3):
+        cbox = pat_data_struct.get_empty_ChunkBox()
+        cbox['chunk']['offset'] = i
+        chunkseq['seq'].append(cbox)
+
+    wldic_iter = single_file_workload_iterator(nchunks=3, 
+                           slotnames=['(','C','F',')','S'], 
+                           valid_regexp=r'^(\((C+F?)+\)S)+$')
+    for workloaddic in wldic_iter:
+        merge_ChunkSeq_Operations( chunkseq, workloaddic )
+        exit(1)
+
+
+def merge_ChunkSeq_Operations( chunkseq, workloaddic ):
+    "chunkseq and workloaddic has the same number of chunks"
+    nchunks = len( chunkseq['seq'] )
+    assert nchunks == workloaddic['nchunks']
+    
+    seq = chunkseq['seq']
+    nslots_per_chunk = len(workloaddic['slotnames']) / nchunks
+    cnt = 0
+    for name, value in zip( workloaddic['slotnames'],
+                            workloaddic['values'] ):
+        opmod = 'pre'
+        chunkid = int( cnt / nslots_per_chunk )
+        seq[chunkid][
+
+
+
+
+def chunk_order_iterator( chunkseq ):
+    """
+    The input chunkseq should not have operations assigned, otherwise
+    reordering the chunks will break the legal operations
+    """
+    ret_chkseq = pat_data_struct.get_empty_ChunkSeq()
+    seq_iter = itertools.permutations( chunkseq['seq'] )
+    for seq in seq_iter:
+        ret_chkseq['seq'] = seq
+        yield ret_chkseq 
+        
+
+def single_file_workload_iterator(nchunks, slotnames, valid_regexp):
     """
     Input:
         slotnames is a list: ['(','C',')'..], repeat once
@@ -99,7 +146,11 @@ def valid_pattern_iterator(nchunks, slotnames, valid_regexp):
                               'values': values } )
         used_str = ''.join(used_str)
         if is_legal(used_str, valid_regexp):
-            print used_str
+            workloaddic = {
+                  'nchunks'  : nchunks,
+                  'slotnames': allnames,
+                  'values'   : values }
+            yield workloaddic
 
 def is_legal( workload_str, valid_regexp ):
     mo = re.match(valid_regexp, workload_str, re.M)
@@ -108,10 +159,14 @@ def is_legal( workload_str, valid_regexp ):
     else:
         return False
 
-valid_pattern_iterator(nchunks=3, 
-                       slotnames=['(','C','F',')','S'], 
-                       valid_regexp=r'^(\((C+F?)+\)S)+$')
-exit(1) 
+create_workload()
+exit(1)
+#a = valid_workload_iterator(nchunks=3, 
+                       #slotnames=['(','C','F',')','S'], 
+                       #valid_regexp=r'^(\((C+F?)+\)S)+$')
+#a = list(a)
+#pprint.pprint( a )
+#exit(1) 
 
 
 N_OPERATIONS = 4 # OPEN FSYNC CLOSE SYNC
@@ -137,7 +192,6 @@ def wrappers_to_symbols( wrappers ):
     seq = ''.join(seq)
 
     return seq
-
 
 def IsLegal( wrappers ):
     "conver to string and use regex"
