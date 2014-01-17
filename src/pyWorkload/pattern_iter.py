@@ -7,6 +7,113 @@ import subprocess
 import pat_data_struct
 import copy
 
+#####################################
+# Let me clarify how pattern iteration works
+# -- how to generate a workload by regular expression
+#
+# ======= OPERATION: Prepare operations
+# 1, get some 0 and 1 sequence for operations,
+#   these 0 and 1 indicate whether or not we use
+#   an operation in the position of the number.
+#   It is like:
+#       slotnames: CFSCSF
+#       values   : 001010
+# 2, put 'C' into the values(01..)
+# 3, transform the values(01..) to symbols(CFS...),
+#    keep the 'C's
+# 4, Check if the workload symbols are legal. If not,
+#    drop it.
+#
+# Now in the workload symbols, we have operations. But
+# we don't know what we should do with the 'C' (chunk).
+# The information of the chunks are not clear. We need
+# to figure out the details of each chunk.
+#
+# ======== LOGICAL SPACE: Put chunks in logical space
+# 1, initialize n chunks as ChunkBox. 
+#    The initialization includes offset, length, fileid.
+#    This step defines this poistion of the chunk
+#    in the logical space.
+# 
+# ======== PID
+# Assign each chunk a pid (which process will write it).
+#
+# ======== TIME: decide the order to write the chunks
+# Put the ChunkBox's to ChunkSeq
+#
+# ===========================================================
+# ===========================================================
+# ===========================================================
+#
+# TIME, OPERATION and LOGICAL SPACE is related since the legal
+# check of operation is only for one file. 
+# One convenient way to do it is:
+# a) LOGICAL SPACE -> TIME -> OPERATION:
+#    1. assign offset, length, fileid, ..
+#    2. put in ChunkSeq
+#    3. figure out valid operations for each file, assign to files
+# 
+# Note that TIME order is useless if the chunks have not been assigned
+# logical space. Without logical info, they are just placeholders.
+# So it has to be LOGICAL SPACE -> TIME.
+#
+# OPERATION is independent of LOGICAL SPACE and TIME. As long as you
+# know how many chunks there are and the possible operations, you can
+# figure out the valid operations. 
+#
+
+def valid_pattern_iterator(nchunks, slotnames, valid_regexp):
+    """
+    Input:
+        slotnames is a list: ['(','C',')'..], repeat once
+
+    The output of this functaion should be
+     dic={
+            'slotnames':[C,F,S,C,S,F..],
+            'values'   :[True, False,..]
+         }
+    """
+    nslots_per_chunk = len( slotnames )
+    nslots = nchunks * nslots_per_chunk
+    nops_per_chunk = nslots_per_chunk - 1 # one is data data
+    nops = nchunks * nops_per_chunk
+    chunkpos = slotnames.index('C') # 'C' always represent Chunk
+
+    # Now iterate all possible operation combinations, 
+    # including invalid ones
+    allops = itertools.product([False, True], repeat=nops)
+    allnames = slotnames * nchunks
+    for op_seq in allops:
+        # first, insert 'C' to operations
+        op_seq = list( op_seq )
+        #print op_seq
+        values = [ op_seq[i:i+chunkpos]
+              +['C']
+              +op_seq[i+chunkpos:i+nops_per_chunk] \
+                for i in range(0, nops, nops_per_chunk) ]
+        values = [ y for x in values for y in x ]
+        #print values
+
+        used_str = pat_data_struct.ChunkBox_filter_used_ops(
+                            { 'slotnames':allnames,
+                              'values': values } )
+        used_str = ''.join(used_str)
+        if is_legal(used_str, valid_regexp):
+            print used_str
+
+def is_legal( workload_str, valid_regexp ):
+    mo = re.match(valid_regexp, workload_str, re.M)
+    if mo:
+        return True
+    else:
+        return False
+
+valid_pattern_iterator(nchunks=3, 
+                       slotnames=['(','C','F',')','S'], 
+                       valid_regexp=r'^(\((C+F?)+\)S)+$')
+exit(1) 
+
+
 N_OPERATIONS = 4 # OPEN FSYNC CLOSE SYNC
 
 def Filter( opstr, keep ):
