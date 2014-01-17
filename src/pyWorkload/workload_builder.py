@@ -8,6 +8,7 @@ import pat_data_struct
 import pattern_iter
 import copy
 import pprint
+import itertools
 
 def create_workload_sample():
     nchunks = 3
@@ -38,5 +39,72 @@ def create_workload_sample():
             break
 
 
-create_workload_sample()
+#create_workload_sample()
+
+def overwrite_workload_iter( filesize ):
+    """
+    The output of this function is ChunkSeq
+    The workload is to write file size and overwrite first 4kb,
+    or the other way around
+    """
+    chunkbox1 = pat_data_struct.get_empty_ChunkBox2()
+    chunkbox1['chunk']['offset'] = 0
+    chunkbox1['chunk']['length'] = filesize
+    chunkbox1['chunk']['fileid'] = 0
+
+    chkseq1 = pat_data_struct.get_empty_ChunkSeq()
+    chkseq1['seq'].append( chunkbox1 )
+
+    chunkbox2 = pat_data_struct.get_empty_ChunkBox2()
+    chunkbox2['chunk']['offset'] = 0
+    chunkbox2['chunk']['length'] = 4096
+    chunkbox2['chunk']['fileid'] = 0
+
+    chkseq2 = pat_data_struct.get_empty_ChunkSeq()
+    chkseq2['seq'].append( chunkbox2 )
+
+    chkseq_list = [chkseq1, chkseq2]
+
+    wldic_iter = pattern_iter.single_file_workload_iterator(nchunks=1, 
+                           slotnames=['(','C','F',')','S'], 
+                           valid_regexp=r'^(\((C+F?)+\)S)+$')
+    wldics = list(wldic_iter)
+    wldics = itertools.product(wldics, repeat=2)
+
+    for wldic in wldics:
+        for cseq, wld in zip(chkseq_list, wldic):
+            pattern_iter.assign_operations_to_chunkseq(
+                                cseq, wld)
+        chkseq = pat_data_struct.get_empty_ChunkSeq()
+        chkseq['seq'] = [ cbox for cs in chkseq_list for cbox in cs['seq'] ]
+        #print pat_data_struct.ChunkSeq_to_strings(chkseq) 
+        yield chkseq
+        
+
+overwrite_workload_iter(12*1024)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

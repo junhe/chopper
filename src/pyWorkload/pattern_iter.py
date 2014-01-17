@@ -87,6 +87,10 @@ def assign_operations_to_chunkseq( chunkseq, workloaddic ):
     """
     nchunks = len( chunkseq['seq'] )
     assert nchunks == workloaddic['nchunks']
+
+    # clean all the operations 
+    for chkbox in chunkseq['seq']:
+        chkbox['opseq'] = []
     
     seq = chunkseq['seq']
     nslots_per_chunk = len(workloaddic['slotnames']) / nchunks
