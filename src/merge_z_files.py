@@ -66,5 +66,5 @@ print "tar ing ......"
 ztar = zdir+'.tar.gz'
 if os.path.exists( ztar ):
     os.remove( ztar )
-subprocess.call( ['tar', '-zcvf', ztar, zdir] )
+subprocess.call( ['tar', '-zcvf', '-C', nfsdir, ztar, zdir] )
 

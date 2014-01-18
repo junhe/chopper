@@ -787,13 +787,10 @@ class Troops:
             self.confparser.set('system', 'filesystem', fs)
 
             fzranges = {
-                        0: range(0, 2),
-                        1: range(5, 10),
-                        2: range(10, 15)
+                        0: range(0, 15),
                         }
             range_sel = self.confparser.getint('workload', 'fzrange')
             fzrange = fzranges[range_sel]
-            print fzrange
             
             exps = [2**x for x in fzrange]
             filesizes1 = [4*1024*3*x for x in exps] 
@@ -830,7 +827,6 @@ class Troops:
                         self.confparser.set('system', 
                                             'makeloopdevice',
                                             'no')
-                        exit(1)
                         #break
                     #break
                 #break

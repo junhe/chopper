@@ -675,8 +675,8 @@ class FSMonitor:
         ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
                                         './pid00000.dir00000/pid.00000.file.')
         myfiles = [
-                    './pid00000.dir00000/pid.00000.file.00000',
-                    './pid00000.dir00000/pid.00000.file.00001'
+                    './pid00000.dir00000/pid.00000.file.00000'
+                    #'./pid00000.dir00000/pid.00000.file.00001'
                   ]
         ret_dict['datafiles'] = '|'.join( myfiles )
 
