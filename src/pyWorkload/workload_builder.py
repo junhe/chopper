@@ -38,9 +38,6 @@ def create_workload_sample():
             pprint.pprint(pat_data_struct.ChunkSeq_to_strings(cseq_cp))
             break
 
-
-#create_workload_sample()
-
 def overwrite_workload_iter( filesize ):
     """
     The output of this function is ChunkSeq
@@ -52,49 +49,33 @@ def overwrite_workload_iter( filesize ):
     chunkbox1['chunk']['length'] = filesize
     chunkbox1['chunk']['fileid'] = 0
 
-    chkseq1 = pat_data_struct.get_empty_ChunkSeq()
-    chkseq1['seq'].append( chunkbox1 )
-
     chunkbox2 = pat_data_struct.get_empty_ChunkBox2()
     chunkbox2['chunk']['offset'] = 0
     chunkbox2['chunk']['length'] = 4096
-    chunkbox2['chunk']['fileid'] = 0
+    chunkbox2['chunk']['fileid'] = 0 
 
-    chkseq2 = pat_data_struct.get_empty_ChunkSeq()
-    chkseq2['seq'].append( chunkbox2 )
+    chkseq = pat_data_struct.get_empty_ChunkSeq()
+    chkseq['seq'].extend( [chunkbox1, chunkbox2] )
 
-    chkseq_list = [chkseq1, chkseq2]
 
     wldic_iter = pattern_iter.single_file_workload_iterator(nchunks=1, 
                            slotnames=['(','C','F',')','S'], 
                            valid_regexp=r'^(\((C+F?)+\)S)+$')
     wldics = list(wldic_iter)
-    wldics = itertools.product(wldics, repeat=2)
+    wldics = list(itertools.product(wldics, repeat=2))
 
-    for wldic in wldics:
-        for cseq, wld in zip(chkseq_list, wldic):
-            pattern_iter.assign_operations_to_chunkseq(
-                                cseq, wld)
-        chkseq = pat_data_struct.get_empty_ChunkSeq()
-        chkseq['seq'] = [ cbox for cs in chkseq_list for cbox in cs['seq'] ]
-        #print pat_data_struct.ChunkSeq_to_strings(chkseq) 
-        yield chkseq
-        
+    for t_chkseq in pattern_iter.chunk_order_iterator( chkseq ):
+        # t_chkseq is ordered
+        # now assign operations
+        for wldic in wldics:
+            for i,wld in enumerate(wldic):
+                pattern_iter.assign_operations_to_chunkbox(
+                                        chunkbox = t_chkseq['seq'][i],
+                                        workloaddic = wld )
+            yield t_chkseq
 
-overwrite_workload_iter(12*1024)
-
-
-
-
-
-
-
-
-
-
-
-
-
+       
+#pprint.pprint( list(overwrite_workload_iter(12*1024)) )
 
 
 

@@ -77,7 +77,29 @@ import copy
 # existing ones to get new pattern.
 #
 
+def assign_operations_to_chunkbox(chunkbox, workloaddic):
+    chunkbox['opseq'] = []
+    for symbol, value in zip( workloaddic['slotnames'],
+                              workloaddic['values'] ):
+        op = {
+                'opname': pat_data_struct.symbol2name(symbol),
+                'optype': pat_data_struct.symbol2type(symbol),
+                'opvalue': value
+             }      
+        chunkbox['opseq'].append( op )
 
+def assign_operations_to_chunkseq_by_fileid( chunkseq, 
+                                             workloaddic, 
+                                             fileid ):
+    """
+    assign workloaddic to chunkboxs in chunkseq of fileid
+    """
+    t_chkseq = pat_data_struct.get_empty_ChunkSeq()
+    for cbox in chunkseq['seq']:
+        if cbox['chunk']['fileid'] == fileid:
+            t_chkseq['seq'].append( cbox )
+    
+    assign_operations_to_chunkseq( t_chkseq, workloaddic )
 
 def assign_operations_to_chunkseq( chunkseq, workloaddic ):
     """

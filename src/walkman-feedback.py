@@ -399,8 +399,8 @@ class Walkman:
             exit(1)
 
     def _play_many_file_traverse2(self):
-        files_chkseq = self.confparser.get(self.confparser.get('workload','name'),
-                                             'files_chkseq')
+        files_chkseq = self.confparser.get(
+                self.confparser.get('workload','name'), 'files_chkseq')
         files_chkseq = literal_eval(files_chkseq)
 
         #print "------------------------------------------"
@@ -811,7 +811,7 @@ class Troops:
                     self.confparser.set('system', 
                                         'makeloopdevice',
                                         'yes')
-                    for files_chkseq in pyWorkload.pattern_iter.\
+                    for files_chkseq in pyWorkload.workload_builder.\
                                         overwrite_workload_iter(filesize=filesize):
                         pprint.pprint( files_chkseq )
                         chkseq_strs = pyWorkload.pat_data_struct.ChunkSeq_to_strings( 
@@ -830,6 +830,7 @@ class Troops:
                         self.confparser.set('system', 
                                             'makeloopdevice',
                                             'no')
+                        exit(1)
                         #break
                     #break
                 #break
