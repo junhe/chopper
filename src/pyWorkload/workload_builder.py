@@ -72,10 +72,14 @@ def overwrite_workload_iter( filesize ):
                 pattern_iter.assign_operations_to_chunkbox(
                                         chunkbox = t_chkseq['seq'][i],
                                         workloaddic = wld )
-            yield t_chkseq
+            for off in [0, filesize/2, filesize-4096]:
+                chunkbox2['chunk']['offset'] = off
+                pprint.pprint( t_chkseq )
+                yield t_chkseq
 
        
 #pprint.pprint( list(overwrite_workload_iter(12*1024)) )
+#overwrite_workload_iter(12*1024)
 
 
 
