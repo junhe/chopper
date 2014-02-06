@@ -87,6 +87,8 @@ def curve_cuts(curves, nhorizons):
     This funtion will use the that has lower x=0 cut 
     to pick the horizons. Then it calls horizon_curve_cuts()
     to get the cuts.
+
+    The return is a list of cuts.
     """
     cs = []
     for curve in curves:
@@ -156,7 +158,7 @@ def cuts_to_chunkseq(xlists):
 
 
 
-def get_curve_coefficiency(nwrites, filesize, d):
+def get_curves(nwrites, filesize, d):
     """
     You can use d to control if it is 
     1. no overlap, no hole
@@ -185,14 +187,18 @@ def get_curve_coefficiency(nwrites, filesize, d):
 #print '------------'
 #get_curve_coefficiency(nwrites=3, filesize=12*1024, d=-1000)
 
-def two_curve_workload_iter():
+def cut_curve_workload(nwrites, filesize):
+
+    t = filesize/4
+    ds = [0, t, -t]
+    for d in ds:
+        curves = get_curves(nwrites=nwrites, filesize=filesize, d=d)
+        cuts = curve_cuts(curves=curves, nhorizons=3)
+        for chkseq in cuts_workload_iter(cuts):
+            yield chkseq
+
+def cuts_workload_iter(cuts):
     # assign logical space #################
-    cuts = curve_cuts(horizons = [0,1,2], 
-            curves = [
-                      {'a':0, 'b':-1, 'c':4},
-                      {'a':0, 'b':-1, 'c':5}
-                     ]
-                   )
     chunkseq = cuts_to_chunkseq(cuts) 
 
     wldic_iter = pattern_iter.single_file_workload_iterator(nchunks=3, 
@@ -206,12 +212,12 @@ def two_curve_workload_iter():
 
             # assign operation ############
             pattern_iter.assign_operations_to_chunkseq( cseq_cp, workloaddic )
-            for cbox in cseq_cp['seq']:
-                print cbox['chunk']['offset'],
-            #pprint.pprint( cseq_cp )
-            print 
-            #pprint.pprint(pat_data_struct.ChunkSeq_to_strings(cseq_cp))
-            #exit(1)
+
+            yield cseq_cp
+            #break
+        #break
 
 
+#for sq in cut_curve_workload(3, 12*1024):
+    #pprint.pprint(sq)
 
