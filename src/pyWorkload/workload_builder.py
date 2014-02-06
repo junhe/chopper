@@ -9,6 +9,7 @@ import pattern_iter
 import copy
 import pprint
 import itertools
+import math
 
 def create_workload_sample():
     nchunks = 3
@@ -81,15 +82,136 @@ def overwrite_workload_iter( filesize ):
 #pprint.pprint( list(overwrite_workload_iter(12*1024)) )
 #overwrite_workload_iter(12*1024)
 
+def curve_cuts(curves, nhorizons):
+    """
+    This funtion will use the that has lower x=0 cut 
+    to pick the horizons. Then it calls horizon_curve_cuts()
+    to get the cuts.
+    """
+    cs = []
+    for curve in curves:
+        cs.append(curve['c'])
+    minc = min(cs)
+    step = minc/(nhorizons-1)
+    horizons = range(0, minc, step)
+    horizons.append(minc)
+    print horizons
+
+    return horizon_curve_cuts(horizons, curves)
+
+def horizon_curve_cuts(horizons, curves):
+    """
+    horizons: a list of Y values, e.g. [0,1,2,3..]
+    curves: a list of curves. Usually should be two.
+            coefficient of y=ax^2+bx+c. It is in
+            the format of [{'a':#, 'b':#, 'c':#}, {...}]
+
+    return value: it is a list of list of x values, like:
+            [
+             [x1,x2],
+             [x1,x2,x3],
+             ...
+            ]
+    """
+   
+    ret_list = []
+    for y in horizons:
+        xlist = []
+        for curve in curves:
+            a = curve['a']
+            b = curve['b']
+            c = curve['c']
+            if a == 0: 
+                assert b != 0
+                x = (y-c)/b 
+                xlist.append(x)
+            else:
+                x = (-b+math.sqrt(b**2-4*a*(c-y)))
+                xlist.append(x)
+                x = (-b-math.sqrt(b**2-4*a*(c-y)))
+                xlist.append(x)
+        ret_list.append( xlist )
+    return ret_list
+
+def cuts_to_chunkseq(xlists):
+    chkseq = pat_data_struct.get_empty_ChunkSeq()
+    for xlist in xlists:
+        chkbox = pat_data_struct.get_empty_ChunkBox2()
+        start = int(min(xlist))
+        end = int(max(xlist))
+        length = end - start
+        chkbox['chunk']['offset'] = start
+        chkbox['chunk']['length'] = length
+        chkseq['seq'].append( chkbox )
+
+    return chkseq
+
+#a = curve_cuts(horizons = [0,1,2,4], 
+        #curves = [
+                  #{'a':0, 'b':-1, 'c':4},
+                  #{'a':0, 'b':-0.5, 'c':5}
+                 #]
+               #)
+#pprint.pprint( cuts_to_chunkseq(a) )
 
 
 
+def get_curve_coefficiency(nwrites, filesize, d):
+    """
+    You can use d to control if it is 
+    1. no overlap, no hole
+    2. overlap
+    3. hole
+    """
+    ylow = filesize # ylow can be any value, but we
+                    # want it to be larger so that
+                    # we have less 0 after decimal point.
+                    # higher precision. 
+    s = filesize
+    yseg = filesize / nwrites
+    a = 0
+    b = -(ylow+d)/float(s)
+    curve1 = {'a':a, 'b':b, 'c':ylow-yseg}
+    curve2 = {'a':a, 'b':b, 'c':ylow+d}
+    curves = [curve1, curve2]
+    
+    #pprint.pprint(curves)
+    #return curve_cuts( curves, nhorizons=nwrites )
+    return curves
 
+#get_curve_coefficiency(nwrites=3, filesize=12*1024, d=0)
+#print '------------'
+#get_curve_coefficiency(nwrites=3, filesize=12*1024, d=1000)
+#print '------------'
+#get_curve_coefficiency(nwrites=3, filesize=12*1024, d=-1000)
 
+def two_curve_workload_iter():
+    # assign logical space #################
+    cuts = curve_cuts(horizons = [0,1,2], 
+            curves = [
+                      {'a':0, 'b':-1, 'c':4},
+                      {'a':0, 'b':-1, 'c':5}
+                     ]
+                   )
+    chunkseq = cuts_to_chunkseq(cuts) 
 
+    wldic_iter = pattern_iter.single_file_workload_iterator(nchunks=3, 
+                           slotnames=['(','C','F',')','S'], 
+                           valid_regexp=r'^(\((C+F?)+\)S)+$')
 
+    for workloaddic in wldic_iter:
+        for cseq in pattern_iter.chunk_order_iterator(chunkseq):
+            # order chunks (assign time) ###############
+            cseq_cp = copy.deepcopy(cseq)
 
-
+            # assign operation ############
+            pattern_iter.assign_operations_to_chunkseq( cseq_cp, workloaddic )
+            for cbox in cseq_cp['seq']:
+                print cbox['chunk']['offset'],
+            #pprint.pprint( cseq_cp )
+            print 
+            #pprint.pprint(pat_data_struct.ChunkSeq_to_strings(cseq_cp))
+            #exit(1)
 
 
 
