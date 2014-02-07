@@ -222,3 +222,96 @@ def cuts_workload_iter(cuts):
 #for sq in cut_curve_workload(3, 12*1024):
     #pprint.pprint(sq)
 
+def single_workload(filesize,
+                    fsync_bitmap,
+                    open_bitmap,
+                    write_order,
+                    nchunks):
+    """
+    The return is a ChunkSeq. So it can used to 
+    produce a workload file immediatly. 
+
+    Note that this function does not validate
+    the parameters. It just generates
+    workload (ChunkSeq) according to the paramters 
+
+    Input format
+    fsync_bitmap: [True, False, ...]. one boolean for
+                  each chunk
+    open_bitmap: [True, False, ...]. one boolean for 
+                 each chunk
+    write_order: [2, 0, 1]. If we name each chunk by its
+                 offset order.
+    """
+    # logical space (setup chunkseq)
+    chunksize = filesize / nchunks 
+   
+    chunkseq = pat_data_struct.get_empty_ChunkSeq()
+    for offset in range(0, filesize, chunksize):
+        cbox = pat_data_struct.get_empty_ChunkBox2()
+        cbox['chunk']['offset'] = offset
+        cbox['chunk']['length'] = chunksize
+        cbox['chunk']['fileid'] = 0
+        chunkseq['seq'].append( cbox )
+
+    chunkseq['seq'] = [ chunkseq['seq'][i] for i in write_order ]
+
+    # operations
+    slotnames = ['(', 'C', 'F', ')', 'S']
+    opbitmap = pat_data_struct.get_empty_OpBitmap()
+    opbitmap['nchunks'] = nchunks
+    for i in range(nchunks):
+        d = {}
+        for name in slotnames:
+            d[name] = False
+
+        d['C'] = 'C'
+        if fsync_bitmap[i] == True:
+            d['F'] = True
+        if open_bitmap[i] == True:
+            d['('] = True
+        
+        opbitmap['slotnames'].extend( slotnames )
+        opbitmap['values'].extend( [ d[x] for x in slotnames ] )
+
+    # if you open a file, you need to close it first and close it
+    # at the end
+    if len(opbitmap['values']) > 2:
+        opbitmap['values'][-1] = True
+        opbitmap['values'][-2] = True
+    for i in sorted(range(len(opbitmap['values'])), reverse=True):
+        if opbitmap['slotnames'][i] == '(' and \
+                opbitmap['values'][i] == True :
+            if i-2 >= 0:
+                opbitmap['values'][i-1] = True
+                opbitmap['values'][i-2] = True
+            
+    pprint.pprint(opbitmap)
+
+single_workload(filesize=12,
+                    fsync_bitmap=[True]*3,
+                    open_bitmap=[True]*3,
+                    write_order=[0,1,2],
+                    nchunks=3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

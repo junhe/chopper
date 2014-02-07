@@ -45,6 +45,31 @@ def get_empty_ChunkSeq():
     }
     return d
 
+def get_empty_OpBitmap():
+    """
+{'nchunks': 3,
+ 'slotnames': ['(',
+               'C',
+               'F',
+               ')',
+               'S',
+               ...]
+ 'values': [True,
+            'C',
+            False,
+            False,
+            False,
+            False,
+            ...]}
+    """
+    d = {
+            '!class'    :'OpBitmap',
+            'nchunks'   :None,
+            'slotnames' :[],
+            'values'    :[]
+        }
+    return d
+
 
 def chunkop_to_chunkseq ( chunkop ):
     """
