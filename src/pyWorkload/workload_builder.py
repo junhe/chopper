@@ -288,6 +288,8 @@ def single_workload(filesize,
             
     pprint.pprint(opbitmap)
 
+    pattern_iter.assign_operations_to_chunkseq( chunkseq, opbitmap )
+
 single_workload(filesize=12,
                     fsync_bitmap=[True]*3,
                     open_bitmap=[True]*3,

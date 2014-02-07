@@ -77,10 +77,10 @@ import copy
 # existing ones to get new pattern.
 #
 
-def assign_operations_to_chunkbox(chunkbox, workloaddic):
+def assign_operations_to_chunkbox(chunkbox, opbitmap):
     chunkbox['opseq'] = []
-    for symbol, value in zip( workloaddic['slotnames'],
-                              workloaddic['values'] ):
+    for symbol, value in zip( opbitmap['slotnames'],
+                              opbitmap['values'] ):
         op = {
                 'opname': pat_data_struct.symbol2name(symbol),
                 'optype': pat_data_struct.symbol2type(symbol),
@@ -89,36 +89,36 @@ def assign_operations_to_chunkbox(chunkbox, workloaddic):
         chunkbox['opseq'].append( op )
 
 def assign_operations_to_chunkseq_by_fileid( chunkseq, 
-                                             workloaddic, 
+                                             opbitmap, 
                                              fileid ):
     """
-    assign workloaddic to chunkboxs in chunkseq of fileid
+    assign opbitmap to chunkboxs in chunkseq of fileid
     """
     t_chkseq = pat_data_struct.get_empty_ChunkSeq()
     for cbox in chunkseq['seq']:
         if cbox['chunk']['fileid'] == fileid:
             t_chkseq['seq'].append( cbox )
     
-    assign_operations_to_chunkseq( t_chkseq, workloaddic )
+    assign_operations_to_chunkseq( t_chkseq, opbitmap )
 
-def assign_operations_to_chunkseq( chunkseq, workloaddic ):
+def assign_operations_to_chunkseq( chunkseq, opbitmap ):
     """
-    chunkseq and workloaddic has the same number of chunks.
+    chunkseq and opbitmap has the same number of chunks.
     WARNING: chunkseq's operations should be empty! otherwise
              they will be overwritten.
     """
     nchunks = len( chunkseq['seq'] )
-    assert nchunks == workloaddic['nchunks']
+    assert nchunks == opbitmap['nchunks']
 
     # clean all the operations 
     for chkbox in chunkseq['seq']:
         chkbox['opseq'] = []
     
     seq = chunkseq['seq']
-    nslots_per_chunk = len(workloaddic['slotnames']) / nchunks
+    nslots_per_chunk = len(opbitmap['slotnames']) / nchunks
     cnt = 0
-    for symbol, value in zip( workloaddic['slotnames'],
-                            workloaddic['values'] ):
+    for symbol, value in zip( opbitmap['slotnames'],
+                            opbitmap['values'] ):
         chunkid = int(cnt / nslots_per_chunk)
         cbox = seq[chunkid]  
         op = {
@@ -178,11 +178,11 @@ def single_file_workload_iterator(nchunks, slotnames, valid_regexp):
                               'values': values } )
         used_str = ''.join(used_str)
         if is_legal(used_str, valid_regexp):
-            workloaddic = {
+            opbitmap = {
                   'nchunks'  : nchunks,
                   'slotnames': allnames,
                   'values'   : values }
-            yield workloaddic
+            yield opbitmap
 
 def is_legal( workload_str, valid_regexp ):
     mo = re.match(valid_regexp, workload_str, re.M)
