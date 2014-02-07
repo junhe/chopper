@@ -832,6 +832,70 @@ class Troops:
                 #break
             #break
 
+    def _curvecut(self):
+        workloadname = 'curvecut'
+        self.confparser.set('workload', 'name', workloadname )
+        self.confparser.add_section( workloadname )
+
+        shorthostname = socket.gethostname().split('.')[0]
+        assignment = { 'h0':'ext4',
+                       'h1':'xfs',
+                       'h2':'btrfs'}
+        
+        #filesystems = ['btrfs', 'xfs', 'ext4']
+        filesystems = [assignment[shorthostname]]
+
+        for fs in filesystems:
+            print fs
+            self.confparser.set('system', 'filesystem', fs)
+
+            fzranges = {
+                        0: range(0, 15),
+                        }
+            range_sel = self.confparser.getint('workload', 'fzrange')
+            fzrange = fzranges[range_sel]
+            
+            exps = [2**x for x in fzrange]
+            filesizes1 = [4*1024*3*x for x in exps] 
+            filesizes2 = [4*1024*3*(x+1) for x in fzrange] 
+
+            for fsizemode in ['incr', 'exp']:
+                self.confparser.set(workloadname, 'fsizemode', fsizemode)
+                if fsizemode == 'incr':
+                    filesizes = filesizes2
+                else:
+                    filesizes = filesizes1
+
+                num_of_chunks = 3 
+                for filesize in filesizes:
+                    self.confparser.set('system', 
+                                        'makeloopdevice',
+                                        'yes')
+                    for files_chkseq in pyWorkload.workload_builder.\
+                                        overwrite_workload_iter(filesize=filesize):
+                        pprint.pprint( files_chkseq )
+                        chkseq_strs = pyWorkload.pat_data_struct.ChunkSeq_to_strings( 
+                                                                        files_chkseq )
+                        for k,v in chkseq_strs.items():
+                            self.confparser.set(workloadname, k, v)
+
+                        self.confparser.set(workloadname, 
+                                           'files_chkseq', 
+                                           str(files_chkseq))
+                        self.confparser.set(self.confparser.get('workload','name'), 
+                                            'filesize', str(filesize))
+
+                        self._walkman_walk(self.confparser)
+
+                        self.confparser.set('system', 
+                                            'makeloopdevice',
+                                            'no')
+                        #break
+                    #break
+                #break
+            #break
+
+
 
 def main(args):
     if len(args) != 2:

@@ -187,15 +187,16 @@ def get_curves(nwrites, filesize, d):
 #print '------------'
 #get_curve_coefficiency(nwrites=3, filesize=12*1024, d=-1000)
 
-def cut_curve_workload(nwrites, filesize):
-
+def cut_curve_workload(nwrites, filesize, mode):
     t = filesize/4
-    ds = [0, t, -t]
-    for d in ds:
-        curves = get_curves(nwrites=nwrites, filesize=filesize, d=d)
-        cuts = curve_cuts(curves=curves, nhorizons=3)
-        for chkseq in cuts_workload_iter(cuts):
-            yield chkseq
+    dic = {'regular':0,
+           'overlap':t,
+           'sparse' :-t}
+    d = dic[mode]
+    curves = get_curves(nwrites=nwrites, filesize=filesize, d=d)
+    cuts = curve_cuts(curves=curves, nhorizons=3)
+    for chkseq in cuts_workload_iter(cuts):
+        yield chkseq
 
 def cuts_workload_iter(cuts):
     # assign logical space #################
