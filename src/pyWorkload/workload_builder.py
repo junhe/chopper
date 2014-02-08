@@ -297,11 +297,11 @@ def single_workload(filesize,
     pattern_iter.assign_operations_to_chunkseq( chunkseq, opbitmap )
     return chunkseq
 
-pprint.pprint( single_workload(filesize=12,
-                    fsync_bitmap=[True]*3,
-                    open_bitmap=[True]*3,
-                    sync_bitmap=[True]*3,
-                    write_order=[0,1,2]) )
+#pprint.pprint( single_workload(filesize=12,
+                    #fsync_bitmap=[True]*3,
+                    #open_bitmap=[True]*3,
+                    #sync_bitmap=[True]*3,
+                    #write_order=[0,1,2]) )
 
 
 

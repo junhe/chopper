@@ -278,7 +278,7 @@ class Walkman:
 
 
     def walk(self):
-        self._wrapper()
+        return self._wrapper()
     
     def _wrapper(self):
         """
@@ -305,10 +305,12 @@ class Walkman:
                     ret_record = self._RecordStatus(year=year,season=season+1, 
                                                     savedata=False)
                     print 'ret_record', ret_record
+                    return ret_record
                     self._post_run_processing(ret_record, year, season+1)
                 else:
                     walkmanlog.write('>>>>>>>> One Failed walkman <<<<<<<<<<<<')
                     confparser.write( walkmanlog )
+                    return None
 
     def _post_run_processing(self, ret_record, year, season):
         self._record_config(ret_record, year, season)
@@ -384,6 +386,8 @@ class Walkman:
         elif self.confparser.get('workload', 'name') == 'manyfiletraverse2':
             return self._play_many_file_traverse2()
         elif self.confparser.get('workload', 'name') == 'overwrite':
+            return self._play_many_file_traverse2()
+        elif self.confparser.get('workload', 'name') == 'selfscaling':
             return self._play_many_file_traverse2()
         elif self.confparser.get('workload', 'name') == 'fbworkload':
             # fbworkload is the one with segment, write size,
@@ -570,50 +574,7 @@ class Troops:
 
     def _walkman_walk(self, cf):
         walkman = Walkman(cf, 'fromTroops')
-        walkman.walk()
-
-    def _test018(self):
-        paradict = {
-                'nwrites_per_file': [2],
-                'w_hole'          : [1024*1024 - 2*4096],
-                'wsize'           : [4096],
-                'nfile_per_dir'   : [1],
-                # 0: only fsync() before closing
-                # 1: fsync() after each write
-                # 2: no fynsc() during open-close
-                'fsync' : [2],
-                'name'  : ['fbworkload']
-                }
-
-        paralist = ParameterCominations(paradict)
-
-        # Translate to list of dictionary
-        for para in paralist:
-            # Calc stride
-            stride = para['w_hole'] + para['wsize']
-            para['wstride'] = stride
-
-            #Calc fsync
-            if para['fsync'] == 0:
-                para['fsync_per_write'] = 0
-                para['fsync_before_close'] = 1
-            elif para['fsync'] == 1:
-                para['fsync_per_write'] = 1
-                para['fsync_before_close'] = 0
-            elif para['fsync'] == 2:
-                para['fsync_per_write'] = 0
-                para['fsync_before_close'] = 0
-            else:
-                print "invalid fsync"
-                exit(0)
-
-        pprint.pprint( paralist )
-
-        return paralist
-
-    def _march_parameter_table(self):
-        "It returns paralist, which will be put into confparser"
-        return self._test018()
+        return walkman.walk()
 
     def march_wrapper(self):
         #self._overwrite()
@@ -896,7 +857,16 @@ class Troops:
                 #break
             #break
 
-    def self_scaling():
+    def self_scaling(self):
+        workloadname = 'selfscaling'
+        self.confparser.set('workload', 'name', workloadname )
+        self.confparser.add_section( workloadname )
+
+        shorthostname = socket.gethostname().split('.')[0]
+        assignment = { 'h0':'ext4',
+                       'h1':'xfs',
+                       'h2':'btrfs'}
+
         nchunks = 3
         boollist = list( itertools.product([False, True], repeat=nchunks) )
 
@@ -921,8 +891,30 @@ class Troops:
         for paraname,paravalue in cur_parameter.items():
             print paraname
             d_spans = []
-            for value in parameters[paraname]:
-                dspan = 1 #single_workload( .... )
+            for cur_value in parameters[paraname]:
+                # update the current parameter with 
+                # new value
+                cur_parameter[paraname] = cur_value
+
+                chkseq = pyWorkload.workload_builder.\
+                          single_workload(filesize=cur_parameter['filesize'],
+                                fsync_bitmap=cur_parameter['fsync_bitmap'],
+                                open_bitmap=cur_parameter['open_bitmap'],
+                                sync_bitmap=cur_parameter['sync_bitmap'],
+                                write_order=cur_parameter['write_order'])
+                pprint.pprint(chkseq)
+
+                chkseq_strs = pyWorkload.pat_data_struct.\
+                              ChunkSeq_to_strings( chkseq )
+                for k,v in chkseq_strs.items():
+                    self.confparser.set(workloadname, k, v)
+
+                self.confparser.set(workloadname, 
+                                   'files_chkseq', 
+                                   str(chkseq))
+
+                ret = self._walkman_walk(self.confparser)
+                dspan = ret['d_span']
                 d_spans.append( dspan )
             # now you have search paraname and 
             # get all the dspans. 
@@ -934,7 +926,7 @@ class Troops:
             # 
             # update cur_parameter
             print d_spans
-            pprint.pprint( cur_parameter )
+            exit(1)
 
 def main(args):
     if len(args) != 2:
