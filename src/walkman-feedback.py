@@ -872,7 +872,7 @@ class Troops:
         boollist = list( itertools.product([False, True], repeat=nchunks) )
 
         parameters = {}
-        parameters['filesize']=[4*1024*3*x for x in range(1, 10, 1)]
+        parameters['filesize']=[4*1024*3*x for x in range(1, 15, 1)]
         parameters['fsync_bitmap'] = boollist
 
         tmp = itertools.product([False, True], repeat=nchunks-1)
@@ -919,58 +919,99 @@ class Troops:
 
 
         #Let's serach 10 rounds
-        for paraname,paravalue in focal_vector.items()*10:
-            print paraname
-            focal_ylist[paraname] = [] #will be filled
-            for cur_value in parameters[paraname]:
-                # update the current parameter with 
-                # new value
-                cur_parameters = copy.deepcopy(focal_vector)
-                cur_parameters[paraname] = cur_value
+        for it in range(1000):
+            for paraname,paravalue in focal_vector.items():
+                print paraname
+                focal_ylist[paraname] = [] #will be filled
+                for cur_value in parameters[paraname]:
+                    # update the current parameter with 
+                    # new value
+                    cur_parameters = copy.deepcopy(focal_vector)
+                    cur_parameters[paraname] = cur_value
 
-                chkseq = pyWorkload.workload_builder.\
-                          single_workload(filesize=cur_parameters['filesize'],
-                                fsync_bitmap=cur_parameters['fsync_bitmap'],
-                                open_bitmap=cur_parameters['open_bitmap'],
-                                sync_bitmap=cur_parameters['sync_bitmap'],
-                                write_order=cur_parameters['write_order'])
-                pprint.pprint(chkseq)
+                    chkseq = pyWorkload.workload_builder.\
+                              single_workload(filesize=cur_parameters['filesize'],
+                                    fsync_bitmap=cur_parameters['fsync_bitmap'],
+                                    open_bitmap=cur_parameters['open_bitmap'],
+                                    sync_bitmap=cur_parameters['sync_bitmap'],
+                                    write_order=cur_parameters['write_order'])
+                    pprint.pprint(chkseq)
 
-                chkseq_strs = pyWorkload.pat_data_struct.\
-                              ChunkSeq_to_strings( chkseq )
-                for k,v in chkseq_strs.items():
-                    self.confparser.set(workloadname, k, v)
+                    chkseq_strs = pyWorkload.pat_data_struct.\
+                                  ChunkSeq_to_strings( chkseq )
+                    for k,v in chkseq_strs.items():
+                        self.confparser.set(workloadname, k, v)
 
-                self.confparser.set(workloadname, 
-                                   'files_chkseq', 
-                                   str(chkseq))
+                    self.confparser.set(workloadname, 
+                                       'files_chkseq', 
+                                       str(chkseq))
 
-                ret = self._walkman_walk(self.confparser)
-                dspan = ret['d_span']
-                focal_ylist[paraname].append( dspan )
-            # now you have searched paraname and 
-            # get all the dspans. 
-            # Now you need to pick a focal point candidate
+                    ret = self._walkman_walk(self.confparser)
+                    dspan = ret['d_span']
+                    focal_ylist[paraname].append( dspan )
+                # now you have searched paraname and 
+                # get all the dspans. 
+                # Now you need to pick a focal point candidate
 
-            # pick a y from focal_ylist
-            y_focal = pyWorkload.tools.median(focal_ylist[paraname])
-            # find the corresponding value of paraname
-            y_focal_idx = focal_ylist[paraname].index(y_focal)
-            # update focal_vector
-            focal_vector[paraname] = parameters[paraname][y_focal_idx]
+                # pick a y from focal_ylist
+                y_focal = pyWorkload.tools.median(focal_ylist[paraname])
+                # find the corresponding value of paraname
+                y_focal_idx = focal_ylist[paraname].index(y_focal)
+                # update focal_vector
+                focal_vector[paraname] = parameters[paraname][y_focal_idx]
+
+            print "***** focal vector dadada ******"
+            pprint.pprint(focal_vector)
+            print '** focal_vector_pre **'
+            pprint.pprint( focal_vector_pre )
+            print "***** focal ylist ******"
+            pprint.pprint(focal_ylist)
+
             # compare current focal_vector with previous one
             # and see if they converge
             if ( focal_vector_pre == focal_vector ):
                 print "great, converged"
            
-                print "***** focal ylist ******"
-                pprint.pprint(focal_ylist)
-                print "***** focal vector ******"
-                pprint.pprint(focal_vector)
+                focaltable = gen_focal_table(parameters,
+                                      focal_ylist,
+                                      focal_vector).toStr()
+                print focaltable
+                with open('focaltable.txt', 'w') as f:
+                    f.write(focaltable)
                 exit(1)
             else:
-                focal_vector_pre[paraname] = focal_vector[paraname]
-                time.sleep(3)
+                focal_vector_pre = copy.deepcopy(focal_vector)
+def num2bitmapstr(blist):
+    a = [str(int(x)) for x in blist]
+    return "".join(a) 
+
+def gen_focal_table(parameters, focal_ylist, focal_vector):
+    header = ['paraname', 'paraX', 'paraY', 'asfocal']
+    focaltable = MWpyFS.dataframe.DataFrame()
+    focaltable.header = header
+    for paraname, paraXlist in parameters.items():
+        assert len(paraXlist) == len(focal_ylist[paraname])
+        for paraX, paraY in zip(paraXlist, focal_ylist[paraname]):
+            if paraX == focal_vector[paraname]:
+                asfocal = True
+            else:
+                asfocal = False
+
+            if paraname in ['fsync_bitmap', 'open_bitmap',
+                            'sync_bitmap', 'write_order']:
+                paraX = num2bitmapstr(paraX)
+
+            d = {'paraname': paraname,
+                 'paraX'   : paraX,
+                 'paraY'   : paraY,
+                 'asfocal' : asfocal
+                 }
+            focaltable.addRowByDict(d)
+    return focaltable
+
+                
+             
+
 
 def main(args):
     if len(args) != 2:
