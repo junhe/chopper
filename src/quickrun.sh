@@ -20,7 +20,7 @@ mkdir $nfsdir
 
 
 sudo python walkman-feedback.py ../conf/h0.conf 
-sleep 1 
+sleep 10
 sudo python ../scripts/result-parser-faster.py $resultdir $host  
 
 sudo rm -f $resultparent/${testname}.tar.gz 

@@ -23,6 +23,7 @@ import itertools
 import pprint
 import itertools
 import random
+import copy
 from ast import literal_eval
 
 walkmanlog = None
@@ -882,26 +883,57 @@ class Troops:
 
         parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
 
-        cur_parameter = {}
-        # initialize cur_parameter
+        # one or more values for each of the 
+        # parameter. eventually it will converge.
+        # ideally, for example, focal_vector['filesize']
+        # has one value. but in the case of having
+        # distinct performance region, we need more than one.
+        # For now, the prototype has one
+        focal_vector = {}
+        # focal_vector_pre is used to keep the focal points
+        # before current parameter exploration. It is 
+        # used to compare with the new focal point and
+        # see if they converge
+        focal_vector_pre = {}
+        # The ylist is also a dictionary of parameters.
+        # For example, focal_ylist['filesize'] has a 
+        # list of d_spans corresponding to different
+        # file sizes, with other parameters fixed at
+        # its focal point.
+        # The focal points need to converge, otherwise
+        # the ylist is not consistent. For example,
+        # you have 3 parameters, the have a ylist for
+        # the first parameter, when you look at the second
+        # parameter and pick a new focal point for the
+        # second parameter, then the ylist of the second
+        # parameter has a different second parameter. 
+        # But this is not a problem if all the parameters
+        # have the same focal point. 
+        focal_ylist = {}
+        # initialize focal_vector
         for k,v in parameters.items():
-            cur_parameter[k] = v[0]
+            focal_vector[k] = v[0]
+            focal_vector_pre[k] = None #made different to focal_vector
+                                       #on purpose
+            focal_ylist[k] = [] # format: [[3,4,52],[2,33,2,1,2,3],..]
 
-        #for repeats in range(10):
-        for paraname,paravalue in cur_parameter.items():
+
+        #Let's serach 10 rounds
+        for paraname,paravalue in focal_vector.items()*10:
             print paraname
-            d_spans = []
+            focal_ylist[paraname] = [] #will be filled
             for cur_value in parameters[paraname]:
                 # update the current parameter with 
                 # new value
-                cur_parameter[paraname] = cur_value
+                cur_parameters = copy.deepcopy(focal_vector)
+                cur_parameters[paraname] = cur_value
 
                 chkseq = pyWorkload.workload_builder.\
-                          single_workload(filesize=cur_parameter['filesize'],
-                                fsync_bitmap=cur_parameter['fsync_bitmap'],
-                                open_bitmap=cur_parameter['open_bitmap'],
-                                sync_bitmap=cur_parameter['sync_bitmap'],
-                                write_order=cur_parameter['write_order'])
+                          single_workload(filesize=cur_parameters['filesize'],
+                                fsync_bitmap=cur_parameters['fsync_bitmap'],
+                                open_bitmap=cur_parameters['open_bitmap'],
+                                sync_bitmap=cur_parameters['sync_bitmap'],
+                                write_order=cur_parameters['write_order'])
                 pprint.pprint(chkseq)
 
                 chkseq_strs = pyWorkload.pat_data_struct.\
@@ -915,18 +947,30 @@ class Troops:
 
                 ret = self._walkman_walk(self.confparser)
                 dspan = ret['d_span']
-                d_spans.append( dspan )
-            # now you have search paraname and 
+                focal_ylist[paraname].append( dspan )
+            # now you have searched paraname and 
             # get all the dspans. 
             # Now you need to pick a focal point candidate
-            
-            # pick a dspan from d_spans
-            #
+
+            # pick a y from focal_ylist
+            y_focal = pyWorkload.tools.median(focal_ylist[paraname])
             # find the corresponding value of paraname
-            # 
-            # update cur_parameter
-            print d_spans
-            exit(1)
+            y_focal_idx = focal_ylist[paraname].index(y_focal)
+            # update focal_vector
+            focal_vector[paraname] = parameters[paraname][y_focal_idx]
+            # compare current focal_vector with previous one
+            # and see if they converge
+            if ( focal_vector_pre == focal_vector ):
+                print "great, converged"
+           
+                print "***** focal ylist ******"
+                pprint.pprint(focal_ylist)
+                print "***** focal vector ******"
+                pprint.pprint(focal_vector)
+                exit(1)
+            else:
+                focal_vector_pre[paraname] = focal_vector[paraname]
+                time.sleep(3)
 
 def main(args):
     if len(args) != 2:

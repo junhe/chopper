@@ -23,6 +23,10 @@ def run_ibench(num_of_runs, run_name, target_dir):
         ret = subprocess.call(cmd.split())
     return ret
 
-
+def median(l):
+    size = len(l)
+    assert size > 0
+    m = size/2
+    return sorted(l)[m]
 #run_ibench(1, "myrun", "/mnt/scratch/")
 
