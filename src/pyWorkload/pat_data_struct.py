@@ -252,29 +252,32 @@ def ChunkBox_to_lists(chkbox):
 
     return ret
 
-def ChunkBox_filter_used_ops( chkbox_dic ):
+def ChunkBox_filter_used_ops( opbitmap ):
+    """
+    Given some 
+    """
     used_ops = []
-    for name, value in zip( chkbox_dic['slotnames'], 
-                            chkbox_dic['values'] ):
+    for name, value in zip( opbitmap['slotnames'], 
+                            opbitmap['values'] ):
         if value != False:
             used_ops.append( name )
     return used_ops
 
-def ChunkBox_lists_to_strings( chkbox_dic ):
+def ChunkBox_lists_to_strings( opbitmap ):
     # values
-    values = chkbox_dic['values']
+    values = opbitmap['values']
     for i,v in enumerate(values):
         if v == False:
             values[i] = 0
         elif v == True:
             values[i] = 1
     
-    for k,v in chkbox_dic.items():
+    for k,v in opbitmap.items():
         s = [str(x) for x in v]
         s = ''.join(s)
-        chkbox_dic[k] = s
+        opbitmap[k] = s
     
-    return chkbox_dic
+    return opbitmap
 
 
 

@@ -616,7 +616,8 @@ class Troops:
         return self._test018()
 
     def march_wrapper(self):
-        self._overwrite()
+        #self._overwrite()
+        self.self_scaling()
         #self._march_many()
         #self._march_single()
 
@@ -895,7 +896,45 @@ class Troops:
                 #break
             #break
 
+    def self_scaling():
+        nchunks = 3
+        boollist = list( itertools.product([False, True], repeat=nchunks) )
 
+        parameters = {}
+        parameters['filesize']=[4*1024*3*x for x in range(1, 10, 1)]
+        parameters['fsync_bitmap'] = boollist
+
+        tmp = itertools.product([False, True], repeat=nchunks-1)
+        tmp = [ [True]+list(x) for x in tmp ]
+        parameters['open_bitmap'] = tmp
+        
+        parameters['sync_bitmap'] = boollist 
+
+        parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
+
+        cur_parameter = {}
+        # initialize cur_parameter
+        for k,v in parameters.items():
+            cur_parameter[k] = v[0]
+
+        #for repeats in range(10):
+        for paraname,paravalue in cur_parameter.items():
+            print paraname
+            d_spans = []
+            for value in parameters[paraname]:
+                dspan = 1 #single_workload( .... )
+                d_spans.append( dspan )
+            # now you have search paraname and 
+            # get all the dspans. 
+            # Now you need to pick a focal point candidate
+            
+            # pick a dspan from d_spans
+            #
+            # find the corresponding value of paraname
+            # 
+            # update cur_parameter
+            print d_spans
+            pprint.pprint( cur_parameter )
 
 def main(args):
     if len(args) != 2:

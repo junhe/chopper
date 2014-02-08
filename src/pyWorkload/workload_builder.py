@@ -225,8 +225,8 @@ def cuts_workload_iter(cuts):
 def single_workload(filesize,
                     fsync_bitmap,
                     open_bitmap,
-                    write_order,
-                    nchunks):
+                    sync_bitmap,
+                    write_order):
     """
     The return is a ChunkSeq. So it can used to 
     produce a workload file immediatly. 
@@ -242,8 +242,16 @@ def single_workload(filesize,
                  each chunk
     write_order: [2, 0, 1]. If we name each chunk by its
                  offset order.
+
+    fsync and open and write order are independent 
+    parameters, so we can explore each space independently
+    without affecting others. 
+
+    The fsync_bitmap, open_bitmap, and write_order
+    imply the number of chunks. 
     """
     # logical space (setup chunkseq)
+    nchunks = len(write_order)
     chunksize = filesize / nchunks 
    
     chunkseq = pat_data_struct.get_empty_ChunkSeq()
@@ -270,6 +278,8 @@ def single_workload(filesize,
             d['F'] = True
         if open_bitmap[i] == True:
             d['('] = True
+        if sync_bitmap[i] == True:
+            d['S'] = True
         
         opbitmap['slotnames'].extend( slotnames )
         opbitmap['values'].extend( [ d[x] for x in slotnames ] )
@@ -277,29 +287,21 @@ def single_workload(filesize,
     # if you open a file, you need to close it first and close it
     # at the end
     if len(opbitmap['values']) > 2:
-        opbitmap['values'][-1] = True
         opbitmap['values'][-2] = True
     for i in sorted(range(len(opbitmap['values'])), reverse=True):
         if opbitmap['slotnames'][i] == '(' and \
                 opbitmap['values'][i] == True :
             if i-2 >= 0:
-                opbitmap['values'][i-1] = True
                 opbitmap['values'][i-2] = True
             
-    pprint.pprint(opbitmap)
-
     pattern_iter.assign_operations_to_chunkseq( chunkseq, opbitmap )
+    return chunkseq
 
-single_workload(filesize=12,
+pprint.pprint( single_workload(filesize=12,
                     fsync_bitmap=[True]*3,
                     open_bitmap=[True]*3,
-                    write_order=[0,1,2],
-                    nchunks=3)
-
-
-
-
-
+                    sync_bitmap=[True]*3,
+                    write_order=[0,1,2]) )
 
 
 
