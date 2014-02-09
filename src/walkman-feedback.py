@@ -868,7 +868,7 @@ class Troops:
                        'h1':'xfs',
                        'h2':'btrfs'}
 
-        nchunks = 3
+        nchunks = 4 
         boollist = list( itertools.product([False, True], repeat=nchunks) )
 
         parameters = {}
@@ -921,6 +921,10 @@ class Troops:
         #Let's serach 10 rounds
         for it in range(1000):
             for paraname,paravalue in focal_vector.items():
+
+                self.confparser.set('system', 
+                                    'makeloopdevice',
+                                    'yes')
                 print paraname
                 focal_ylist[paraname] = [] #will be filled
                 for cur_value in parameters[paraname]:
@@ -935,7 +939,6 @@ class Troops:
                                     open_bitmap=cur_parameters['open_bitmap'],
                                     sync_bitmap=cur_parameters['sync_bitmap'],
                                     write_order=cur_parameters['write_order'])
-                    pprint.pprint(chkseq)
 
                     chkseq_strs = pyWorkload.pat_data_struct.\
                                   ChunkSeq_to_strings( chkseq )
@@ -949,10 +952,9 @@ class Troops:
                     ret = self._walkman_walk(self.confparser)
                     dspan = ret['d_span']
                     focal_ylist[paraname].append( dspan )
-                # now you have searched paraname and 
-                # get all the dspans. 
-                # Now you need to pick a focal point candidate
-
+                    self.confparser.set('system', 
+                                        'makeloopdevice',
+                                        'no')
                 # pick a y from focal_ylist
                 y_focal = pyWorkload.tools.median(focal_ylist[paraname])
                 # find the corresponding value of paraname
@@ -978,7 +980,7 @@ class Troops:
                 print focaltable
                 with open('focaltable.txt', 'w') as f:
                     f.write(focaltable)
-                exit(1)
+                break
             else:
                 focal_vector_pre = copy.deepcopy(focal_vector)
 def num2bitmapstr(blist):
