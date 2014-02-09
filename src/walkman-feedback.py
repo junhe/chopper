@@ -983,6 +983,134 @@ class Troops:
                 break
             else:
                 focal_vector_pre = copy.deepcopy(focal_vector)
+
+    def self_scaling2(self):
+        workloadname = 'selfscaling'
+        self.confparser.set('workload', 'name', workloadname )
+        self.confparser.add_section( workloadname )
+
+        shorthostname = socket.gethostname().split('.')[0]
+        assignment = { 'h0':'ext4',
+                       'h1':'xfs',
+                       'h2':'btrfs'}
+
+        nchunks = 4 
+        boollist = list( itertools.product([False, True], repeat=nchunks) )
+
+        parameters = {}
+        parameters['filesize']=[4*1024*3*x for x in range(1, 15, 1)]
+        parameters['fsync_bitmap'] = boollist
+
+        tmp = itertools.product([False, True], repeat=nchunks-1)
+        tmp = [ [True]+list(x) for x in tmp ]
+        parameters['open_bitmap'] = tmp
+        
+        parameters['sync_bitmap'] = boollist 
+
+        parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
+
+        # one or more values for each of the 
+        # parameter. eventually it will converge.
+        # ideally, for example, focal_vector['filesize']
+        # has one value. but in the case of having
+        # distinct performance region, we need more than one.
+        # For now, the prototype has one
+        focal_vector = {}
+        # focal_vector_pre is used to keep the focal points
+        # before current parameter exploration. It is 
+        # used to compare with the new focal point and
+        # see if they converge
+        focal_vector_pre = {}
+        # The ylist is also a dictionary of parameters.
+        # For example, focal_ylist['filesize'] has a 
+        # list of d_spans corresponding to different
+        # file sizes, with other parameters fixed at
+        # its focal point.
+        # The focal points need to converge, otherwise
+        # the ylist is not consistent. For example,
+        # you have 3 parameters, the have a ylist for
+        # the first parameter, when you look at the second
+        # parameter and pick a new focal point for the
+        # second parameter, then the ylist of the second
+        # parameter has a different second parameter. 
+        # But this is not a problem if all the parameters
+        # have the same focal point. 
+        focal_ylist = {}
+        # initialize focal_vector
+        for k,v in parameters.items():
+            focal_vector[k] = v[0]
+            focal_vector_pre[k] = None #made different to focal_vector
+                                       #on purpose
+            focal_ylist[k] = [] # format: [[3,4,52],[2,33,2,1,2,3],..]
+
+
+        #Let's serach 10 rounds
+        for it in range(1000):
+            for paraname,paravalue in focal_vector.items():
+
+                self.confparser.set('system', 
+                                    'makeloopdevice',
+                                    'yes')
+                print paraname
+                focal_ylist[paraname] = [] #will be filled
+                for cur_value in parameters[paraname]:
+                    # update the current parameter with 
+                    # new value
+                    cur_parameters = copy.deepcopy(focal_vector)
+                    cur_parameters[paraname] = cur_value
+
+                    chkseq = pyWorkload.workload_builder.\
+                              single_workload(filesize=cur_parameters['filesize'],
+                                    fsync_bitmap=cur_parameters['fsync_bitmap'],
+                                    open_bitmap=cur_parameters['open_bitmap'],
+                                    sync_bitmap=cur_parameters['sync_bitmap'],
+                                    write_order=cur_parameters['write_order'])
+
+                    chkseq_strs = pyWorkload.pat_data_struct.\
+                                  ChunkSeq_to_strings( chkseq )
+                    for k,v in chkseq_strs.items():
+                        self.confparser.set(workloadname, k, v)
+
+                    self.confparser.set(workloadname, 
+                                       'files_chkseq', 
+                                       str(chkseq))
+
+                    ret = self._walkman_walk(self.confparser)
+                    dspan = ret['d_span']
+                    focal_ylist[paraname].append( dspan )
+                    self.confparser.set('system', 
+                                        'makeloopdevice',
+                                        'no')
+                # pick a y from focal_ylist
+                y_focal = pyWorkload.tools.median(focal_ylist[paraname])
+                # find the corresponding value of paraname
+                y_focal_idx = focal_ylist[paraname].index(y_focal)
+                # update focal_vector
+                focal_vector[paraname] = parameters[paraname][y_focal_idx]
+
+            print "***** focal vector dadada ******"
+            pprint.pprint(focal_vector)
+            print '** focal_vector_pre **'
+            pprint.pprint( focal_vector_pre )
+            print "***** focal ylist ******"
+            pprint.pprint(focal_ylist)
+
+            # compare current focal_vector with previous one
+            # and see if they converge
+            if ( focal_vector_pre == focal_vector ):
+                print "great, converged"
+           
+                focaltable = gen_focal_table(parameters,
+                                      focal_ylist,
+                                      focal_vector).toStr()
+                print focaltable
+                with open('focaltable.txt', 'w') as f:
+                    f.write(focaltable)
+                break
+            else:
+                focal_vector_pre = copy.deepcopy(focal_vector)
+
+
 def num2bitmapstr(blist):
     a = [str(int(x)) for x in blist]
     return "".join(a) 
