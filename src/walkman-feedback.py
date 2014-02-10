@@ -579,7 +579,7 @@ class Troops:
 
     def march_wrapper(self):
         #self._overwrite()
-        self.self_scaling()
+        self.self_scaling2()
         #self._march_many()
         #self._march_single()
 
@@ -994,7 +994,7 @@ class Troops:
                        'h1':'xfs',
                        'h2':'btrfs'}
 
-        nchunks = 4 
+        nchunks = 4
         boollist = list( itertools.product([False, True], repeat=nchunks) )
 
         parameters = {}
@@ -1009,107 +1009,147 @@ class Troops:
 
         parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
 
-        # one or more values for each of the 
-        # parameter. eventually it will converge.
-        # ideally, for example, focal_vector['filesize']
-        # has one value. but in the case of having
-        # distinct performance region, we need more than one.
-        # For now, the prototype has one
-        focal_vector = {}
-        # focal_vector_pre is used to keep the focal points
-        # before current parameter exploration. It is 
-        # used to compare with the new focal point and
-        # see if they converge
-        focal_vector_pre = {}
-        # The ylist is also a dictionary of parameters.
-        # For example, focal_ylist['filesize'] has a 
-        # list of d_spans corresponding to different
-        # file sizes, with other parameters fixed at
-        # its focal point.
-        # The focal points need to converge, otherwise
-        # the ylist is not consistent. For example,
-        # you have 3 parameters, the have a ylist for
-        # the first parameter, when you look at the second
-        # parameter and pick a new focal point for the
-        # second parameter, then the ylist of the second
-        # parameter has a different second parameter. 
-        # But this is not a problem if all the parameters
-        # have the same focal point. 
-        focal_ylist = {}
-        # initialize focal_vector
+        # format: {para1:[
+        #                {'x':3,'y':4},
+        #                {'x':4,'y':5},
+        #                {'x':6,'y':8},..}
+        #                ],
+        #          para2:[
+        #                {'x':...
+        #                ..
+        #                ],
+        #          para3:...
+        #         }
+        focal_group_vector = {} 
+        focal_group_vector_pre = {}
+        # format is the same as focal_group_vector,
+        # but it has all the data points of the space
+        # of that parameter.
+        # focal_xy_vector[para1] has all the (X,Y)
+        # of the space of X.
+        focal_xy_vector = {}
+        # initialize the vectors 
         for k,v in parameters.items():
-            focal_vector[k] = v[0]
-            focal_vector_pre[k] = None #made different to focal_vector
-                                       #on purpose
-            focal_ylist[k] = [] # format: [[3,4,52],[2,33,2,1,2,3],..]
+            focal_group_vector[k] = [{'x':v[0], 'y':None}]
+            focal_group_vector_pre[k] = None #made different to focal_vector
+                                             #on purpose
+            focal_xy_vector[k] = []
 
-
-        #Let's serach 10 rounds
         for it in range(1000):
-            for paraname,paravalue in focal_vector.items():
+            for paraname,parapoints in focal_group_vector.items():
 
                 self.confparser.set('system', 
                                     'makeloopdevice',
                                     'yes')
-                print paraname
-                focal_ylist[paraname] = [] #will be filled
-                for cur_value in parameters[paraname]:
-                    # update the current parameter with 
-                    # new value
-                    cur_parameters = copy.deepcopy(focal_vector)
-                    cur_parameters[paraname] = cur_value
+                focal_xy_vector[paraname] = [] #will be filled
+                # Search the space of one parameter
+                for cur_x in parameters[paraname]:
+                    # cur_focal_x_vector is similar to the traditional
+                    # focalvector
+                    cur_focal_x_vector = get_x_vector(focal_group_vector)
+                    print 'focal_group_vector'
+                    pprint.pprint(focal_group_vector)
+                    print 'cur_focal_x_vector'
+                    pprint.pprint(cur_focal_x_vector)
 
-                    chkseq = pyWorkload.workload_builder.\
-                              single_workload(filesize=cur_parameters['filesize'],
-                                    fsync_bitmap=cur_parameters['fsync_bitmap'],
-                                    open_bitmap=cur_parameters['open_bitmap'],
-                                    sync_bitmap=cur_parameters['sync_bitmap'],
-                                    write_order=cur_parameters['write_order'])
+                    cur_focal_x_vector[paraname] = cur_x
+                    print 'cur_focal_x_vector'
+                    pprint.pprint(cur_focal_x_vector)
 
-                    chkseq_strs = pyWorkload.pat_data_struct.\
-                                  ChunkSeq_to_strings( chkseq )
-                    for k,v in chkseq_strs.items():
-                        self.confparser.set(workloadname, k, v)
-
-                    self.confparser.set(workloadname, 
-                                       'files_chkseq', 
-                                       str(chkseq))
-
-                    ret = self._walkman_walk(self.confparser)
+                    ret = self.get_feedback(
+                                 cur_focal_x_vector=cur_focal_x_vector,
+                                 workloadname      =workloadname) 
                     dspan = ret['d_span']
-                    focal_ylist[paraname].append( dspan )
+                    print ret
+
+                    focal_xy_vector[paraname].append( {'x':cur_x, 'y':dspan} )
                     self.confparser.set('system', 
                                         'makeloopdevice',
                                         'no')
-                # pick a y from focal_ylist
-                y_focal = pyWorkload.tools.median(focal_ylist[paraname])
-                # find the corresponding value of paraname
-                y_focal_idx = focal_ylist[paraname].index(y_focal)
-                # update focal_vector
-                focal_vector[paraname] = parameters[paraname][y_focal_idx]
-
-            print "***** focal vector dadada ******"
-            pprint.pprint(focal_vector)
-            print '** focal_vector_pre **'
-            pprint.pprint( focal_vector_pre )
-            print "***** focal ylist ******"
-            pprint.pprint(focal_ylist)
-
-            # compare current focal_vector with previous one
-            # and see if they converge
-            if ( focal_vector_pre == focal_vector ):
+                # cluster here!
+                print 'focal_xy_vector'
+                pprint.pprint( focal_xy_vector )
+                
+                points = focal_xy_vector[paraname] # for short
+                median_ponit = get_median_point(points)
+                print 'median_ponit', paraname
+                print median_ponit
+                print 'focal_group_vector'
+                pprint.pprint( focal_group_vector )
+                
+                if median_ponit != focal_group_vector[paraname][0]:
+                    focal_group_vector[paraname][0] = median_ponit 
+                    print 'updated'
+                print 'focal_group_vector'
+            
+            print 'After an iteration...........dadada'
+            print 'focal_group_vector'
+            pprint.pprint( focal_group_vector )
+            print 'focal_group_vector_pre'
+            pprint.pprint( focal_group_vector_pre)
+            if ( focal_group_vector_pre == focal_group_vector ):
                 print "great, converged"
-           
-                focaltable = gen_focal_table(parameters,
-                                      focal_ylist,
-                                      focal_vector).toStr()
+                focaltable = gen_focal_table2(
+                                      focal_xy_vector,
+                                      focal_group_vector).toStr()
                 print focaltable
                 with open('focaltable.txt', 'w') as f:
                     f.write(focaltable)
                 break
             else:
-                focal_vector_pre = copy.deepcopy(focal_vector)
+                focal_group_vector_pre = copy.deepcopy(focal_group_vector)
 
+    def get_feedback(self, cur_focal_x_vector, workloadname):
+        chkseq = pyWorkload.workload_builder.\
+                  single_workload(filesize=cur_focal_x_vector['filesize'],
+                        fsync_bitmap=cur_focal_x_vector['fsync_bitmap'],
+                        open_bitmap=cur_focal_x_vector['open_bitmap'],
+                        sync_bitmap=cur_focal_x_vector['sync_bitmap'],
+                        write_order=cur_focal_x_vector['write_order'])
+
+        chkseq_strs = pyWorkload.pat_data_struct.\
+                      ChunkSeq_to_strings( chkseq )
+        for k,v in chkseq_strs.items():
+            self.confparser.set(workloadname, k, v)
+
+        self.confparser.set(workloadname, 
+                           'files_chkseq', 
+                           str(chkseq))
+
+        ret = self._walkman_walk(self.confparser)
+        return ret
+def get_x_vector(focal_group_vector):
+    xy_vector = get_xy_vector(focal_group_vector)
+    print 'xy_vector'
+    pprint.pprint( xy_vector )
+    x_vector = {}
+    for paraname, point in xy_vector.items():
+        x_vector[paraname] = point['x']
+    return x_vector
+
+def get_xy_vector(focal_group_vector):
+    """
+    This function gets the median point from
+    each group of points
+    """
+    xy_vector = {}
+    for paraname, points in focal_group_vector.items():
+        xy_vector[paraname] = get_median_point(points)
+    return xy_vector
+
+def get_median_point(points):
+    # Let's be stupid at this moment
+    # input format: [{'x':1,'y':1},{'x':2,'y':2},..]
+    # it is a list of dictionary
+    ylist = []
+    for point in points:
+        ylist.append(point['y'])
+    size = len(ylist)
+    assert size > 0
+    m = size/2
+    medy = sorted(ylist)[m]
+    idx = ylist.index(medy)
+    return points[idx]
 
 def num2bitmapstr(blist):
     a = [str(int(x)) for x in blist]
@@ -1139,7 +1179,31 @@ def gen_focal_table(parameters, focal_ylist, focal_vector):
             focaltable.addRowByDict(d)
     return focaltable
 
-                
+def gen_focal_table2(focal_xy_vector, focal_group_vector):
+    header = ['paraname', 'paraX', 'paraY', 'asfocal']
+    focaltable = MWpyFS.dataframe.DataFrame()
+    focaltable.header = header
+
+    for paraname, points in focal_xy_vector.items():
+        for point in points:
+            if paraname in ['fsync_bitmap', 'open_bitmap',
+                            'sync_bitmap', 'write_order']:
+                paraX = num2bitmapstr(point['x'])
+            else:
+                paraX = point['x']
+
+            d = {'paraname': paraname,
+                 'paraX'   : paraX,
+                 'paraY'   : point['y']
+                 }
+            if point in focal_group_vector[paraname]:
+                d['asfocal'] = True
+            else:
+                d['asfocal'] = False
+            focaltable.addRowByDict(d)
+
+    return focaltable
+               
              
 
 
