@@ -1009,7 +1009,16 @@ class Troops:
         parameters['sync_bitmap'] = boollist 
 
         parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
+        target_vector = {
+                        'filesize'     :[0.5],
+                        'fsync_bitmap' :[0.5],
+                        'open_bitmap'  :[0.5],
+                        'sync_bitmap'  :[0.5],
+                        'write_order'  :[0.5]
+                        }
 
+
+        headerinfile = False
         # format: {para1:[
         #                {'x':3,'y':4},
         #                {'x':4,'y':5},
@@ -1032,10 +1041,10 @@ class Troops:
         # initialize the vectors 
         for k,v in parameters.items():
             focal_group_vector[k] = [{'x':v[0], 'y':None}]
-            focal_group_vector_pre[k] = None #made different to focal_vector
+            focal_group_vector_pre[k] = [] #made different to focal_vector
                                              #on purpose
             focal_xy_vector[k] = []
-
+        
         for it in range(1000):
             for paraname,parapoints in focal_group_vector.items():
 
@@ -1045,41 +1054,30 @@ class Troops:
                 focal_xy_vector[paraname] = [] #will be filled
                 # Search the space of one parameter
                 for cur_x in parameters[paraname]:
-                    # cur_focal_x_vector is similar to the traditional
-                    # focalvector
                     cur_focal_x_vector = get_x_vector(focal_group_vector)
-                    print 'focal_group_vector'
-                    pprint.pprint(focal_group_vector)
-                    print 'cur_focal_x_vector'
-                    pprint.pprint(cur_focal_x_vector)
-
                     cur_focal_x_vector[paraname] = cur_x
-                    print 'cur_focal_x_vector'
-                    pprint.pprint(cur_focal_x_vector)
-
                     ret = self.get_feedback(
                                  cur_focal_x_vector=cur_focal_x_vector,
                                  workloadname      =workloadname) 
                     dspan = ret['d_span']
-                    print ret
 
                     focal_xy_vector[paraname].append( {'x':cur_x, 'y':dspan} )
                     self.confparser.set('system', 
                                         'makeloopdevice',
                                         'no')
                 # cluster here!
-                print 'focal_xy_vector'
-                pprint.pprint( focal_xy_vector )
                 
                 points = focal_xy_vector[paraname] # for short
-                median_ponit = get_percent_point(points, 0.75)
-                print 'median_ponit', paraname
-                print median_ponit
+                print 'Looking for', target_vector[paraname][0]
+                cur_focal_point = get_percent_point(
+                               points, target_vector[paraname][0])
+                print 'cur_focal_point', paraname
+                print cur_focal_point
                 print 'focal_group_vector'
                 pprint.pprint( focal_group_vector )
                 
-                if median_ponit != focal_group_vector[paraname][0]:
-                    focal_group_vector[paraname][0] = median_ponit 
+                if cur_focal_point != focal_group_vector[paraname][0]:
+                    focal_group_vector[paraname][0] = cur_focal_point 
                     print 'updated'
                 print 'focal_group_vector'
             
@@ -1088,11 +1086,24 @@ class Troops:
             pprint.pprint( focal_group_vector )
             print 'focal_group_vector_pre'
             pprint.pprint( focal_group_vector_pre)
-            if ( focal_group_vector_pre == focal_group_vector ):
+            print 'focal_xy_vector'
+            pprint.pprint( focal_xy_vector )
+
+            focaltable = gen_focal_table2(
+                                  focal_xy_vector,
+                                  focal_group_vector,
+                                  target_vector, 
+                                  0).toStr()
+            print focaltable
+            exit(1)
+
+            if ( group_vector_is_equal(focal_group_vector_pre, focal_group_vector)):
                 print "great, converged"
                 focaltable = gen_focal_table2(
                                       focal_xy_vector,
-                                      focal_group_vector).toStr()
+                                      focal_group_vector,
+                                      target_vector, 
+                                      0).toStr()
                 print focaltable
                 with open('focaltable.txt', 'w') as f:
                     f.write(focaltable)
@@ -1232,6 +1243,20 @@ class Troops:
         ret = self._walkman_walk(self.confparser)
         return ret
 
+def group_vector_is_equal( group_vector, group_vector_pre ):
+    """
+    This function only compares the X in each point
+    """
+    for paraname in group_vector.keys():
+        xlist1 = [ point['x'] for point in group_vector[paraname]]
+        xlist2 = [ point['x'] for point in group_vector_pre[paraname]]
+        #print sorted(xlist1)
+        #print sorted(xlist2)
+        if sorted(xlist1) != sorted(xlist2):
+            return False
+    return True
+
+
 def cluster_by_y(points):
     ylist = []
     for point in points:
@@ -1245,6 +1270,12 @@ def cluster_by_y(points):
     cl = cluster.HierarchicalClustering(ylist, lambda x,y: abs(x-y))
     clusters = cl.getlevel(distance)
     return clusters
+
+def get_target_string(target_vector, i):
+    targets=[]
+    for paraname, targetlist in target_vector.items():
+        targets.append( ":".join([paraname, str(targetlist[i])]) )
+    return ",".join(targets)
 
 def sort_clusters(clusters):
     clusters = [sorted(x) for x in clusters]
@@ -1283,7 +1314,7 @@ def get_percent_point(points, percent):
     medy = sorted(ylist)[m]
     goodpoints = []
     for point in points:
-        if point['y'] = medy:
+        if point['y'] == medy:
             goodpoints.append( point )
     mid = len(goodpoints)/2
     return goodpoints[mid]
@@ -1316,7 +1347,8 @@ def gen_focal_table(parameters, focal_ylist, focal_vector):
             focaltable.addRowByDict(d)
     return focaltable
 
-def gen_focal_table2(focal_xy_vector, focal_group_vector):
+def gen_focal_table2(focal_xy_vector, focal_group_vector, 
+                     target_vector, targeti):
     header = ['paraname', 'paraX', 'paraY', 'asfocal']
     focaltable = MWpyFS.dataframe.DataFrame()
     focaltable.header = header
@@ -1338,11 +1370,13 @@ def gen_focal_table2(focal_xy_vector, focal_group_vector):
             else:
                 d['asfocal'] = False
             focaltable.addRowByDict(d)
+    for paraname, targetlist in target_vector.items():
+        focaltable.addColumn(key=paraname+'_target',
+                             value=targetlist[targeti])
 
+    focaltable.addColumn(key='HEADERMARKER_focaltable',
+                         value='DATAMARKER_focaltable')
     return focaltable
-               
-             
-
 
 def main(args):
     if len(args) != 2:

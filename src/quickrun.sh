@@ -21,6 +21,7 @@ mkdir $nfsdir
 
 sudo python walkman-feedback.py ../conf/h0.conf 
 mv ./focaltable.txt $testname-focaltable.txt
+exit 0
 sleep 10
 sudo python ../scripts/result-parser-faster.py $resultdir $host  
 

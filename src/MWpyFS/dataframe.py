@@ -19,8 +19,13 @@ class DataFrame:
         self.table = table
         self.colwidth = 15
 
-    def toStr(self):
-        return self.headerStr() + self.tableStr() 
+    def toStr(self, header=True, table=True):
+        ret = ""
+        if header:
+            ret += self.headerStr()
+        if table:
+            ret += self.tableStr()
+        return ret
 
     def headerStr(self):
         hd = self.items2line(self.header, linechange=True)
