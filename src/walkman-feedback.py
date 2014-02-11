@@ -24,6 +24,7 @@ import pprint
 import itertools
 import random
 import copy
+import cluster
 from ast import literal_eval
 
 walkmanlog = None
@@ -994,7 +995,7 @@ class Troops:
                        'h1':'xfs',
                        'h2':'btrfs'}
 
-        nchunks = 4
+        nchunks = 3
         boollist = list( itertools.product([False, True], repeat=nchunks) )
 
         parameters = {}
@@ -1071,7 +1072,7 @@ class Troops:
                 pprint.pprint( focal_xy_vector )
                 
                 points = focal_xy_vector[paraname] # for short
-                median_ponit = get_median_point(points)
+                median_ponit = get_percent_point(points, 0.75)
                 print 'median_ponit', paraname
                 print median_ponit
                 print 'focal_group_vector'
@@ -1081,6 +1082,118 @@ class Troops:
                     focal_group_vector[paraname][0] = median_ponit 
                     print 'updated'
                 print 'focal_group_vector'
+            
+            print 'After an iteration...........dadada'
+            print 'focal_group_vector'
+            pprint.pprint( focal_group_vector )
+            print 'focal_group_vector_pre'
+            pprint.pprint( focal_group_vector_pre)
+            if ( focal_group_vector_pre == focal_group_vector ):
+                print "great, converged"
+                focaltable = gen_focal_table2(
+                                      focal_xy_vector,
+                                      focal_group_vector).toStr()
+                print focaltable
+                with open('focaltable.txt', 'w') as f:
+                    f.write(focaltable)
+                break
+            else:
+                focal_group_vector_pre = copy.deepcopy(focal_group_vector)
+
+    def self_scaling3(self):
+        workloadname = 'selfscaling'
+        self.confparser.set('workload', 'name', workloadname )
+        self.confparser.add_section( workloadname )
+
+        shorthostname = socket.gethostname().split('.')[0]
+        assignment = { 'h0':'ext4',
+                       'h1':'xfs',
+                       'h2':'btrfs'}
+
+        nchunks = 3 
+        boollist = list( itertools.product([False, True], repeat=nchunks) )
+
+        parameters = {}
+        parameters['filesize']=[4*1024*3*x for x in range(1, 15, 1)]
+        parameters['fsync_bitmap'] = boollist
+
+        tmp = itertools.product([False, True], repeat=nchunks-1)
+        tmp = [ [True]+list(x) for x in tmp ]
+        parameters['open_bitmap'] = tmp
+        
+        parameters['sync_bitmap'] = boollist 
+
+        parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
+
+
+        # format: {para1:[
+        #                {'x':3,'y':4},
+        #                {'x':4,'y':5},
+        #                {'x':6,'y':8},..}
+        #                ],
+        #          para2:[
+        #                {'x':...
+        #                ..
+        #                ],
+        #          para3:...
+        #         }
+        focal_group_vector = {} 
+        focal_group_vector_pre = {}
+        # format is the same as focal_group_vector,
+        # but it has all the data points of the space
+        # of that parameter.
+        # focal_xy_vector[para1] has all the (X,Y)
+        # of the space of X.
+        focal_xy_vector = {}
+        # initialize the vectors 
+        for k,v in parameters.items():
+            focal_group_vector[k] = [{'x':v[0], 'y':None}]
+            focal_group_vector_pre[k] = None #made different to focal_vector
+                                             #on purpose
+            focal_xy_vector[k] = []
+
+        for it in range(1000):
+            for paraname,parapoints in focal_group_vector.items():
+
+                self.confparser.set('system', 
+                                    'makeloopdevice',
+                                    'yes')
+                focal_xy_vector[paraname] = [] #will be filled
+                # Search the space of one parameter
+                for cur_x in parameters[paraname]:
+                    # cur_focal_x_vector is similar to the traditional
+                    # focalvector
+                    cur_focal_x_vector = get_x_vector(focal_group_vector)
+                    cur_focal_x_vector[paraname] = cur_x
+
+                    ret = self.get_feedback(
+                                 cur_focal_x_vector=cur_focal_x_vector,
+                                 workloadname      =workloadname) 
+                    dspan = ret['d_span']
+
+                    focal_xy_vector[paraname].append( {'x':cur_x, 'y':dspan} )
+                    self.confparser.set('system', 
+                                        'makeloopdevice',
+                                        'no')
+                # cluster here!
+                print 'focal_xy_vector clusterhere'
+                pprint.pprint( focal_xy_vector )
+                
+                points = focal_xy_vector[paraname] # for short
+                grps = cluster_by_y( points )
+                sort_clusters( grps )
+                pickedy = grps[0][0]
+                pickedpoint = None
+                for point in points:
+                    if point['y'] == pickedy:
+                        pickedpoint = point
+                        break
+                assert pickedpoint != None 
+                if pickedpoint != focal_group_vector[paraname][0]:
+                    focal_group_vector[paraname][0] = pickedpoint
+                    print 'updated'
+                print 'focal_group_vector'
+                pprint.pprint( focal_group_vector )
             
             print 'After an iteration...........dadada'
             print 'focal_group_vector'
@@ -1118,6 +1231,26 @@ class Troops:
 
         ret = self._walkman_walk(self.confparser)
         return ret
+
+def cluster_by_y(points):
+    ylist = []
+    for point in points:
+        ylist.append( point['y'] )
+
+    # find out what's 'close'
+    ymax = max(ylist)
+    ymin = min(ylist)
+    distance = 0.2*(ymax-ymin)
+
+    cl = cluster.HierarchicalClustering(ylist, lambda x,y: abs(x-y))
+    clusters = cl.getlevel(distance)
+    return clusters
+
+def sort_clusters(clusters):
+    clusters = [sorted(x) for x in clusters]
+    clusters.sort()
+    return None
+
 def get_x_vector(focal_group_vector):
     xy_vector = get_xy_vector(focal_group_vector)
     print 'xy_vector'
@@ -1134,10 +1267,10 @@ def get_xy_vector(focal_group_vector):
     """
     xy_vector = {}
     for paraname, points in focal_group_vector.items():
-        xy_vector[paraname] = get_median_point(points)
+        xy_vector[paraname] = get_percent_point(points, 0.5)
     return xy_vector
 
-def get_median_point(points):
+def get_percent_point(points, percent):
     # Let's be stupid at this moment
     # input format: [{'x':1,'y':1},{'x':2,'y':2},..]
     # it is a list of dictionary
@@ -1146,10 +1279,14 @@ def get_median_point(points):
         ylist.append(point['y'])
     size = len(ylist)
     assert size > 0
-    m = size/2
+    m = int(size*percent)
     medy = sorted(ylist)[m]
-    idx = ylist.index(medy)
-    return points[idx]
+    goodpoints = []
+    for point in points:
+        if point['y'] = medy:
+            goodpoints.append( point )
+    mid = len(goodpoints)/2
+    return goodpoints[mid]
 
 def num2bitmapstr(blist):
     a = [str(int(x)) for x in blist]
