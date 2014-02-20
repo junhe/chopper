@@ -196,6 +196,7 @@ def ChunkSeq_to_strings(chkseq):
 
 #############################################
 symbol_dict = {
+                'set_affinity':'A',
                 'open' :'(',
                 'chunk':'C',
                 'fsync':'F',
@@ -208,6 +209,7 @@ for k,v in symbol_dict.items():
     name_dict[v] = k
 
 symbol2type_dict = {
+                     'A':'op', #CPU affinity
                      '(':'op',
                      'C':'chunk',
                      'F':'op',

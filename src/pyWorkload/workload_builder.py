@@ -319,6 +319,20 @@ def build_dir_tree_chkeq( depth ):
         chkseq['seq'].append(cbox)
     return chkseq
         
+def get_dir_path (dirid):
+    """
+    dirid is the in index in the breadth-first
+    traversal
+    """
+    path = [dirid]
+    # put parents to path
+    # root (0) does not need to be put in it
+    parent = (dirid - 1)/2
+    while parent > 0 :
+        path.insert(0, parent)
+        parent = (parent - 1)/2
+    path = "/".join( [str(x) for x in path] )
+    return path
 
 def build_dir_tree_path( depth ):
     """
@@ -347,14 +361,7 @@ def build_dir_tree_path( depth ):
     dirpaths = []
     n = 2**(depth+1) - 1 
     for dirid in range(1, n):
-        path = [dirid]
-        # put parents to path
-        # root (0) does not need to be put in it
-        parent = (dirid - 1)/2
-        while parent > 0 :
-            path.insert(0, parent)
-            parent = (parent - 1)/2
-        path = "/".join( [str(x) for x in path] )
+        dir = get_dir_path(dirid)
         dirpaths.append( path )
 
     return dirpaths
@@ -380,11 +387,53 @@ def build_conf ( treatment, confparser ):
 
     # n_dir_depth
     dirs_chkseq = build_dir_tree_chkeq( treatment['depth'] )
-    pprint.pprint( dirs_chkseq )
     
 
-build_conf( {'depth':2}, None ) 
+    
 
+#build_conf( {'depth':2}, None ) 
+
+def build_file_chunkseq ( file_treatment ):
+    """
+    *********************************************
+    PROVIDE ONLY THE MECHANISM, LEAST POLICY HERE
+    TIRED IMPLEMENTING SIMILAR MECHANISM FOR DIFFERENT POLICIES
+    *********************************************
+
+    file_treatment = {
+           parent_dirid :
+           fileid       : make this globally unique
+           overlap      :
+           chunks       : [{'offset':, 'length':},{}]  
+                          #chunk id is the index here
+           write_order  : [0,1,2,3,..]
+           # The bitmaps apply to ordered chunkseq
+           open_bitmap  : [True, .. ]
+           fsync_bitmap : [True, False, ...]
+           close_bitmap : [True, .. ]
+           sync_bitmap  : [True, .. ]
+           writer_proc_bitmap: [0,1,0,1] # set affinity to which cpu
+           }
+    This function returns a chunkseq of this treatment
+    """
+    # logical space (setup chunkseq)
+    nchunks = len(write_order)
+   
+    chunkseq = pat_data_struct.get_empty_ChunkSeq()
+    for pair in file_treatment['chunks']:
+        cbox = pat_data_struct.get_empty_ChunkBox2()
+        cbox['chunk']['offset'] = pair['offset'] 
+        cbox['chunk']['length'] = pair['length']
+        cbox['chunk']['fileid'] = file_treatment['fileid']
+        cbox['chunk']['parent_dirid'] = file_treatment['parent_dirid']
+        chunkseq['seq'].append( cbox )
+
+    # Order it
+    chunkseq['seq'] = [ chunkseq['seq'][i] \
+                        for i in file_treatment['write_order'] ]
+
+    # apply the bitmaps
+    for 
 
 
 
