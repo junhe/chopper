@@ -1010,11 +1010,11 @@ class Troops:
 
         parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
         target_vector = {
-                        'filesize'     :[0.5],
-                        'fsync_bitmap' :[0.5],
-                        'open_bitmap'  :[0.5],
-                        'sync_bitmap'  :[0.5],
-                        'write_order'  :[0.5]
+                        'filesize'     :[0.5,0.51],
+                        'fsync_bitmap' :[0.5,0.51],
+                        'open_bitmap'  :[0.5,0.51],
+                        'sync_bitmap'  :[0.5,0.51],
+                        'write_order'  :[0.5,0.51]
                         }
 
 
@@ -1044,72 +1044,71 @@ class Troops:
             focal_group_vector_pre[k] = [] #made different to focal_vector
                                              #on purpose
             focal_xy_vector[k] = []
-        
-        for it in range(1000):
-            for paraname,parapoints in focal_group_vector.items():
+        for targeti in [0]:#range(len(target_vector['filesize'])): 
+            for it in range(1000):
+                for paraname,parapoints in focal_group_vector.items():
 
-                self.confparser.set('system', 
-                                    'makeloopdevice',
-                                    'yes')
-                focal_xy_vector[paraname] = [] #will be filled
-                # Search the space of one parameter
-                for cur_x in parameters[paraname]:
-                    cur_focal_x_vector = get_x_vector(focal_group_vector)
-                    cur_focal_x_vector[paraname] = cur_x
-                    ret = self.get_feedback(
-                                 cur_focal_x_vector=cur_focal_x_vector,
-                                 workloadname      =workloadname) 
-                    dspan = ret['d_span']
-
-                    focal_xy_vector[paraname].append( {'x':cur_x, 'y':dspan} )
                     self.confparser.set('system', 
                                         'makeloopdevice',
-                                        'no')
-                # cluster here!
+                                        'yes')
+                    focal_xy_vector[paraname] = [] #will be filled
+                    # Search the space of one parameter
+                    for cur_x in parameters[paraname]:
+                        cur_focal_x_vector = get_x_vector(focal_group_vector)
+                        cur_focal_x_vector[paraname] = cur_x
+                        ret = self.get_feedback(
+                                     cur_focal_x_vector=cur_focal_x_vector,
+                                     workloadname      =workloadname) 
+                        dspan = ret['d_span']
+
+                        focal_xy_vector[paraname].append( {'x':cur_x, 'y':dspan} )
+                        self.confparser.set('system', 
+                                            'makeloopdevice',
+                                            'no')
+                    # cluster here!
+                    
+                    points = focal_xy_vector[paraname] # for short
+                    print 'Looking for', target_vector[paraname][targeti]
+                    cur_focal_point = get_percent_point(
+                                   points, target_vector[paraname][targeti])
+                    print 'cur_focal_point', paraname
+                    print cur_focal_point
+                    print 'focal_group_vector'
+                    pprint.pprint( focal_group_vector )
+                    
+                    #if cur_focal_point['x'] != focal_group_vector[paraname][0]['x']:
+                    if cur_focal_point != focal_group_vector[paraname][0]:
+                        focal_group_vector[paraname][0] = cur_focal_point 
+                        print 'updated'
+                    print 'focal_group_vector'
                 
-                points = focal_xy_vector[paraname] # for short
-                print 'Looking for', target_vector[paraname][0]
-                cur_focal_point = get_percent_point(
-                               points, target_vector[paraname][0])
-                print 'cur_focal_point', paraname
-                print cur_focal_point
+                print 'After an iteration...........dadada'
                 print 'focal_group_vector'
                 pprint.pprint( focal_group_vector )
-                
-                if cur_focal_point != focal_group_vector[paraname][0]:
-                    focal_group_vector[paraname][0] = cur_focal_point 
-                    print 'updated'
-                print 'focal_group_vector'
-            
-            print 'After an iteration...........dadada'
-            print 'focal_group_vector'
-            pprint.pprint( focal_group_vector )
-            print 'focal_group_vector_pre'
-            pprint.pprint( focal_group_vector_pre)
-            print 'focal_xy_vector'
-            pprint.pprint( focal_xy_vector )
+                print 'focal_group_vector_pre'
+                pprint.pprint( focal_group_vector_pre)
+                print 'focal_xy_vector'
+                pprint.pprint( focal_xy_vector )
 
-            focaltable = gen_focal_table2(
-                                  focal_xy_vector,
-                                  focal_group_vector,
-                                  target_vector, 
-                                  0).toStr()
-            print focaltable
-            exit(1)
+                if ( group_vector_is_equal(focal_group_vector_pre, focal_group_vector)):
+                    print "great, converged"
+                    focaldf = gen_focal_table2(
+                                          focal_xy_vector,
+                                          focal_group_vector,
+                                          target_vector, 
+                                          targeti)
+                    if headerinfile == False:
+                        focaldfstr = focaldf.toStr()
+                        if os.path.exists('focaltable.txt'):
+                            os.remove('focaltable.txt')
+                    else:
+                        focaldfstr = focaldf.toStr(header=False)
 
-            if ( group_vector_is_equal(focal_group_vector_pre, focal_group_vector)):
-                print "great, converged"
-                focaltable = gen_focal_table2(
-                                      focal_xy_vector,
-                                      focal_group_vector,
-                                      target_vector, 
-                                      0).toStr()
-                print focaltable
-                with open('focaltable.txt', 'w') as f:
-                    f.write(focaltable)
-                break
-            else:
-                focal_group_vector_pre = copy.deepcopy(focal_group_vector)
+                    with open('focaltable.txt', 'a') as f:
+                        f.write(focaldfstr)
+                    break
+                else:
+                    focal_group_vector_pre = copy.deepcopy(focal_group_vector)
 
     def self_scaling3(self):
         workloadname = 'selfscaling'
