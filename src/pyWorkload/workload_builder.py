@@ -303,7 +303,87 @@ def single_workload(filesize,
                     #sync_bitmap=[True]*3,
                     #write_order=[0,1,2]) )
 
+def build_dir_tree_chkeq( depth ):
+    dirpaths = build_dir_tree_path( depth )
+    chkseq = pat_data_struct.get_empty_ChunkSeq() 
 
+    for dirpath in dirpaths:
+        cbox = pat_data_struct.get_empty_ChunkBox2()
+        op = {
+                'opname':'mkdir',
+                'optype':'dir',
+                'opvalue':dirpath
+             }
+        # yes, I only put one operation to a chunkbox
+        cbox['opseq'] = [op]
+        chkseq['seq'].append(cbox)
+    return chkseq
+        
+
+def build_dir_tree_path( depth ):
+    """
+    depth: The depth of a node is the number of edges 
+           from the root to the node.
+
+    return: a list of paths, each is a path of a dir
+
+    The dirs are named by their index in breadth-first-order
+    traversal.
+    For example, if the depth of the binary tree is
+    2, we have 7 directories. The root is 0. We have
+    6 extra directories to make:
+           0
+        1      2 
+      3   4   5  6  
+    The major job of this function is to create paths:
+    /1
+    /1/3
+    /1/4
+    /2
+    /2/5
+    /2/6
+    Note that the root does not need to be created.
+    """
+    dirpaths = []
+    n = 2**(depth+1) - 1 
+    for dirid in range(1, n):
+        path = [dirid]
+        # put parents to path
+        # root (0) does not need to be put in it
+        parent = (dirid - 1)/2
+        while parent > 0 :
+            path.insert(0, parent)
+            parent = (parent - 1)/2
+        path = "/".join( [str(x) for x in path] )
+        dirpaths.append( path )
+
+    return dirpaths
+
+
+
+def build_conf ( treatment, confparser ):
+    """
+    This function build a confparser from the treatment. 
+    The treatment contains values for different factors.
+    Refer to ** Design the experiment for the paper ** in 
+    Evernote for more details.
+    Note that this function only takes one treatment (a
+    point on the region). The distribution of the treatments
+    are controlled out of this function. 
+
+    Implementing factors in treatment:
+    1. n_dir_depth: we name the directory tree by the index
+       of directory in the pre-order traversal. No two dir names
+       are the same. 
+    """
+    chkseq = pat_data_struct.get_empty_ChunkSeq()
+
+    # n_dir_depth
+    dirs_chkseq = build_dir_tree_chkeq( treatment['depth'] )
+    pprint.pprint( dirs_chkseq )
+    
+
+build_conf( {'depth':2}, None ) 
 
 
 

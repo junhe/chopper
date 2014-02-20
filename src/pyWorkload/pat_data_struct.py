@@ -26,9 +26,10 @@ def get_empty_ChunkBox():
 def get_empty_ChunkBox2():
     d = {
       '!class':   'ChunkBox2',
-      'opseq': [], # [{'opname':'open','close'..'chunk' 
-                   #   'optype':'pre_op'or'post_op'or'chunk',
-                   #   'opvalue':TrueOrFalse, 'C' for CHUNK},
+      'opseq': [], # [{'opname':'open','close'..'chunk','mkdir' 
+                   #   'optype':'pre_op'or'post_op'or'chunk','dir',
+                   #   'opvalue':TrueOrFalse, 'C' for CHUNK, 
+                   #             dirpath for dir },
                    #  {},{}]
       'chunk':   {'offset':None,
                   'length':None,
