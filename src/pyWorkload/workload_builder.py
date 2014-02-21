@@ -412,12 +412,12 @@ def build_file_chunkseq ( file_treatment ):
            fsync_bitmap : [True, False, ...]
            close_bitmap : [True, .. ]
            sync_bitmap  : [True, .. ]
-           writer_proc_bitmap: [0,1,0,1] # set affinity to which cpu
+           writer_proc_map: [0,1,0,1] # set affinity to which cpu
            }
     This function returns a chunkseq of this treatment
     """
     # logical space (setup chunkseq)
-    nchunks = len(write_order)
+    nchunks = len(file_treatment['write_order'])
    
     chunkseq = pat_data_struct.get_empty_ChunkSeq()
     for pair in file_treatment['chunks']:
@@ -433,11 +433,56 @@ def build_file_chunkseq ( file_treatment ):
                         for i in file_treatment['write_order'] ]
 
     # apply the bitmaps
-    for 
+
+    slotnames = ['A', '(', 'C', 'F', ')', 'S']
+    opbitmap = pat_data_struct.get_empty_OpBitmap()
+    opbitmap['nchunks'] = nchunks
+    for writer, open_bit, fsync_bit, close_bit, sync_bit\
+            in zip( 
+                    file_treatment['writer_proc_map'],
+                    file_treatment['open_bitmap'], 
+                    file_treatment['fsync_bitmap'], 
+                    file_treatment['close_bitmap'],
+                    file_treatment['sync_bitmap'] ):
+        d = {
+             'A': writer,
+             '(': open_bit,
+             'C': 'C',
+             'F': fsync_bit,
+             ')': close_bit,
+             'S': sync_bit
+            }
+
+        opbitmap['slotnames'].extend( slotnames )
+        opbitmap['values'].extend( [ d[x] for x in slotnames ] )
+
+    pprint.pprint(opbitmap)
+    pattern_iter.assign_operations_to_chunkseq( chunkseq, opbitmap )
+    
+    pprint.pprint(chunkseq)
 
 
+file_treatment = {
+       'parent_dirid' : 2,
+       'fileid'       : 8848,
+       'overlap'      : 1,
+       'chunks'       : [
+                       {'offset':0, 'length':1},
+                       {'offset':1, 'length':1},
+                       {'offset':2, 'length':1},
+                       {'offset':3, 'length':1}
+                      ],
+                      #chunk id is the index here
+       'write_order'  : [0,1,2,3],
+       # The bitmaps apply to ordered chunkseq
+       'open_bitmap'  : [True, True, True, True],
+       'fsync_bitmap' : [False, False, False, False],
+       'close_bitmap' : [True, True, True, True],
+       'sync_bitmap'  : [True, False, False, False ],
+       'writer_proc_map': [0,1,0,1] # set affinity to which cpu
+       }
 
-
+build_file_chunkseq( file_treatment )
 
 
 
