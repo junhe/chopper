@@ -325,7 +325,7 @@ class Walkman:
         print "------------------------------------------"
         pprint.pprint( files_chkseq )
 
-        pyWorkload.pat_data_struct.ChunkSeq_to_workload(
+        pyWorkload.pat_data_struct.ChunkSeq_to_workload2(
                 files_chkseq,
                 rootdir  = self.confparser.get('system', 'mountpoint'),
                 tofile   = self.confparser.get('system', 'workloadbufpath'))

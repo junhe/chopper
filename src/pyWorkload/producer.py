@@ -22,15 +22,35 @@ class Producer:
         entry = str(pid)+";"+path+";"+op.lower()+";"+str(off)+";"+str(len)+"\n"
         self.workload += entry
 
+    def addReadOrWrite2(self, op, path, fileid, off, len):
+        "op: read/write"
+        fullpath = self.getFullpath(path)
+        entry = str(pid)+";"+fullpath+";"+op.lower()+";"+str(off)+";"+str(len)+"\n"
+        self.workload += entry
+
     def addUniOp(self, op, pid, dirid, fileid):
         "op: open/close/fsync"
         path = self.getFilepath(dir=dirid, pid=pid, file_id=fileid)
         entry = str(pid)+";"+path+";"+op.lower()+"\n";
         self.workload += entry
 
+    def addUniOp2(self, op, pid, path):
+        """
+        All functions with suffix '2' use path instead of (dirid, fileid)
+        op: open/close/fsync
+        """
+        fullpath = self.getFullpath(path)
+        entry = str(pid)+";"+fullpath+";"+op.lower()+"\n";
+        self.workload += entry
+
     def addDirOp(self, op, pid, dirid):
         path = self.getDirpath(dir=dirid, pid=pid)
         entry = str(pid)+";"+path+";"+op.lower()+"\n";
+        self.workload += entry
+
+    def addDirOp2(self, op, pid, path):
+        fullpath = self.getFullpath(path)
+        entry = str(pid)+";"+fullpath+";"+op.lower()+"\n";
         self.workload += entry
 
     def addOSOp(self, op, pid):
@@ -39,6 +59,10 @@ class Producer:
         This assigned pid should do this
         """
         entry = str(pid)+";"+"NA"+";"+op.lower()+"\n";
+        self.workload += entry
+
+    def addSetaffinity(self, pid, cpuid):
+        entry = str(pid)+";"+"NA"+";"+"sched_setaffinity;"+str(cpuid)+'\n'
         self.workload += entry
 
     def display(self):
@@ -123,7 +147,9 @@ class Producer:
     def getDirpath(self, pid, dir):
         dirname = "pid" + str(pid).zfill(5) + ".dir" + str(dir).zfill(5) + "/" 
         return os.path.join(self.rootdir, dirname)
-        
+    
+    def getFullpath(self, path):
+        return os.path.join(self.rootdir, path)
 
     def _produce(self):
         workload = ""

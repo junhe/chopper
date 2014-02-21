@@ -159,6 +159,41 @@ def ChunkSeq_to_workload(chkseq, rootdir, tofile):
     prd.saveWorkloadToFile()
     return True
 
+def ChunkSeq_to_workload2(chkseq, rootdir, tofile):
+    assert chkseq['!class'] == 'ChunkSeq'
+
+    prd = producer.Producer(
+            rootdir = rootdir,
+            tofile = tofile)
+
+    for chkbox in chkseq['seq']:
+        filepath= chkbox['chunk']['filepath']
+        writer_pid = chkbox['chunk']['writer_pid']
+        affinity_cpuid = chkbox['chunk']['sched_setaffinity']
+
+        for op in chkbox['opseq']:
+            if op['opname'] == 'open':
+                prd.addUniOp2('open', pid=writer_pid, path=filepath)
+            elif op['opname'] == 'chunk':
+                prd.addReadOrWrite2('write', pid=writer_pid, 
+                           path=filepath,
+                           off=chkbox['chunk']['offset'], 
+                           len=chkbox['chunk']['length'])
+            elif op['opname'] == 'fsync':
+                prd.addUniOp2('fsync', pid=writer_pid, path=filepath)
+            elif op['opname'] == 'close':
+                prd.addUniOp2('close', pid=writer_pid, path=filepath)
+            elif op['opname'] == 'sync':
+                prd.addOSOp('sync', pid=writer_pid)
+            elif op['opname'] == 'sched_setaffinity':
+                prd.addSetaffinity(pid=writer_pid, cpuid=affinity_cpuid)
+
+    prd.display()
+    exit(0)
+    prd.saveWorkloadToFile()
+    return True
+
+
 def ChunkSeq_to_strings(chkseq):
     """
     It returns:
