@@ -289,129 +289,41 @@ class Walkman:
         _RecordStatus()
         """
 
-        nyear = self.confparser.getint('workload', 'nyears')
-        nseasons_per_year = self.confparser.getint('workload', 'nseasons_per_year')
-
+        year=0
+        season=0
+    
         self._SetupEnv()
         #self._RecordStatus(year=0, season=0) # always record the inital status
 
-        for year in range(nyear):
-            for season in range(nseasons_per_year):
-                # Run workload
-                ret = self._play_workload_wrapper(year=year, season=season)
+        # Run workload
+        ret = self._play_workload_wrapper(year=year, season=season)
 
-                # do not record faulty status of the file system
-                # (however, sometimes it is useful to record faulty ones)
-                print 'Return of _play_workload_wrapper() =', ret
-                if ret == 0:
-                    ret_record = self._RecordStatus(year=year,season=season+1, 
-                                                    savedata=False)
-                    print 'ret_record', ret_record
-                    return ret_record
-                    self._post_run_processing(ret_record, year, season+1)
-                else:
-                    walkmanlog.write('>>>>>>>> One Failed walkman <<<<<<<<<<<<')
-                    confparser.write( walkmanlog )
-                    return None
-
-    def _post_run_processing(self, ret_record, year, season):
-        self._record_config(ret_record, year, season)
-        self._record_details(ret_record, year, season)
-    
-    def _record_config(self, ret_record, year, season):
-        # save the key/value in ret_record to config
-        workloadname = self.confparser.get('workload', 'name')
-
-        for k,v in ret_record.items():
-            self.confparser.set(
-                                self.confparser.get('workload', 'name'),
-                                k, str(v))
- 
-        # save wrappers sequence ((()))
-        if self.confparser.get('workload', 'name') == 'singlefiletraverse':
-            wps = self.confparser.get(
-                                'singlefiletraverse',
-                                'wrappers')
-            wps = literal_eval(wps)
-            self.confparser.set(
-                                'singlefiletraverse',
-                                'pattern_symbols',
-                            pyWorkload.pattern_iter.wrappers_to_symbols(wps))
-
-            self.confparser.remove_option('singlefiletraverse', 'chunks')
-            self.confparser.remove_option('singlefiletraverse', 'wrappers')
-
-        if workloadname in ['manyfiletraverse2', 'overwrite']:
-            self.confparser.remove_option(workloadname, 'files_chkseq')
-            
-        self._RecordWalkmanConfig()
-        
-    def _record_details(self, ret_record, year, season):
-        global feedback_dic
-
-        # initialize feedback_dic as needed
-        for k in ret_record.keys():
-            if not feedback_dic.has_key(k):
-                feedback_dic[k] = []
-        
-        print ret_record
-        print feedback_dic
-        #feedback_inuse = 'd_span'
-        feedback_inuse = 'physical_layout_hash'
-        #print feedback_inuse
-
-
-        if ret_record['d_span'] <  \
-                2 * self.confparser.getint(self.confparser.get('workload','name'), 'filesize'):
-            return
-
-
-        if ret_record[feedback_inuse] in feedback_dic[feedback_inuse]:
-            # already has it, skip recording
-            print 'skip'
-            return
-
-        feedback_dic[feedback_inuse].append( ret_record[feedback_inuse] )
-
-        self._RecordStatus(year=year,season=season, 
-                                        savedata=True)
+        # do not record faulty status of the file system
+        # (however, sometimes it is useful to record faulty ones)
+        print 'Return of _play_workload_wrapper() =', ret
+        if ret == 0:
+            ret_record = self._RecordStatus(year=year,season=season+1, 
+                                            savedata=False)
+            print 'ret_record', ret_record
+            return ret_record
+        else:
+            walkmanlog.write('>>>>>>>> One Failed walkman <<<<<<<<<<<<')
+            confparser.write( walkmanlog )
+            return None
 
     def _play_workload_wrapper(self, year, season):
         """
         decide which workload to play here. 
         They use different generators
         """
-        if self.confparser.get('workload', 'name') == 'ibench':
-            return self._play_ibench(year, season)
-        elif self.confparser.get('workload', 'name') == 'singlefiletraverse':
-            return self._play_single_file_traverse()
-        elif self.confparser.get('workload', 'name') == 'manyfiletraverse2':
-            return self._play_many_file_traverse2()
-        elif self.confparser.get('workload', 'name') == 'overwrite':
-            return self._play_many_file_traverse2()
-        elif self.confparser.get('workload', 'name') == 'selfscaling':
-            return self._play_many_file_traverse2()
-        elif self.confparser.get('workload', 'name') == 'fbworkload':
-            # fbworkload is the one with segment, write size,
-            # write direction...
-            return self._play_fb_workload()
-        elif self.confparser.get('workload', 'name') == 'traditional':
-            # This is the one where many pid write to many dir with
-            # many files of many writes
-            # and have write frequency.
-            return self._play_test()
-        else:
-            print "BAD BAD, you are using a workload name that does not exist"
-            exit(1)
+        return self._play_chunkseq()
 
-    def _play_many_file_traverse2(self):
-        files_chkseq = self.confparser.get(
-                self.confparser.get('workload','name'), 'files_chkseq')
+    def _play_chunkseq(self):
+        files_chkseq = self.confparser.get('workload', 'files_chkseq')
         files_chkseq = literal_eval(files_chkseq)
 
-        #print "------------------------------------------"
-        #pprint.pprint( files_chkseq )
-        #exit(1)
+        print "------------------------------------------"
+        pprint.pprint( files_chkseq )
 
         pyWorkload.pat_data_struct.ChunkSeq_to_workload(
                 files_chkseq,
@@ -579,803 +491,64 @@ class Troops:
         return walkman.walk()
 
     def march_wrapper(self):
-        #self._overwrite()
-        self.self_scaling2()
-        #self._march_many()
-        #self._march_single()
+        self.sampleworkload()
 
-    def _march_traditional(self):
+    def get_response(self, treatment):
         """
-        change self.confparser here
-        It would be a good idea to touch every option in
-        confparser, even though it is not changed here.
-        Otherwise, you might accidentally leave a value
-        unchanged in the near future. 
+        This function takes a treatment and get the response.
+        NOTHING MORE!
         """
-        cparser = self.confparser
-        paralist = self._march_parameter_table()
-
-        for para in paralist:
-            # put the paremters in para into cparser
-            for k,v in para.items():
-                cparser.set( 'workload', str(k), str(v) )
-            # Do a run with cparser
-            self._walkman_walk(cparser)
-
-    def _march_single(self):
-        
-        filesystems = ['btrfs', 'xfs', 'ext4']
-
-        self.confparser.set('workload', 'name', 'singlefiletraverse')
-        self.confparser.add_section( self.confparser.get('workload','name') )
-
-        for fs in filesystems:
-            self.confparser.set('system', 'filesystem', fs)
-
-            exps = [2**x for x in range(15)]
-            filesizes1 = [4*1024*3*x for x in exps] 
-            filesizes2 = [4*1024*3*x for x in range(1,20)] 
-
-            for fsizemode in ['incr', 'exp']:
-                self.confparser.set('singlefiletraverse', 'fsizemode', fsizemode)
-                if fsizemode == 'incr':
-                    filesizes = filesizes2
-                else:
-                    filesizes = filesizes1
-
-                #for chunk_size in chunksizes:
-                for filesize in filesizes:
-                    chunk_size = 4096
-                    #filesize = chunk_size * 3
-                    #continue
-
-                    self.confparser.set(self.confparser.get('workload','name'), 
-                                        'filesize', str(filesize))
-                    self.confparser.set(self.confparser.get('workload','name'),
-                                        'chunk_size', str(chunk_size))
-                    
-                    print "Before iterate..."
-                    for entry in pyWorkload.pattern_iter.pattern_iter(nfiles     =1, 
-                                              filesize   =filesize, 
-                                              chunksize  =chunk_size,
-                                              num_of_chunks = 3):
-                        chunks = str(entry['chunks'])
-                        wrappers = str(entry['wrappers'])
-                        self.confparser.set(self.confparser.get('workload','name'),
-                                            'chunks',
-                                            chunks)
-                        self.confparser.set(self.confparser.get('workload','name'),
-                                            'wrappers',
-                                            wrappers)
-                        wrappers01 = "".join( [str(int(x)) for x in entry['wrappers']] )
-                        self.confparser.set(self.confparser.get('workload','name'),
-                                            'wrappers01',
-                                            wrappers01)
-                        patternstring = pyWorkload.pattern_iter.pattern_string( entry['chunks'], entry['wrappers'] )
-                        self.confparser.set(self.confparser.get('workload','name'),
-                                            'patternstring', patternstring)
-                             
-                        self._walkman_walk(self.confparser)
-                        #exit(1)
-                        #break
-
-                    #time.sleep(1)
-                    #break
-
-    def _march_many(self):
-        self.confparser.set('workload', 'name', 'manyfiletraverse2')
-        self.confparser.add_section( self.confparser.get('workload','name') )
-
-        shorthostname = socket.gethostname().split('.')[0]
-        assignment = { 'h0':'ext4',
-                       'h1':'xfs',
-                       'h2':'btrfs'}
-        
-        #filesystems = ['btrfs', 'xfs', 'ext4']
-        filesystems = [assignment[shorthostname]]
-
-        for fs in filesystems:
-            print fs
-            self.confparser.set('system', 'filesystem', fs)
-
-            fzranges = {
-                        0: range(0, 5),
-                        1: range(5, 10),
-                        2: range(10, 15)
-                        }
-            range_sel = self.confparser.getint('workload', 'fzrange')
-            fzrange = fzranges[range_sel]
-            print fzrange
-            
-            exps = [2**x for x in fzrange]
-            filesizes1 = [4*1024*3*x for x in exps] 
-            filesizes2 = [4*1024*3*(x+1) for x in fzrange] 
-
-            for fsizemode in ['incr', 'exp']:
-                self.confparser.set('manyfiletraverse2', 'fsizemode', fsizemode)
-                if fsizemode == 'incr':
-                    filesizes = filesizes2
-                else:
-                    filesizes = filesizes1
-
-                num_of_chunks = 2 
-                for filesize in filesizes:
-                    chunk_size = filesize / num_of_chunks
-                    self.confparser.set('system', 
-                                        'makeloopdevice',
-                                        'yes')
-                    for files_chkseq in pyWorkload.pattern_iter.pattern_iter_files(nfiles=2,
-                                                          filesize=filesize,
-                                                          chunksize=chunk_size,
-                                                          num_of_chunks=num_of_chunks):
-                        chkseq_strs = pyWorkload.pat_data_struct.ChunkSeq_to_strings( 
-                                                                        files_chkseq )
-                        for k,v in chkseq_strs.items():
-                            self.confparser.set('manyfiletraverse2', k, v)
-
-                        self.confparser.set('manyfiletraverse2', 
-                                           'files_chkseq', 
-                                           str(files_chkseq))
-                        self.confparser.set(self.confparser.get('workload','name'), 
-                                            'filesize', str(filesize))
-                        self.confparser.set(self.confparser.get('workload','name'),
-                                            'chunk_size', str(chunk_size))
-                        self.confparser.set(self.confparser.get('workload','name'),
-                                            'num_of_chunks', str(num_of_chunks))
-
-                        self._walkman_walk(self.confparser)
-
-
-                        self.confparser.set('system', 
-                                            'makeloopdevice',
-                                            'no')
-                        #break
-                    #break
-                #break
-            #break
-    def _overwrite(self):
-        workloadname = 'overwrite'
-        self.confparser.set('workload', 'name', workloadname )
-        self.confparser.add_section( workloadname )
-
-        shorthostname = socket.gethostname().split('.')[0]
-        assignment = { 'h0':'ext4',
-                       'h1':'xfs',
-                       'h2':'btrfs'}
-        
-        #filesystems = ['btrfs', 'xfs', 'ext4']
-        filesystems = [assignment[shorthostname]]
-
-        for fs in filesystems:
-            print fs
-            self.confparser.set('system', 'filesystem', fs)
-
-            fzranges = {
-                        0: range(0, 15),
-                        }
-            range_sel = self.confparser.getint('workload', 'fzrange')
-            fzrange = fzranges[range_sel]
-            
-            exps = [2**x for x in fzrange]
-            filesizes1 = [4*1024*3*x for x in exps] 
-            filesizes2 = [4*1024*3*(x+1) for x in fzrange] 
-
-            for fsizemode in ['incr', 'exp']:
-                self.confparser.set(workloadname, 'fsizemode', fsizemode)
-                if fsizemode == 'incr':
-                    filesizes = filesizes2
-                else:
-                    filesizes = filesizes1
-
-                num_of_chunks = 2 
-                for filesize in filesizes:
-                    self.confparser.set('system', 
-                                        'makeloopdevice',
-                                        'yes')
-                    for files_chkseq in pyWorkload.workload_builder.\
-                                        overwrite_workload_iter(filesize=filesize):
-                        pprint.pprint( files_chkseq )
-                        chkseq_strs = pyWorkload.pat_data_struct.ChunkSeq_to_strings( 
-                                                                        files_chkseq )
-                        for k,v in chkseq_strs.items():
-                            self.confparser.set(workloadname, k, v)
-
-                        self.confparser.set(workloadname, 
-                                           'files_chkseq', 
-                                           str(files_chkseq))
-                        self.confparser.set(self.confparser.get('workload','name'), 
-                                            'filesize', str(filesize))
-
-                        self._walkman_walk(self.confparser)
-
-                        self.confparser.set('system', 
-                                            'makeloopdevice',
-                                            'no')
-                        #break
-                    #break
-                #break
-            #break
-
-    def _curvecut(self):
-        workloadname = 'curvecut'
-        self.confparser.set('workload', 'name', workloadname )
-        self.confparser.add_section( workloadname )
-
-        shorthostname = socket.gethostname().split('.')[0]
-        assignment = { 'h0':'ext4',
-                       'h1':'xfs',
-                       'h2':'btrfs'}
-        
-        #filesystems = ['btrfs', 'xfs', 'ext4']
-        filesystems = [assignment[shorthostname]]
-
-        for fs in filesystems:
-            print fs
-            self.confparser.set('system', 'filesystem', fs)
-
-            fzranges = {
-                        0: range(0, 15),
-                        }
-            range_sel = self.confparser.getint('workload', 'fzrange')
-            fzrange = fzranges[range_sel]
-            
-            exps = [2**x for x in fzrange]
-            filesizes1 = [4*1024*3*x for x in exps] 
-            filesizes2 = [4*1024*3*(x+1) for x in fzrange] 
-
-            for fsizemode in ['incr', 'exp']:
-                self.confparser.set(workloadname, 'fsizemode', fsizemode)
-                if fsizemode == 'incr':
-                    filesizes = filesizes2
-                else:
-                    filesizes = filesizes1
-
-                num_of_chunks = 3 
-                for filesize in filesizes:
-                    self.confparser.set('system', 
-                                        'makeloopdevice',
-                                        'yes')
-                    for files_chkseq in pyWorkload.workload_builder.\
-                                        overwrite_workload_iter(filesize=filesize):
-                        pprint.pprint( files_chkseq )
-                        chkseq_strs = pyWorkload.pat_data_struct.ChunkSeq_to_strings( 
-                                                                        files_chkseq )
-                        for k,v in chkseq_strs.items():
-                            self.confparser.set(workloadname, k, v)
-
-                        self.confparser.set(workloadname, 
-                                           'files_chkseq', 
-                                           str(files_chkseq))
-                        self.confparser.set(self.confparser.get('workload','name'), 
-                                            'filesize', str(filesize))
-
-                        self._walkman_walk(self.confparser)
-
-                        self.confparser.set('system', 
-                                            'makeloopdevice',
-                                            'no')
-                        #break
-                    #break
-                #break
-            #break
-
-    def self_scaling(self):
-        workloadname = 'selfscaling'
-        self.confparser.set('workload', 'name', workloadname )
-        self.confparser.add_section( workloadname )
-
-        shorthostname = socket.gethostname().split('.')[0]
-        assignment = { 'h0':'ext4',
-                       'h1':'xfs',
-                       'h2':'btrfs'}
-
-        nchunks = 4 
-        boollist = list( itertools.product([False, True], repeat=nchunks) )
-
-        parameters = {}
-        parameters['filesize']=[4*1024*3*x for x in range(1, 15, 1)]
-        parameters['fsync_bitmap'] = boollist
-
-        tmp = itertools.product([False, True], repeat=nchunks-1)
-        tmp = [ [True]+list(x) for x in tmp ]
-        parameters['open_bitmap'] = tmp
-        
-        parameters['sync_bitmap'] = boollist 
-
-        parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
-
-        # one or more values for each of the 
-        # parameter. eventually it will converge.
-        # ideally, for example, focal_vector['filesize']
-        # has one value. but in the case of having
-        # distinct performance region, we need more than one.
-        # For now, the prototype has one
-        focal_vector = {}
-        # focal_vector_pre is used to keep the focal points
-        # before current parameter exploration. It is 
-        # used to compare with the new focal point and
-        # see if they converge
-        focal_vector_pre = {}
-        # The ylist is also a dictionary of parameters.
-        # For example, focal_ylist['filesize'] has a 
-        # list of d_spans corresponding to different
-        # file sizes, with other parameters fixed at
-        # its focal point.
-        # The focal points need to converge, otherwise
-        # the ylist is not consistent. For example,
-        # you have 3 parameters, the have a ylist for
-        # the first parameter, when you look at the second
-        # parameter and pick a new focal point for the
-        # second parameter, then the ylist of the second
-        # parameter has a different second parameter. 
-        # But this is not a problem if all the parameters
-        # have the same focal point. 
-        focal_ylist = {}
-        # initialize focal_vector
-        for k,v in parameters.items():
-            focal_vector[k] = v[0]
-            focal_vector_pre[k] = None #made different to focal_vector
-                                       #on purpose
-            focal_ylist[k] = [] # format: [[3,4,52],[2,33,2,1,2,3],..]
-
-
-        #Let's serach 10 rounds
-        for it in range(1000):
-            for paraname,paravalue in focal_vector.items():
-
-                self.confparser.set('system', 
-                                    'makeloopdevice',
-                                    'yes')
-                print paraname
-                focal_ylist[paraname] = [] #will be filled
-                for cur_value in parameters[paraname]:
-                    # update the current parameter with 
-                    # new value
-                    cur_parameters = copy.deepcopy(focal_vector)
-                    cur_parameters[paraname] = cur_value
-
-                    chkseq = pyWorkload.workload_builder.\
-                              single_workload(filesize=cur_parameters['filesize'],
-                                    fsync_bitmap=cur_parameters['fsync_bitmap'],
-                                    open_bitmap=cur_parameters['open_bitmap'],
-                                    sync_bitmap=cur_parameters['sync_bitmap'],
-                                    write_order=cur_parameters['write_order'])
-
-                    chkseq_strs = pyWorkload.pat_data_struct.\
-                                  ChunkSeq_to_strings( chkseq )
-                    for k,v in chkseq_strs.items():
-                        self.confparser.set(workloadname, k, v)
-
-                    self.confparser.set(workloadname, 
-                                       'files_chkseq', 
-                                       str(chkseq))
-
-                    ret = self._walkman_walk(self.confparser)
-                    dspan = ret['d_span']
-                    focal_ylist[paraname].append( dspan )
-                    self.confparser.set('system', 
-                                        'makeloopdevice',
-                                        'no')
-                # pick a y from focal_ylist
-                y_focal = pyWorkload.tools.median(focal_ylist[paraname])
-                # find the corresponding value of paraname
-                y_focal_idx = focal_ylist[paraname].index(y_focal)
-                # update focal_vector
-                focal_vector[paraname] = parameters[paraname][y_focal_idx]
-
-            print "***** focal vector dadada ******"
-            pprint.pprint(focal_vector)
-            print '** focal_vector_pre **'
-            pprint.pprint( focal_vector_pre )
-            print "***** focal ylist ******"
-            pprint.pprint(focal_ylist)
-
-            # compare current focal_vector with previous one
-            # and see if they converge
-            if ( focal_vector_pre == focal_vector ):
-                print "great, converged"
-           
-                focaltable = gen_focal_table(parameters,
-                                      focal_ylist,
-                                      focal_vector).toStr()
-                print focaltable
-                with open('focaltable.txt', 'w') as f:
-                    f.write(focaltable)
-                break
-            else:
-                focal_vector_pre = copy.deepcopy(focal_vector)
-
-    def self_scaling2(self):
-        workloadname = 'selfscaling'
-        self.confparser.set('workload', 'name', workloadname )
-        self.confparser.add_section( workloadname )
-
-        shorthostname = socket.gethostname().split('.')[0]
-        assignment = { 'h0':'ext4',
-                       'h1':'xfs',
-                       'h2':'btrfs'}
-
-        nchunks = 3
-        boollist = list( itertools.product([False, True], repeat=nchunks) )
-
-        parameters = {}
-        parameters['filesize']=[4*1024*3*x for x in range(1, 15, 1)]
-        parameters['fsync_bitmap'] = boollist
-
-        tmp = itertools.product([False, True], repeat=nchunks-1)
-        tmp = [ [True]+list(x) for x in tmp ]
-        parameters['open_bitmap'] = tmp
-        
-        parameters['sync_bitmap'] = boollist 
-
-        parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
-        target_vector = {
-                        'filesize'     :[0.5,0.51],
-                        'fsync_bitmap' :[0.5,0.51],
-                        'open_bitmap'  :[0.5,0.51],
-                        'sync_bitmap'  :[0.5,0.51],
-                        'write_order'  :[0.5,0.51]
-                        }
-
-
-        headerinfile = False
-        # format: {para1:[
-        #                {'x':3,'y':4},
-        #                {'x':4,'y':5},
-        #                {'x':6,'y':8},..}
-        #                ],
-        #          para2:[
-        #                {'x':...
-        #                ..
-        #                ],
-        #          para3:...
-        #         }
-        focal_group_vector = {} 
-        focal_group_vector_pre = {}
-        # format is the same as focal_group_vector,
-        # but it has all the data points of the space
-        # of that parameter.
-        # focal_xy_vector[para1] has all the (X,Y)
-        # of the space of X.
-        focal_xy_vector = {}
-        # initialize the vectors 
-        for k,v in parameters.items():
-            focal_group_vector[k] = [{'x':v[0], 'y':None}]
-            focal_group_vector_pre[k] = [] #made different to focal_vector
-                                             #on purpose
-            focal_xy_vector[k] = []
-        for targeti in [0]:#range(len(target_vector['filesize'])): 
-            for it in range(1000):
-                for paraname,parapoints in focal_group_vector.items():
-
-                    self.confparser.set('system', 
-                                        'makeloopdevice',
-                                        'yes')
-                    focal_xy_vector[paraname] = [] #will be filled
-                    # Search the space of one parameter
-                    for cur_x in parameters[paraname]:
-                        cur_focal_x_vector = get_x_vector(focal_group_vector)
-                        cur_focal_x_vector[paraname] = cur_x
-                        ret = self.get_feedback(
-                                     cur_focal_x_vector=cur_focal_x_vector,
-                                     workloadname      =workloadname) 
-                        dspan = ret['d_span']
-
-                        focal_xy_vector[paraname].append( {'x':cur_x, 'y':dspan} )
-                        self.confparser.set('system', 
-                                            'makeloopdevice',
-                                            'no')
-                    # cluster here!
-                    
-                    points = focal_xy_vector[paraname] # for short
-                    print 'Looking for', target_vector[paraname][targeti]
-                    cur_focal_point = get_percent_point(
-                                   points, target_vector[paraname][targeti])
-                    print 'cur_focal_point', paraname
-                    print cur_focal_point
-                    print 'focal_group_vector'
-                    pprint.pprint( focal_group_vector )
-                    
-                    #if cur_focal_point['x'] != focal_group_vector[paraname][0]['x']:
-                    if cur_focal_point != focal_group_vector[paraname][0]:
-                        focal_group_vector[paraname][0] = cur_focal_point 
-                        print 'updated'
-                    print 'focal_group_vector'
-                
-                print 'After an iteration...........dadada'
-                print 'focal_group_vector'
-                pprint.pprint( focal_group_vector )
-                print 'focal_group_vector_pre'
-                pprint.pprint( focal_group_vector_pre)
-                print 'focal_xy_vector'
-                pprint.pprint( focal_xy_vector )
-
-                if ( group_vector_is_equal(focal_group_vector_pre, focal_group_vector)):
-                    print "great, converged"
-                    focaldf = gen_focal_table2(
-                                          focal_xy_vector,
-                                          focal_group_vector,
-                                          target_vector, 
-                                          targeti)
-                    if headerinfile == False:
-                        focaldfstr = focaldf.toStr()
-                        if os.path.exists('focaltable.txt'):
-                            os.remove('focaltable.txt')
-                    else:
-                        focaldfstr = focaldf.toStr(header=False)
-
-                    with open('focaltable.txt', 'a') as f:
-                        f.write(focaldfstr)
-                    break
-                else:
-                    focal_group_vector_pre = copy.deepcopy(focal_group_vector)
-
-    def self_scaling3(self):
-        workloadname = 'selfscaling'
-        self.confparser.set('workload', 'name', workloadname )
-        self.confparser.add_section( workloadname )
-
-        shorthostname = socket.gethostname().split('.')[0]
-        assignment = { 'h0':'ext4',
-                       'h1':'xfs',
-                       'h2':'btrfs'}
-
-        nchunks = 3 
-        boollist = list( itertools.product([False, True], repeat=nchunks) )
-
-        parameters = {}
-        parameters['filesize']=[4*1024*3*x for x in range(1, 15, 1)]
-        parameters['fsync_bitmap'] = boollist
-
-        tmp = itertools.product([False, True], repeat=nchunks-1)
-        tmp = [ [True]+list(x) for x in tmp ]
-        parameters['open_bitmap'] = tmp
-        
-        parameters['sync_bitmap'] = boollist 
-
-        parameters['write_order'] = list(itertools.permutations( range(nchunks) ) )
-
-
-        # format: {para1:[
-        #                {'x':3,'y':4},
-        #                {'x':4,'y':5},
-        #                {'x':6,'y':8},..}
-        #                ],
-        #          para2:[
-        #                {'x':...
-        #                ..
-        #                ],
-        #          para3:...
-        #         }
-        focal_group_vector = {} 
-        focal_group_vector_pre = {}
-        # format is the same as focal_group_vector,
-        # but it has all the data points of the space
-        # of that parameter.
-        # focal_xy_vector[para1] has all the (X,Y)
-        # of the space of X.
-        focal_xy_vector = {}
-        # initialize the vectors 
-        for k,v in parameters.items():
-            focal_group_vector[k] = [{'x':v[0], 'y':None}]
-            focal_group_vector_pre[k] = None #made different to focal_vector
-                                             #on purpose
-            focal_xy_vector[k] = []
-
-        for it in range(1000):
-            for paraname,parapoints in focal_group_vector.items():
-
-                self.confparser.set('system', 
-                                    'makeloopdevice',
-                                    'yes')
-                focal_xy_vector[paraname] = [] #will be filled
-                # Search the space of one parameter
-                for cur_x in parameters[paraname]:
-                    # cur_focal_x_vector is similar to the traditional
-                    # focalvector
-                    cur_focal_x_vector = get_x_vector(focal_group_vector)
-                    cur_focal_x_vector[paraname] = cur_x
-
-                    ret = self.get_feedback(
-                                 cur_focal_x_vector=cur_focal_x_vector,
-                                 workloadname      =workloadname) 
-                    dspan = ret['d_span']
-
-                    focal_xy_vector[paraname].append( {'x':cur_x, 'y':dspan} )
-                    self.confparser.set('system', 
-                                        'makeloopdevice',
-                                        'no')
-                # cluster here!
-                print 'focal_xy_vector clusterhere'
-                pprint.pprint( focal_xy_vector )
-                
-                points = focal_xy_vector[paraname] # for short
-                grps = cluster_by_y( points )
-                sort_clusters( grps )
-                pickedy = grps[0][0]
-                pickedpoint = None
-                for point in points:
-                    if point['y'] == pickedy:
-                        pickedpoint = point
-                        break
-                assert pickedpoint != None 
-                if pickedpoint != focal_group_vector[paraname][0]:
-                    focal_group_vector[paraname][0] = pickedpoint
-                    print 'updated'
-                print 'focal_group_vector'
-                pprint.pprint( focal_group_vector )
-            
-            print 'After an iteration...........dadada'
-            print 'focal_group_vector'
-            pprint.pprint( focal_group_vector )
-            print 'focal_group_vector_pre'
-            pprint.pprint( focal_group_vector_pre)
-            if ( focal_group_vector_pre == focal_group_vector ):
-                print "great, converged"
-                focaltable = gen_focal_table2(
-                                      focal_xy_vector,
-                                      focal_group_vector).toStr()
-                print focaltable
-                with open('focaltable.txt', 'w') as f:
-                    f.write(focaltable)
-                break
-            else:
-                focal_group_vector_pre = copy.deepcopy(focal_group_vector)
-
-    def get_feedback(self, cur_focal_x_vector, workloadname):
-        chkseq = pyWorkload.workload_builder.\
-                  single_workload(filesize=cur_focal_x_vector['filesize'],
-                        fsync_bitmap=cur_focal_x_vector['fsync_bitmap'],
-                        open_bitmap=cur_focal_x_vector['open_bitmap'],
-                        sync_bitmap=cur_focal_x_vector['sync_bitmap'],
-                        write_order=cur_focal_x_vector['write_order'])
-
-        chkseq_strs = pyWorkload.pat_data_struct.\
-                      ChunkSeq_to_strings( chkseq )
-        for k,v in chkseq_strs.items():
-            self.confparser.set(workloadname, k, v)
-
-        self.confparser.set(workloadname, 
-                           'files_chkseq', 
-                           str(chkseq))
-
-        ret = self._walkman_walk(self.confparser)
+        # we need some trivial settings in the conf file
+        # such as the the workload file location
+        conf = self.confparser 
+
+        pyWorkload.workload_builder.build_conf(
+                                    treatment = treatment,
+                                    confparser = conf)
+
+        #pprint.pprint(conf.items('system'))
+        #pprint.pprint(conf.items('workload'))
+        #exit(0)
+        ret = self._walkman_walk(conf)
         return ret
 
-def group_vector_is_equal( group_vector, group_vector_pre ):
-    """
-    This function only compares the X in each point
-    """
-    for paraname in group_vector.keys():
-        xlist1 = [ point['x'] for point in group_vector[paraname]]
-        xlist2 = [ point['x'] for point in group_vector_pre[paraname]]
-        #print sorted(xlist1)
-        #print sorted(xlist2)
-        if sorted(xlist1) != sorted(xlist2):
-            return False
-    return True
+    def sampleworkload(self):
+        file_treatment = {
+               'parent_dirid' : 2,
+               'fileid'       : 8848,
+               'writer_pid'   : 0,
+               'chunks'       : [
+                               {'offset':0, 'length':1},
+                               {'offset':1, 'length':1},
+                               {'offset':2, 'length':1},
+                               {'offset':3, 'length':1}
+                              ],
+                              #chunk id is the index here
+               'write_order'  : [0,1,2,3],
+               # The bitmaps apply to ordered chunkseq
+               'open_bitmap'  : [True, True, True, True],
+               'fsync_bitmap' : [False, False, False, False],
+               'close_bitmap' : [True, True, True, True],
+               'sync_bitmap'  : [True, False, False, False ],
+               'writer_cpu_map': [0,1,0,1] # set affinity to which cpu
+               }
 
+        #pprint.pprint(build_file_chunkseq( file_treatment ))
 
-def cluster_by_y(points):
-    ylist = []
-    for point in points:
-        ylist.append( point['y'] )
+        treatment = {
+                      'filesystem': 'ext4',
+                      'disksize'  : 64*1024*1024,
+                      'free_space_layout_score': 1,
+                      'free_space_ratio': 0.7,
+                      'dir_depth'     : 3,
+                      # file id in file_treatment is the index here
+                      'files': [file_treatment, copy.deepcopy(file_treatment)],
+                      # the number of item in the following list
+                      # is the number of total chunks of all files
+                      'filechunk_order': [0, 1, 0, 1, 0, 1, 0, 1]
+                    }
+        print self.get_response(treatment)
 
-    # find out what's 'close'
-    ymax = max(ylist)
-    ymin = min(ylist)
-    distance = 0.2*(ymax-ymin)
-
-    cl = cluster.HierarchicalClustering(ylist, lambda x,y: abs(x-y))
-    clusters = cl.getlevel(distance)
-    return clusters
-
-def get_target_string(target_vector, i):
-    targets=[]
-    for paraname, targetlist in target_vector.items():
-        targets.append( ":".join([paraname, str(targetlist[i])]) )
-    return ",".join(targets)
-
-def sort_clusters(clusters):
-    clusters = [sorted(x) for x in clusters]
-    clusters.sort()
-    return None
-
-def get_x_vector(focal_group_vector):
-    xy_vector = get_xy_vector(focal_group_vector)
-    print 'xy_vector'
-    pprint.pprint( xy_vector )
-    x_vector = {}
-    for paraname, point in xy_vector.items():
-        x_vector[paraname] = point['x']
-    return x_vector
-
-def get_xy_vector(focal_group_vector):
-    """
-    This function gets the median point from
-    each group of points
-    """
-    xy_vector = {}
-    for paraname, points in focal_group_vector.items():
-        xy_vector[paraname] = get_percent_point(points, 0.5)
-    return xy_vector
-
-def get_percent_point(points, percent):
-    # Let's be stupid at this moment
-    # input format: [{'x':1,'y':1},{'x':2,'y':2},..]
-    # it is a list of dictionary
-    ylist = []
-    for point in points:
-        ylist.append(point['y'])
-    size = len(ylist)
-    assert size > 0
-    m = int(size*percent)
-    medy = sorted(ylist)[m]
-    goodpoints = []
-    for point in points:
-        if point['y'] == medy:
-            goodpoints.append( point )
-    mid = len(goodpoints)/2
-    return goodpoints[mid]
-
-def num2bitmapstr(blist):
-    a = [str(int(x)) for x in blist]
-    return "".join(a) 
-
-def gen_focal_table(parameters, focal_ylist, focal_vector):
-    header = ['paraname', 'paraX', 'paraY', 'asfocal']
-    focaltable = MWpyFS.dataframe.DataFrame()
-    focaltable.header = header
-    for paraname, paraXlist in parameters.items():
-        assert len(paraXlist) == len(focal_ylist[paraname])
-        for paraX, paraY in zip(paraXlist, focal_ylist[paraname]):
-            if paraX == focal_vector[paraname]:
-                asfocal = True
-            else:
-                asfocal = False
-
-            if paraname in ['fsync_bitmap', 'open_bitmap',
-                            'sync_bitmap', 'write_order']:
-                paraX = num2bitmapstr(paraX)
-
-            d = {'paraname': paraname,
-                 'paraX'   : paraX,
-                 'paraY'   : paraY,
-                 'asfocal' : asfocal
-                 }
-            focaltable.addRowByDict(d)
-    return focaltable
-
-def gen_focal_table2(focal_xy_vector, focal_group_vector, 
-                     target_vector, targeti):
-    header = ['paraname', 'paraX', 'paraY', 'asfocal']
-    focaltable = MWpyFS.dataframe.DataFrame()
-    focaltable.header = header
-
-    for paraname, points in focal_xy_vector.items():
-        for point in points:
-            if paraname in ['fsync_bitmap', 'open_bitmap',
-                            'sync_bitmap', 'write_order']:
-                paraX = num2bitmapstr(point['x'])
-            else:
-                paraX = point['x']
-
-            d = {'paraname': paraname,
-                 'paraX'   : paraX,
-                 'paraY'   : point['y']
-                 }
-            if point in focal_group_vector[paraname]:
-                d['asfocal'] = True
-            else:
-                d['asfocal'] = False
-            focaltable.addRowByDict(d)
-    for paraname, targetlist in target_vector.items():
-        focaltable.addColumn(key=paraname+'_target',
-                             value=targetlist[targeti])
-
-    focaltable.addColumn(key='HEADERMARKER_focaltable',
-                         value='DATAMARKER_focaltable')
-    return focaltable
 
 def main(args):
     if len(args) != 2:

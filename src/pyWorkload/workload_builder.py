@@ -10,6 +10,7 @@ import copy
 import pprint
 import itertools
 import math
+import ConfigParser
 
 def create_workload_sample():
     nchunks = 3
@@ -361,7 +362,7 @@ def build_dir_tree_path( depth ):
     dirpaths = []
     n = 2**(depth+1) - 1 
     for dirid in range(1, n):
-        dir = get_dir_path(dirid)
+        path = get_dir_path(dirid)
         dirpaths.append( path )
 
     return dirpaths
@@ -382,17 +383,59 @@ def build_conf ( treatment, confparser ):
     1. n_dir_depth: we name the directory tree by the index
        of directory in the pre-order traversal. No two dir names
        are the same. 
+
+    treatment = {
+                  filesystem:
+                  disksize  :
+                  free_space_layout_score:
+                  free_space_ratio:
+                  n_dir_depth:
+                  # file id in file_treatment is the index here
+                  files: [file_treatment0, file_treatment1, ..],
+                  # the number of item in the following list
+                  # is the number of total chunks of all files
+                  filechunk_order: [0, 2, 1, fileid,..]
+                }
+                  
+
     """
+    if not confparser.has_section('system'):
+        confparser.add_section('system')
+    if not confparser.has_section('workload'):
+        confparser.add_section('workload')
+
+    confparser.set('system', 'filesystem', treatment['filesystem'])
+    confparser.set('system', 'disksize'  , str(treatment['disksize']))
+    confparser.set('system', 'free_space_layout_score', 
+                                   str(treatment['free_space_layout_score']))
+    confparser.set('system', 'free_space_ratio',
+                                   str(treatment['free_space_ratio']))
+
+
     chkseq = pat_data_struct.get_empty_ChunkSeq()
 
-    # n_dir_depth
-    dirs_chkseq = build_dir_tree_chkeq( treatment['depth'] )
+    # creat directory tree
+    dirs_chkseq = build_dir_tree_chkeq( treatment['dir_depth'] )
+    chkseq['seq'].extend( dirs_chkseq['seq'] )
+   
+    # Get chunkseq for each file
+    nfiles = len( treatment['files'] )
+    files_chkseq_list = []
+    for fileid, file_treatment in enumerate(treatment['files']):
+        file_treatment['fileid'] = fileid
+        files_chkseq_list.append( 
+                    build_file_chunkseq( file_treatment ) )
+
+    # mix the chunks of all files
+    ckpos = [0] * nfiles
+    for curfile in treatment['filechunk_order']:
+        chkseq['seq'].append( 
+                files_chkseq_list[curfile]['seq'][ ckpos[curfile] ])
+        ckpos[curfile] += 1
+    #pprint.pprint( chkseq )
     
-
-    
-
-#build_conf( {'depth':2}, None ) 
-
+    confparser.set('workload', 'files_chkseq', str(chkseq))
+        
 def build_file_chunkseq ( file_treatment ):
     """
     *********************************************
@@ -403,7 +446,9 @@ def build_file_chunkseq ( file_treatment ):
     file_treatment = {
            parent_dirid :
            fileid       : make this globally unique
-           overlap      :
+           writer_pid   : writer pid
+           (DEL)overlap : This one should be specified out of this
+                          function. It changes chunks
            chunks       : [{'offset':, 'length':},{}]  
                           #chunk id is the index here
            write_order  : [0,1,2,3,..]
@@ -412,7 +457,7 @@ def build_file_chunkseq ( file_treatment ):
            fsync_bitmap : [True, False, ...]
            close_bitmap : [True, .. ]
            sync_bitmap  : [True, .. ]
-           writer_proc_map: [0,1,0,1] # set affinity to which cpu
+           writer_cpu_map: [0,1,0,1] # set affinity to which cpu
            }
     This function returns a chunkseq of this treatment
     """
@@ -426,6 +471,9 @@ def build_file_chunkseq ( file_treatment ):
         cbox['chunk']['length'] = pair['length']
         cbox['chunk']['fileid'] = file_treatment['fileid']
         cbox['chunk']['parent_dirid'] = file_treatment['parent_dirid']
+        cbox['chunk']['parent_dirpath'] = get_dir_path(
+                                   file_treatment['parent_dirid'])
+        cbox['chunk']['writer_pid'] = file_treatment['writer_pid']
         chunkseq['seq'].append( cbox )
 
     # Order it
@@ -433,13 +481,12 @@ def build_file_chunkseq ( file_treatment ):
                         for i in file_treatment['write_order'] ]
 
     # apply the bitmaps
-
     slotnames = ['A', '(', 'C', 'F', ')', 'S']
     opbitmap = pat_data_struct.get_empty_OpBitmap()
     opbitmap['nchunks'] = nchunks
     for writer, open_bit, fsync_bit, close_bit, sync_bit\
             in zip( 
-                    file_treatment['writer_proc_map'],
+                    file_treatment['writer_cpu_map'],
                     file_treatment['open_bitmap'], 
                     file_treatment['fsync_bitmap'], 
                     file_treatment['close_bitmap'],
@@ -456,39 +503,20 @@ def build_file_chunkseq ( file_treatment ):
         opbitmap['slotnames'].extend( slotnames )
         opbitmap['values'].extend( [ d[x] for x in slotnames ] )
 
-    pprint.pprint(opbitmap)
+    #pprint.pprint(opbitmap)
     pattern_iter.assign_operations_to_chunkseq( chunkseq, opbitmap )
     
-    pprint.pprint(chunkseq)
-
-
-file_treatment = {
-       'parent_dirid' : 2,
-       'fileid'       : 8848,
-       'overlap'      : 1,
-       'chunks'       : [
-                       {'offset':0, 'length':1},
-                       {'offset':1, 'length':1},
-                       {'offset':2, 'length':1},
-                       {'offset':3, 'length':1}
-                      ],
-                      #chunk id is the index here
-       'write_order'  : [0,1,2,3],
-       # The bitmaps apply to ordered chunkseq
-       'open_bitmap'  : [True, True, True, True],
-       'fsync_bitmap' : [False, False, False, False],
-       'close_bitmap' : [True, True, True, True],
-       'sync_bitmap'  : [True, False, False, False ],
-       'writer_proc_map': [0,1,0,1] # set affinity to which cpu
-       }
-
-build_file_chunkseq( file_treatment )
+    return chunkseq
 
 
 
 
+#confparser = ConfigParser.SafeConfigParser()
 
+##build_conf( treatment, confparser )
 
+#pprint.pprint( confparser.items('system') )
+#pprint.pprint( confparser.items('workload') )
 
 
 
