@@ -24,7 +24,7 @@ import pprint
 import itertools
 import random
 import copy
-import cluster
+#import cluster
 from ast import literal_eval
 
 walkmanlog = None

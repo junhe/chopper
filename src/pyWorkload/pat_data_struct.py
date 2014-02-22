@@ -167,9 +167,10 @@ def ChunkSeq_to_workload2(chkseq, rootdir, tofile):
             tofile = tofile)
 
     for chkbox in chkseq['seq']:
-        filepath= chkbox['chunk']['filepath']
-        writer_pid = chkbox['chunk']['writer_pid']
-        affinity_cpuid = chkbox['chunk']['sched_setaffinity']
+        if chkbox['chunk'].has_key('filepath'):
+            filepath= chkbox['chunk']['filepath']
+        if chkbox['chunk'].has_key('writer_pid'):
+            writer_pid = chkbox['chunk']['writer_pid']
 
         for op in chkbox['opseq']:
             if op['opname'] == 'open':
@@ -186,7 +187,9 @@ def ChunkSeq_to_workload2(chkseq, rootdir, tofile):
             elif op['opname'] == 'sync':
                 prd.addOSOp('sync', pid=writer_pid)
             elif op['opname'] == 'sched_setaffinity':
-                prd.addSetaffinity(pid=writer_pid, cpuid=affinity_cpuid)
+                prd.addSetaffinity(pid=writer_pid, cpuid=op['opvalue'])
+            elif op['opname'] == 'mkdir':
+                prd.addDirOp2(op='mkdir', pid=0, path=op['opvalue'])
 
     prd.display()
     exit(0)
@@ -231,7 +234,7 @@ def ChunkSeq_to_strings(chkseq):
 
 #############################################
 symbol_dict = {
-                'set_affinity':'A',
+                'sched_setaffinity':'A',
                 'open' :'(',
                 'chunk':'C',
                 'fsync':'F',

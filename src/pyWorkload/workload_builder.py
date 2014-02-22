@@ -11,6 +11,7 @@ import pprint
 import itertools
 import math
 import ConfigParser
+import os
 
 def create_workload_sample():
     nchunks = 3
@@ -457,7 +458,8 @@ def build_file_chunkseq ( file_treatment ):
            fsync_bitmap : [True, False, ...]
            close_bitmap : [True, .. ]
            sync_bitmap  : [True, .. ]
-           writer_cpu_map: [0,1,0,1] # set affinity to which cpu
+           writer_cpu_map: [0,1,0,1] # set affinity to which cpu, 
+                                     # -1 means not schedule explicitly
            }
     This function returns a chunkseq of this treatment
     """
@@ -485,15 +487,16 @@ def build_file_chunkseq ( file_treatment ):
     slotnames = ['A', '(', 'C', 'F', ')', 'S']
     opbitmap = pat_data_struct.get_empty_OpBitmap()
     opbitmap['nchunks'] = nchunks
-    for writer, open_bit, fsync_bit, close_bit, sync_bit\
+    for writer_cpu, open_bit, fsync_bit, close_bit, sync_bit\
             in zip( 
                     file_treatment['writer_cpu_map'],
                     file_treatment['open_bitmap'], 
                     file_treatment['fsync_bitmap'], 
                     file_treatment['close_bitmap'],
                     file_treatment['sync_bitmap'] ):
+        # each iteration in the loop is for a chunk
         d = {
-             'A': writer,
+             'A': writer_cpu,
              '(': open_bit,
              'C': 'C',
              'F': fsync_bit,

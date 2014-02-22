@@ -22,7 +22,7 @@ class Producer:
         entry = str(pid)+";"+path+";"+op.lower()+";"+str(off)+";"+str(len)+"\n"
         self.workload += entry
 
-    def addReadOrWrite2(self, op, path, fileid, off, len):
+    def addReadOrWrite2(self, op, pid, path, off, len):
         "op: read/write"
         fullpath = self.getFullpath(path)
         entry = str(pid)+";"+fullpath+";"+op.lower()+";"+str(off)+";"+str(len)+"\n"
