@@ -598,8 +598,11 @@ class FSMonitor:
             
             ######################
             # get extents of all files
-            extlist = self.getExtentList_of_a_dir(rootdir='./pid00000.dir00000')
+            extlist = self.getExtentList_of_a_dir(rootdir='./')
             df_ext = extlist_translate_new_format(extlist)
+
+            print df_ext.toStr()
+            exit(1)
 
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"

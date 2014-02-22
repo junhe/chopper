@@ -67,10 +67,12 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
     if ( wl_entry._operation == "mkdir" ) {
         // make dir
         //cout << "mkdir" << endl;
-        string cmd = "mkdir -p ";
-        cmd += wl_entry._path;
-        string ret = Util::exec(cmd.c_str());
-        if ( ret == "ERROR" ) {
+
+        //string cmd = "mkdir -p ";
+        //cmd += wl_entry._path;
+        //string ret = Util::exec(cmd.c_str());
+        int ret = mkdir(wl_entry._path.c_str(), 0777);
+        if ( ret == -1 ) {
             logwrite( wl_entry._entry_str + " File to mkdir.");
             exit(1);
         }
@@ -224,13 +226,24 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         }
         //cout << ret;
     } else if ( wl_entry._operation == "sync" ) {
-        string cmd = "sync";
-        string ret = Util::exec(cmd.c_str());
-        if ( ret == "ERROR" ) {
-            logwrite( wl_entry._entry_str + " Faile sync os.");
+        sync(); // This never fails
+        //string cmd = "sync";
+        //string ret = Util::exec(cmd.c_str());
+        //if ( ret == "ERROR" ) {
+            //logwrite( wl_entry._entry_str + " Faile sync os.");
+            //exit(1);
+        //}
+        //cout << ret;
+    } else if ( wl_entry._operation == "sched_setaffinity" ) {
+        int cpuid;
+
+        istringstream( wl_entry._tokens[3] ) >> cpuid;
+        int ret = Util::set_to_cpu(cpuid);
+        if ( ret == -1 ) {
+            logwrite( wl_entry._entry_str + " Fail to setaffinity.");
             exit(1);
         }
-        //cout << ret;
+
     } else {
         logwrite( wl_entry._entry_str + "Unrecognized Operation in play()" );
         exit(1);

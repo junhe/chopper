@@ -176,7 +176,8 @@ def ChunkSeq_to_workload2(chkseq, rootdir, tofile):
             if op['opname'] == 'open':
                 prd.addUniOp2('open', pid=writer_pid, path=filepath)
             elif op['opname'] == 'chunk':
-                prd.addReadOrWrite2('write', pid=writer_pid, 
+                prd.addReadOrWrite2('write', 
+                           pid=writer_pid, 
                            path=filepath,
                            off=chkbox['chunk']['offset'], 
                            len=chkbox['chunk']['length'])
@@ -191,8 +192,8 @@ def ChunkSeq_to_workload2(chkseq, rootdir, tofile):
             elif op['opname'] == 'mkdir':
                 prd.addDirOp2(op='mkdir', pid=0, path=op['opvalue'])
 
-    prd.display()
-    exit(0)
+    #prd.display()
+    #exit(0)
     prd.saveWorkloadToFile()
     return True
 

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -16,6 +17,7 @@
 #include <sys/statvfs.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <sched.h>
 
 #include "Util.h"
 
@@ -67,6 +69,26 @@ Util::Flush(int fd)
 {
     return fsync(fd);
 }
+
+int
+Util::set_to_cpu(int cpuid)
+{
+    cpu_set_t set;
+
+    CPU_ZERO( &set );
+    CPU_SET( cpuid, &set );
+    int ret = sched_setaffinity( 0, sizeof( cpu_set_t ), &set );
+    /*printf("ret: %d\n", ret);*/
+    if (ret == -1) {
+        perror("setaffinit:");
+    }
+        
+    /*int curcpu = sched_getaffinity( 0, sizeof(cpu_set_t), &set);*/
+    //int curcpu = sched_getcpu();
+    //printf("curcpu: %x\n", curcpu);
+    return ret;
+}
+
 
 void
 Util::replaceSubStr( string del, string newstr, string &line, int startpos) 

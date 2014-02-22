@@ -18,6 +18,7 @@ class Util {
         static int Open(const char *fname, int flag);
         static int Close(int fd);
         static int Flush(int fd);
+        static int set_to_cpu(int cpuid);
         static void replaceSubStr( std::string del, 
                                    std::string newstr, 
                                    std::string &line, int startpos = 0 );

@@ -475,7 +475,7 @@ def build_file_chunkseq ( file_treatment ):
         cbox['chunk']['parent_dirid'] = file_treatment['parent_dirid']
         cbox['chunk']['filepath'] = os.path.join(
                 get_dir_path(file_treatment['parent_dirid']),
-                str( file_treatment['fileid'] ) )
+                str( file_treatment['fileid'] ) + ".file" )
         cbox['chunk']['writer_pid'] = file_treatment['writer_pid']
         chunkseq['seq'].append( cbox )
 

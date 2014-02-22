@@ -308,7 +308,7 @@ class Walkman:
             return ret_record
         else:
             walkmanlog.write('>>>>>>>> One Failed walkman <<<<<<<<<<<<')
-            confparser.write( walkmanlog )
+            self.confparser.write( walkmanlog )
             return None
 
     def _play_workload_wrapper(self, year, season):
@@ -516,7 +516,7 @@ class Troops:
         file_treatment = {
                'parent_dirid' : 2,
                'fileid'       : 8848,
-               'writer_pid'   : 0,
+               'writer_pid'   : 1,
                'chunks'       : [
                                {'offset':0, 'length':1},
                                {'offset':1, 'length':1},
