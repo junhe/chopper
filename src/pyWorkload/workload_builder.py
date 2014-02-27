@@ -423,7 +423,7 @@ def build_conf ( treatment, confparser ):
     nfiles = len( treatment['files'] )
     files_chkseq_list = []
     for fileid, file_treatment in enumerate(treatment['files']):
-        file_treatment['fileid'] = fileid
+        #file_treatment['fileid'] = fileid
         files_chkseq_list.append( 
                     build_file_chunkseq( file_treatment ) )
 
@@ -437,6 +437,10 @@ def build_conf ( treatment, confparser ):
     
     confparser.set('workload', 'files_chkseq', str(chkseq))
         
+def correctize_fileid (treatment):
+    for fileid, file_treatment in enumerate(treatment['files']):
+        file_treatment['fileid'] = fileid
+
 def build_file_chunkseq ( file_treatment ):
     """
     *********************************************

@@ -26,6 +26,7 @@ import random
 import copy
 #import cluster
 from ast import literal_eval
+from time import strftime, localtime, sleep
 
 walkmanlog = None
 feedback_dic = {}
@@ -485,6 +486,7 @@ class Troops:
         that's what Troops is designed for.
         """
         self.confparser = confparser 
+        self.fileout = None
 
     def _walkman_walk(self, cf):
         walkman = Walkman(cf, 'fromTroops')
@@ -543,13 +545,38 @@ class Troops:
                       'dir_depth'     : 3,
                       # file id in file_treatment is the index here
                       'files': [file_treatment, copy.deepcopy(file_treatment)],
+                      #'files': [file_treatment],
                       # the number of item in the following list
                       # is the number of total chunks of all files
                       'filechunk_order': [0, 1, 0, 1, 0, 1, 0, 1]
+                      #'filechunk_order': [0,0,0,0]
                     }
+        pyWorkload.workload_builder.correctize_fileid(treatment)
+        self.run_and_get_df( treatment, savedf=True)
+        self.run_and_get_df( treatment, savedf=True)
 
-        #print self.get_response(treatment)
-        pyWorkload.pat_data_struct.treatment_to_df(treatment)
+    def run_and_get_df(self, treatment, savedf=False ):
+        """
+        This function will run the experiment for this treatment,
+        and append the resulting dataframe to the result file
+        """
+        df = pyWorkload.pat_data_struct.treatment_to_df(treatment)
+
+        # put response to df
+        ret = self.get_response(treatment)
+        df.addColumn(key = 'dspan', value=ret['d_span'])
+        df.addColumn(key = 'treatment_id', 
+                     value = strftime("%Y-%m-%d-%H-%M-%S", localtime()))
+       
+        if savedf:
+            if self.fileout == None:
+                self.fileout = open('result-table.txt', 'w')
+                self.fileout.write(df.toStr(header=True, table=True)) 
+            else:
+                self.fileout.write(df.toStr(header=False, table=True)) 
+
+        return df
+
 
 
 def main(args):
