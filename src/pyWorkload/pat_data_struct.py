@@ -1,5 +1,12 @@
 import pprint
 import producer
+import sys
+import os
+
+#sys.path.append("MWpyFS")
+lib_path = os.path.abspath('..')
+sys.path.append(lib_path)
+import MWpyFS
 
 # {
 #   'class':   'ChunkBox',
@@ -320,6 +327,63 @@ def ChunkBox_lists_to_strings( opbitmap ):
         opbitmap[k] = s
     
     return opbitmap
+
+def treatment_to_df(treatment):
+    df = None
+    for fileid,ftreatment in enumerate(treatment['files']):
+        #assert fileid == ftreatment['fileid']
+        tmpdf = file_treatment_to_df( ftreatment )
+        if df == None:
+            df = tmpdf
+        else:
+            df.table.extend( tmpdf.table )
+    #print df.toStr()
+    
+    fset = treatment.keys()
+    fset = set(fset)
+    fset.remove('files')
+    
+    for k in fset:
+        if k in ['filechunk_order']:
+            vstr = ",".join([str(x) for x in treatment[k]])
+        else:
+            vstr = treatment[k]
+        df.addColumn(key=k, value=vstr)
+    df.colwidth = 20
+
+    return df
+
+def file_treatment_to_df (ftreatment):
+    df = MWpyFS.dataframe.DataFrame()
+    df.header = ['variable_name', 'variable_value']
+
+    for k,v in ftreatment.items():
+        if k in ['chunks']:
+            valuestr = "|".join([ "("+str(c['offset'])+","+str(c['length'])+")"  for c in v ])
+        elif k.endswith('_bitmap'):
+            valuestr = "".join( [ str(int(x)) for x in v ] )
+        elif k in ['write_order', 'writer_cpu_map']:
+            valuestr = ",".join( [str(x) for x in v] )
+        elif k in ['parent_dirid', 'fileid', 'writer_pid']:
+            valuestr = str(v)
+        else:
+            print 'missed something in file_treatment_to_df()'
+            print k,v
+            exit(1)
+
+        d = {
+                'variable_name': k,
+                'variable_value': valuestr}
+        #pprint.pprint(d)
+        df.addRowByDict(d)
+    df.addColumn(key='fileid', value=ftreatment['fileid'])
+    #print df.toStr()
+    return df
+
+
+
+
+
 
 
 

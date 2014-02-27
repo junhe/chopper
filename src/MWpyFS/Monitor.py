@@ -601,8 +601,8 @@ class FSMonitor:
             extlist = self.getExtentList_of_a_dir(rootdir='./')
             df_ext = extlist_translate_new_format(extlist)
 
-            print df_ext.toStr()
-            exit(1)
+            #print df_ext.toStr()
+            #exit(1)
 
             if savedata and extlist != None:
                 h = "---------------- extent list -------------------\n"
@@ -676,9 +676,9 @@ class FSMonitor:
         
         # calculate return value
         ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
-                                        './pid00000.dir00000/pid.00000.file.')
+                                        'file')
         myfiles = [
-                    './pid00000.dir00000/pid.00000.file.00000'
+                    #'./pid00000.dir00000/pid.00000.file.00000'
                     #'./pid00000.dir00000/pid.00000.file.00001'
                   ]
         ret_dict['datafiles'] = '|'.join( myfiles )

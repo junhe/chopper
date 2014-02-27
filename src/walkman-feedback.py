@@ -547,7 +547,9 @@ class Troops:
                       # is the number of total chunks of all files
                       'filechunk_order': [0, 1, 0, 1, 0, 1, 0, 1]
                     }
-        print self.get_response(treatment)
+
+        #print self.get_response(treatment)
+        pyWorkload.pat_data_struct.treatment_to_df(treatment)
 
 
 def main(args):

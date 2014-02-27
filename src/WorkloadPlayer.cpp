@@ -239,6 +239,10 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
 
         istringstream( wl_entry._tokens[3] ) >> cpuid;
         int ret = Util::set_to_cpu(cpuid);
+
+        //ostringstream oss;
+        //oss << sched_getcpu();
+        //logwrite( "current cpu:" + oss.str() );
         if ( ret == -1 ) {
             logwrite( wl_entry._entry_str + " Fail to setaffinity.");
             exit(1);
