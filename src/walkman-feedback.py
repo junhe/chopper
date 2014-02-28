@@ -24,6 +24,7 @@ import pprint
 import itertools
 import random
 import copy
+import datetime
 #import cluster
 from ast import literal_eval
 from time import strftime, localtime, sleep
@@ -301,11 +302,9 @@ class Walkman:
 
         # do not record faulty status of the file system
         # (however, sometimes it is useful to record faulty ones)
-        print 'Return of _play_workload_wrapper() =', ret
         if ret == 0:
             ret_record = self._RecordStatus(year=year,season=season+1, 
                                             savedata=False)
-            print 'ret_record', ret_record
             return ret_record
         else:
             walkmanlog.write('>>>>>>>> One Failed walkman <<<<<<<<<<<<')
@@ -322,9 +321,6 @@ class Walkman:
     def _play_chunkseq(self):
         files_chkseq = self.confparser.get('workload', 'files_chkseq')
         files_chkseq = literal_eval(files_chkseq)
-
-        print "------------------------------------------"
-        pprint.pprint( files_chkseq )
 
         pyWorkload.pat_data_struct.ChunkSeq_to_workload2(
                 files_chkseq,
@@ -493,7 +489,8 @@ class Troops:
         return walkman.walk()
 
     def march_wrapper(self):
-        self.sampleworkload()
+        #self.sampleworkload()
+        self.run_experiment()
 
     def get_response(self, treatment):
         """
@@ -513,6 +510,11 @@ class Troops:
         #exit(0)
         ret = self._walkman_walk(conf)
         return ret
+
+    def run_experiment(self):
+        #for treatment in pyWorkload.exp_design.dir_distance_iter():
+        for treatment in pyWorkload.exp_design.onefile_iter():
+            self.run_and_get_df( treatment, savedf=True)
 
     def sampleworkload(self):
         file_treatment = {
@@ -564,9 +566,10 @@ class Troops:
 
         # put response to df
         ret = self.get_response(treatment)
+        
         df.addColumn(key = 'dspan', value=ret['d_span'])
         df.addColumn(key = 'treatment_id', 
-                     value = strftime("%Y-%m-%d-%H-%M-%S", localtime()))
+                     value = datetime.datetime.now().strftime("%m-%d-%H-%M-%S.%f"))
        
         if savedf:
             if self.fileout == None:

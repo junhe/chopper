@@ -195,7 +195,8 @@ def ChunkSeq_to_workload2(chkseq, rootdir, tofile):
             elif op['opname'] == 'sync':
                 prd.addOSOp('sync', pid=writer_pid)
             elif op['opname'] == 'sched_setaffinity':
-                prd.addSetaffinity(pid=writer_pid, cpuid=op['opvalue'])
+                if op['opvalue'] != -1:
+                    prd.addSetaffinity(pid=writer_pid, cpuid=op['opvalue'])
             elif op['opname'] == 'mkdir':
                 prd.addDirOp2(op='mkdir', pid=0, path=op['opvalue'])
 

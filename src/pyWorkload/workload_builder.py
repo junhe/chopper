@@ -326,6 +326,9 @@ def get_dir_path (dirid):
     dirid is the in index in the breadth-first
     traversal
     """
+    if dirid == 0:
+        return ""
+
     path = [dirid]
     # put parents to path
     # root (0) does not need to be put in it
