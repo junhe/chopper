@@ -699,7 +699,7 @@ class Troops:
         filesizes = [4*1024*3*x for x in range(1,20)] 
 
         for filesize in filesizes:
-            chunk_size = filesize / 3
+            chunk_size = filesize / 4 
 
             self.confparser.set(self.confparser.get('workload','name'), 
                                 'filesize', str(filesize))
@@ -728,7 +728,7 @@ class Troops:
                 print patternstring
                 self._walkman_walk(self.confparser)
                 #print 'my end'
-                #exit(1)
+                #exit(0)
 
                 #time.sleep(1)
 

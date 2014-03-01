@@ -1,6 +1,6 @@
 testname=$1
 host=`hostname`
-resultdir=results.$host
+resultdir=/mnt/scratch-sda4/results.$host
 echo testname $testname 
 echo host: $host 
 echo result dir: $resultdir
@@ -16,6 +16,6 @@ sudo rm -rf $resultdir \
     && sudo python ../scripts/result-parser-faster.py $resultdir $host  
 sudo rm ${testname}.tar.gz 
 sudo rm -rf ${testname}
-sudo mv $resultdir ${testname}
-tar zcvf ${testname}.tar.gz ${testname}/z*
+sudo mv $resultdir /mnt/scratch-sda4/${testname}
+tar zcvf ${testname}.tar.gz /mnt/scratch-sda4/${testname}/z*
 
