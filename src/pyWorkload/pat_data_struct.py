@@ -180,7 +180,7 @@ def ChunkSeq_to_workload2(chkseq, rootdir, tofile):
             writer_pid = chkbox['chunk']['writer_pid']
 
         for op in chkbox['opseq']:
-            if op['opname'] == 'open':
+            if op['opname'] == 'open' and op['opvalue'] == True:
                 prd.addUniOp2('open', pid=writer_pid, path=filepath)
             elif op['opname'] == 'chunk':
                 prd.addReadOrWrite2('write', 
@@ -188,15 +188,15 @@ def ChunkSeq_to_workload2(chkseq, rootdir, tofile):
                            path=filepath,
                            off=chkbox['chunk']['offset'], 
                            len=chkbox['chunk']['length'])
-            elif op['opname'] == 'fsync':
+            elif op['opname'] == 'fsync' and op['opvalue'] == True:
                 prd.addUniOp2('fsync', pid=writer_pid, path=filepath)
-            elif op['opname'] == 'close':
+            elif op['opname'] == 'close' and op['opvalue'] == True:
                 prd.addUniOp2('close', pid=writer_pid, path=filepath)
-            elif op['opname'] == 'sync':
+            elif op['opname'] == 'sync' and op['opvalue'] == True:
                 prd.addOSOp('sync', pid=writer_pid)
-            elif op['opname'] == 'sched_setaffinity':
-                if op['opvalue'] != -1:
-                    prd.addSetaffinity(pid=writer_pid, cpuid=op['opvalue'])
+            elif op['opname'] == 'sched_setaffinity' and \
+                    op['opvalue'] != -1:
+                prd.addSetaffinity(pid=writer_pid, cpuid=op['opvalue'])
             elif op['opname'] == 'mkdir':
                 prd.addDirOp2(op='mkdir', pid=0, path=op['opvalue'])
 
