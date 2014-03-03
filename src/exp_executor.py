@@ -583,30 +583,17 @@ class Troops:
 
 
 
-def main(args):
-    if len(args) != 2:
-        print 'usage:', args[0], 'config-file'
-        exit(1)
-    global walkmanlog
-    walkmanlog = open('/tmp/walkman.log', 'a')
+global walkmanlog
+walkmanlog = open('/tmp/walkman.log', 'a')
     
-    confpath = args[1]
-    confparser = SafeConfigParser()
-    try:
-        confparser.readfp(open(confpath, 'r'))
-    except:
-        print "unable to read config file:", confpath
-        exit(1)
+confpath = "../conf/h0.conf"
+confparser = SafeConfigParser()
+try:
+    confparser.readfp(open(confpath, 'r'))
+except:
+    print "unable to read config file:", confpath
+    exit(1)
    
-    troops = Troops(confparser)
-    troops.march_wrapper()
-
-    #walkman = Walkman(confparser, 'recorder')
-    #walkman._RecordStatus(0, 0)
-    walkmanlog.close()
-    exit(0)
-
-if __name__ == "__main__":
-    main(sys.argv)
+troops = Troops(confparser)
 
 

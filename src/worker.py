@@ -40,6 +40,12 @@ def mp_factorizer(shared_job_q, shared_result_q, nprocs):
 
 
 
+def experiment_worker(treatment):
+    """
+    This function simple take one job (a treatment)
+    and return the result as a dict
+    """
+
 
 def runclient():
     manager = make_client_manager(IP, PORTNUM, AUTHKEY)
