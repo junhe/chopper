@@ -4,6 +4,7 @@ import time
 from multiprocessing.managers import SyncManager
 import exp_executor
 import pprint
+import sys
 
 PORTNUM=8848
 AUTHKEY='11'
@@ -25,7 +26,7 @@ def batch_worker(shared_job_q, shared_result_q):
     the job and and work on them one by one. 
     Then the result to shared_result_q together
     """
-    batchsize =20 
+    batchsize =4 
     while True:
         batchjobs = []
         
@@ -56,8 +57,8 @@ def batch_worker(shared_job_q, shared_result_q):
         for result in results:
             shared_result_q.put( result )
 
-def runclient():
-    manager = make_client_manager(IP, PORTNUM, AUTHKEY)
+def runclient(masterip):
+    manager = make_client_manager(masterip, PORTNUM, AUTHKEY)
     job_q = manager.get_job_q()
     result_q = manager.get_result_q()
     batch_worker(job_q, result_q)
@@ -83,6 +84,10 @@ def make_client_manager(ip, port, authkey):
 
 
 if __name__ == '__main__':
-    runclient()
+    if len(sys.argv) != 2:
+        print 'usage:', sys.argv[0], 'masterip'
+        exit(0)
+    masterip = sys.argv[1]
+    runclient(masterip)
 
 

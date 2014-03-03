@@ -49,11 +49,11 @@ def runserver():
                 job = jobiter.next() 
                 shared_job_q.put( job )
                 jobcnt += 1
+                print 'jobcnt',jobcnt, 'resultcnt', resultcnt
             except StopIteration:
                 print 'alldispatched!'
                 alldispatched = True
                 break
-            print 'jobcnt',jobcnt
 
         local_results = []
         # grab to local list
@@ -62,7 +62,7 @@ def runserver():
                 r = shared_result_q.get(block=True, timeout=1)
                 local_results.append( r )
                 resultcnt += 1
-                print 'resultcnt', resultcnt
+                print 'jobcnt',jobcnt, 'resultcnt', resultcnt
             except Queue.Empty:
                 break
         for dfdic in local_results:
