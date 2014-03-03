@@ -5,11 +5,12 @@ from multiprocessing.managers import SyncManager
 import exp_executor
 import pprint
 import sys
+import socket
 
 PORTNUM=8848
 AUTHKEY='11'
 IP='127.0.0.1'
-
+nodeinfo=None
 
 def experiment_worker(treatment):
     """
@@ -26,6 +27,8 @@ def batch_worker(shared_job_q, shared_result_q):
     the job and and work on them one by one. 
     Then the result to shared_result_q together
     """
+    myhostname = socket.gethostname().split('.')[0]
+    nodeinfo = 'WORKERINFO ['+str(myhostname)+']:'
     batchsize =4 
     while True:
         batchjobs = []
@@ -39,7 +42,7 @@ def batch_worker(shared_job_q, shared_result_q):
             except Queue.Empty:
                 break
             except  EOFError:
-                print 'master is closed'
+                print nodeinfo, 'master is closed'
                 time.sleep(1)
                 break
             except:
@@ -56,6 +59,10 @@ def batch_worker(shared_job_q, shared_result_q):
         
         for result in results:
             shared_result_q.put( result )
+
+        if len(results) > 0:
+            print nodeinfo, myhostname, 'just finished', \
+                    len(results), 'jobs'
 
 def runclient(masterip):
     manager = make_client_manager(masterip, PORTNUM, AUTHKEY)
@@ -79,7 +86,7 @@ def make_client_manager(ip, port, authkey):
     manager = ServerQueueManager(address=(ip, port), authkey=authkey)
     manager.connect()
 
-    print 'Client connected to %s:%s' % (ip, port)
+    print nodeinfo, 'Client connected to %s:%s' % (ip, port)
     return manager
 
 
