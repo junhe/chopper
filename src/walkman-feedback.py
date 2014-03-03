@@ -514,6 +514,7 @@ class Troops:
     def run_experiment(self):
         #for treatment in pyWorkload.exp_design.dir_distance_iter():
         for treatment in pyWorkload.exp_design.onefile_iter():
+            #pprint.pprint(treatment)
             self.run_and_get_df( treatment, savedf=True)
 
     def sampleworkload(self):

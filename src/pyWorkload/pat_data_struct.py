@@ -365,12 +365,8 @@ def file_treatment_to_df (ftreatment):
             valuestr = "".join( [ str(int(x)) for x in v ] )
         elif k in ['write_order', 'writer_cpu_map']:
             valuestr = ",".join( [str(x) for x in v] )
-        elif k in ['parent_dirid', 'fileid', 'writer_pid']:
-            valuestr = str(v)
         else:
-            print 'missed something in file_treatment_to_df()'
-            print k,v
-            exit(1)
+            valuestr = str(v).replace(' ','')
 
         d = {
                 'variable_name': k,

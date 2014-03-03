@@ -414,6 +414,9 @@ def build_conf ( treatment, confparser ):
                                    str(treatment['free_space_layout_score']))
     confparser.set('system', 'free_space_ratio',
                                    str(treatment['free_space_ratio']))
+    if treatment.has_key('makeloopdevice'):
+        confparser.set('system', 'makeloopdevice', 
+                       treatment['makeloopdevice'])
 
 
     chkseq = pat_data_struct.get_empty_ChunkSeq()
@@ -516,7 +519,6 @@ def build_file_chunkseq ( file_treatment ):
 
     #pprint.pprint(opbitmap)
     pattern_iter.assign_operations_to_chunkseq( chunkseq, opbitmap )
-    
     return chunkseq
 
 
