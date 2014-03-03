@@ -2,6 +2,8 @@ import multiprocessing
 import Queue
 import time
 from multiprocessing.managers import SyncManager
+import exp_executor
+import pprint
 
 PORTNUM=8848
 AUTHKEY='11'
@@ -45,13 +47,44 @@ def experiment_worker(treatment):
     This function simple take one job (a treatment)
     and return the result as a dict
     """
+    df = exp_executor.exp_exe.run_and_get_df( treatment, 
+                                         savedf = False )
+    print df.toStr()
+    return df
 
+def batch_worker(shared_job_q, shared_result_q):
+    """
+    This function takes a batch of jobs from 
+    the job and and work on them one by one. 
+    Then the result to shared_result_q together
+    """
+    batchsize = 2
+    while True:
+        batchjobs = []
+        
+        for i in range(batchsize):
+            # we wait for a while,
+            # if no other jobs, we do a smaller batch
+            try:
+                batchjobs.append(
+                    shared_job_q.get(block=True, timeout=10)) 
+            except:
+                break
+
+        results = []
+        for treatment in batchjobs:
+            pprint.pprint(treatment)
+            df = experiment_worker( treatment )
+            results.append( df.table )
+        
+        for result in results:
+            shared_result_q.put( result )
 
 def runclient():
     manager = make_client_manager(IP, PORTNUM, AUTHKEY)
     job_q = manager.get_job_q()
     result_q = manager.get_result_q()
-    mp_factorizer(job_q, result_q, 4)
+    batch_worker(job_q, result_q)
 
 
 def make_client_manager(ip, port, authkey):
