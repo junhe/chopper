@@ -67,12 +67,15 @@ def batch_worker(shared_job_q, shared_result_q):
             # if no other jobs, we do a smaller batch
             try:
                 batchjobs.append(
-                    shared_job_q.get(block=True, timeout=10)) 
-            except:
+                    shared_job_q.get(block=True, timeout=2)) 
+            except Queue.Empty:
                 break
 
         results = []
         for treatment in batchjobs:
+            results.append(1)
+            continue
+
             pprint.pprint(treatment)
             df = experiment_worker( treatment )
             results.append( df.table )

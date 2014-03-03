@@ -27,34 +27,43 @@ def runserver():
     shared_job_q = manager.get_job_q()
     shared_result_q = manager.get_result_q()
 
+    jobiter = pyWorkload.exp_design.onefile_iter()
+    alldispatched = False
+    jobcnt = 0
+    resultcnt = 0
+    while not (alldispatched == True and jobcnt == resultcnt):
+        qmax = 16
+        # Fill the job queue
+        qsz = shared_job_q.qsize()
+        delta = qmax - qsz
+        if delta < 8 or alldispatched:
+            delta = 0
+        # only add job when delta is large
+        for i in range(delta): 
+            try:
+                job = jobiter.next() 
+                shared_job_q.put( job )
+                jobcnt += 1
+            except StopIteration:
+                print 'alldispatched!'
+                alldispatched = True
+                break
+            print 'jobcnt',jobcnt, 'job', job
 
-    cnt = 10
-    for treatment in pyWorkload.exp_design.onefile_iter():
-        shared_job_q.put( treatment )
-        cnt -= 1
-        if cnt == 0:
-            break
-    #N =86 
-    #nums = range(N)
+        local_results = []
+        # grab to local list
+        while not shared_result_q.empty():
+            try:
+                r = shared_result_q.get(block=True, timeout=1)
+                local_results.append( r )
+                resultcnt += 1
+                print 'resultcnt', resultcnt
+            except Queue.Empty:
+                break
+        #for table in local_results:
+            #pprint.pprint( table )
+         
 
-    ## The numbers are split into chunks. Each chunk is pushed into the job
-    ## queue.
-    #chunksize = 43
-    #for i in range(0, len(nums), chunksize):
-        #shared_job_q.put(nums[i:i + chunksize])
-
-    # Wait until all results are ready in shared_result_q
-    numresults = 0
-    resultlist = []
-    while numresults < 2:
-        out = shared_result_q.get()
-        resultlist.append(out)
-        numresults += 1
-        
-    pprint.pprint( resultlist )
-
-    # Sleep a bit before shutting down the server - to give clients time to
-    # realize the job queue is empty and exit in an orderly way.
     time.sleep(2)
     manager.shutdown()
 
