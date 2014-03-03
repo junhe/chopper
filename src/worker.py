@@ -10,38 +10,6 @@ AUTHKEY='11'
 IP='127.0.0.1'
 
 
-def factorizer_worker(job_q, result_q):
-    """ A worker function to be launched in a separate process. Takes jobs from
-        job_q - each job a list of numbers to factorize. When the job is done,
-        the result (dict mapping number -> list of factors) is placed into
-        result_q. Runs until job_q is empty.
-    """
-    while True:
-        try:
-            job = job_q.get_nowait()
-            result_q.put(job)
-        except Queue.Empty:
-            return
-
-def mp_factorizer(shared_job_q, shared_result_q, nprocs):
-    """ Split the work with jobs in shared_job_q and results in
-        shared_result_q into several processes. Launch each process with
-        factorizer_worker as the worker function, and wait until all are
-        finished.
-    """
-    procs = []
-    for i in range(nprocs):
-        p = multiprocessing.Process(
-                target=factorizer_worker,
-                args=(shared_job_q, shared_result_q))
-        procs.append(p)
-        p.start()
-
-    for p in procs:
-        p.join()
-
-
-
 def experiment_worker(treatment):
     """
     This function simple take one job (a treatment)
@@ -49,7 +17,6 @@ def experiment_worker(treatment):
     """
     df = exp_executor.exp_exe.run_and_get_df( treatment, 
                                          savedf = False )
-    print df.toStr()
     return df
 
 def batch_worker(shared_job_q, shared_result_q):
@@ -58,7 +25,7 @@ def batch_worker(shared_job_q, shared_result_q):
     the job and and work on them one by one. 
     Then the result to shared_result_q together
     """
-    batchsize = 2
+    batchsize =20 
     while True:
         batchjobs = []
         
@@ -70,15 +37,21 @@ def batch_worker(shared_job_q, shared_result_q):
                     shared_job_q.get(block=True, timeout=2)) 
             except Queue.Empty:
                 break
+            except  EOFError:
+                print 'master is closed'
+                time.sleep(1)
+                break
+            except:
+                exit(0)
 
         results = []
         for treatment in batchjobs:
-            results.append(1)
-            continue
+            #results.append(1)
+            #continue
 
-            pprint.pprint(treatment)
+            #pprint.pprint(treatment)
             df = experiment_worker( treatment )
-            results.append( df.table )
+            results.append( df.toDic() )
         
         for result in results:
             shared_result_q.put( result )

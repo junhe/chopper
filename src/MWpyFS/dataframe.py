@@ -18,6 +18,16 @@ class DataFrame:
         self.header = header
         self.table = table
         self.colwidth = 15
+    def toDic(self):
+        d = {
+              'header':self.header,
+              'table': self.table 
+              }
+        return d
+
+    def fromDic(self, dic ):
+        self.header = dic['header']
+        self.table = dic['table']
 
     def toStr(self, header=True, table=True):
         ret = ""

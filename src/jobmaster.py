@@ -4,6 +4,7 @@ import time
 from multiprocessing.managers import SyncManager
 import pyWorkload
 import pprint
+import MWpyFS
 
 # This jobmaster uses workload iterator to find
 # jobs and put them to the job queue. The workers
@@ -27,6 +28,10 @@ def runserver():
     shared_job_q = manager.get_job_q()
     shared_result_q = manager.get_result_q()
 
+
+    fresult = open('aggarated_results.txt', 'w')
+    hasheader = False
+
     jobiter = pyWorkload.exp_design.onefile_iter()
     alldispatched = False
     jobcnt = 0
@@ -48,7 +53,7 @@ def runserver():
                 print 'alldispatched!'
                 alldispatched = True
                 break
-            print 'jobcnt',jobcnt, 'job', job
+            print 'jobcnt',jobcnt
 
         local_results = []
         # grab to local list
@@ -60,9 +65,13 @@ def runserver():
                 print 'resultcnt', resultcnt
             except Queue.Empty:
                 break
-        #for table in local_results:
-            #pprint.pprint( table )
-         
+        for dfdic in local_results:
+            df = MWpyFS.dataframe.DataFrame() 
+            df.fromDic(dfdic)
+            if hasheader:
+                fresult.write( df.toStr(header=True, table=True) )
+            else:
+                fresult.write( df.toStr(header=False, table=True) )
 
     time.sleep(2)
     manager.shutdown()
