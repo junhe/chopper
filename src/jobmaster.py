@@ -69,9 +69,10 @@ def runserver():
             df = MWpyFS.dataframe.DataFrame() 
             df.fromDic(dfdic)
             if hasheader:
-                fresult.write( df.toStr(header=True, table=True) )
-            else:
                 fresult.write( df.toStr(header=False, table=True) )
+            else:
+                fresult.write( df.toStr(header=True, table=True) )
+                hasheader = True
 
     time.sleep(2)
     manager.shutdown()
