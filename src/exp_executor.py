@@ -559,7 +559,7 @@ class Executor:
         This function will run the experiment for this treatment,
         and append the resulting dataframe to the result file
         """
-        df = pyWorkload.pat_data_struct.treatment_to_df(treatment)
+        df = pyWorkload.pat_data_struct.treatment_to_df_foronefile(treatment)
 
         # put response to df
         ret = self.get_response(treatment)
@@ -567,7 +567,8 @@ class Executor:
         df.addColumn(key = 'dspan', value=ret['d_span'])
         df.addColumn(key = 'treatment_id', 
                      value = datetime.datetime.now().strftime("%m-%d-%H-%M-%S.%f"))
-       
+        df.addColumn(key = 'node_id',
+                value = '.'.join(socket.gethostname().split('.')[0:2]))
         if savedf:
             if self.fileout == None:
                 self.fileout = open('result-table.txt', 'w')

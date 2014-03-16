@@ -6,6 +6,7 @@ import exp_executor
 import pprint
 import sys
 import socket
+import random
 
 PORTNUM=8848
 AUTHKEY='11'
@@ -29,7 +30,7 @@ def batch_worker(shared_job_q, shared_result_q):
     """
     myhostname = socket.gethostname().split('.')[0]
     nodeinfo = 'WORKERINFO ['+str(myhostname)+']:'
-    batchsize =4 
+    batchsize = random.randint(10,20)
     while True:
         batchjobs = []
         

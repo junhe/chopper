@@ -1,24 +1,34 @@
 import sys
 import subprocess
 
-hostsuf = 'ubt3n.plfs'
-np = 3
+#hostsuf = 'ubt8n.plfs'
+#np = 8
+jobmaster = 'h0.ubt32n.plfs'
 
 hostlist = []
+
+hostsuf = 'ubt32n.plfs'
+np = 14
 for i in range(np):
     prefix = 'h'+str(i)
     hname = '.'.join( [prefix, hostsuf] )
     hostlist.append(hname)
 
 print hostlist
-#mpirun -np 2 -H h1.ubt3n.plfs,h2.ubt3n.plfs sudo bash -c 'python worker.py h0.ubt3n.plfs 2>&1 |grep WORKERINFO'
+
 cmd = ['mpirun', 
        '-np', np,
        '-H', ','.join(hostlist),
        'sudo',
        'bash',
        '-c',
-       'python worker.py '+'h0.'+hostsuf+' 2>&1 |grep WORKERINFO']
+       'python worker.py '+jobmaster+' 2>&1 |grep WORKERINFO']
+#cmd = ['mpirun', 
+       #'-np', np,
+       #'-H', ','.join(hostlist),
+       #'sudo',
+       #'hostname']
+
 cmd = [str(x) for x in cmd]
 subprocess.call( cmd )
 

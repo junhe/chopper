@@ -32,16 +32,16 @@ def runserver():
     fresult = open('aggarated_results.txt', 'w')
     hasheader = False
 
-    jobiter = pyWorkload.exp_design.onefile_iter()
+    jobiter = pyWorkload.exp_design.onefile_iter2()
     alldispatched = False
     jobcnt = 0
     resultcnt = 0
     while not (alldispatched == True and jobcnt == resultcnt):
-        qmax = 16
+        qmax = 100 
         # Fill the job queue
         qsz = shared_job_q.qsize()
         delta = qmax - qsz
-        if delta < 8 or alldispatched:
+        if delta < 50 or alldispatched:
             delta = 0
         # only add job when delta is large
         for i in range(delta): 

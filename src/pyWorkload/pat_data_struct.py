@@ -1,4 +1,5 @@
 import pprint
+import copy
 import producer
 import sys
 import os
@@ -374,6 +375,60 @@ def file_treatment_to_df (ftreatment):
         #pprint.pprint(d)
         df.addRowByDict(d)
     df.addColumn(key='fileid', value=ftreatment['fileid'])
+    #print df.toStr()
+    return df
+
+def treatment_to_df_foronefile(treatment):
+    df = None
+    for fileid,ftreatment in enumerate(treatment['files']):
+        assert fileid == 0
+        tmpdf = file_treatment_to_df_foronefile( ftreatment )
+        if df == None:
+            df = tmpdf
+        else:
+            df.table.extend( tmpdf.table )
+    #print df.toStr()
+    
+    fset = treatment.keys()
+    fset = set(fset)
+    fset.remove('files')
+    
+    for k in fset:
+        if k in ['filechunk_order']:
+            vstr = ",".join([str(x) for x in treatment[k]])
+        else:
+            vstr = treatment[k]
+        df.addColumn(key=k, value=vstr)
+    df.colwidth = 20
+
+    #writer_cpu_map  open_bitmap     close_bitmap    writer_pid      write_order     filesize        sync_bitmap     parent_dirid    chunks          fsync_bitmap    fileid
+    tokeep = ['open_bitmap', 'close_bitmap',
+              'write_order',  'filesize',
+              'sync_bitmap',  'fsync_bitmap',
+              'nchunks',  'fileid']
+    headers = copy.deepcopy(df.header)
+    for colname in headers:
+        if not colname in tokeep:
+            df.delColumn(colname)
+    return df
+
+def file_treatment_to_df_foronefile(ftreatment):
+    df = MWpyFS.dataframe.DataFrame()
+    
+    ftreatment['nchunks'] = len(ftreatment['chunks'])
+    for k,v in ftreatment.items():
+        if k in ['chunks']:
+            valuestr = "|".join([ "("+str(c['offset'])+","+str(c['length'])+")"  for c in v ])
+        elif k.endswith('_bitmap'):
+            valuestr = "".join( [ str(int(x)) for x in v ] )
+        elif k in ['write_order', 'writer_cpu_map']:
+            valuestr = "".join( [str(x) for x in v] )
+        else:
+            valuestr = str(v).replace(' ','')
+
+        #pprint.pprint(d)
+        df.addColumn(key = k,
+                     value = valuestr)
     #print df.toStr()
     return df
 

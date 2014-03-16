@@ -82,6 +82,15 @@ class DataFrame:
             print "rowdic:", sorted(rowdic.keys())
             print "header:", sorted(self.header)
     
+    def delColumn(self, colname):
+        if not colname in self.header:
+            return False
+        pos = self.header.index(colname)
+        for row in self.table:
+            del row[pos]
+        del self.header[pos]
+        return True
+
     def addColumn(self, key, value):
         """
         value will be the same for each row
@@ -94,6 +103,8 @@ class DataFrame:
         if len(self.table) != 0:
             for row in self.table:
                 row.append(value)
+        else:
+            self.table = [[value]]
 
     def addColumns(self, keylist, valuelist):
         """
