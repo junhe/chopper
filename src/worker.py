@@ -30,10 +30,10 @@ def batch_worker(shared_job_q, shared_result_q):
     """
     myhostname = socket.gethostname().split('.')[0]
     nodeinfo = 'WORKERINFO ['+str(myhostname)+']:'
-    batchsize = random.randint(10,20)
     while True:
         batchjobs = []
         
+        batchsize = random.randint(10,20)
         for i in range(batchsize):
             # we wait for a while,
             # if no other jobs, we do a smaller batch

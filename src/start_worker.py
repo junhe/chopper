@@ -8,7 +8,7 @@ jobmaster = 'h0.ubt32n.plfs'
 hostlist = []
 
 hostsuf = 'ubt32n.plfs'
-np = 14
+np = 32
 for i in range(np):
     prefix = 'h'+str(i)
     hname = '.'.join( [prefix, hostsuf] )

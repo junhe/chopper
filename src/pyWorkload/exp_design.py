@@ -4,6 +4,7 @@ import sys
 import os
 import pprint
 import workload_builder
+import random
 #sys.path.append( os.path.abspath("..") )
 #import pyWorkload
 
@@ -197,17 +198,25 @@ def one_file_treatment2(filesize,
 def onefile_iter2():
     #nchunks_set = [1,2,3,4,5] 
     print '------------0000-------------'
-    nchunks_set = [3] 
+    nchunks_set = [3,4] 
     cnt = 0
     for nchunks in nchunks_set:
         binspace = itertools.product( [False, True], repeat=nchunks)
         binspace = [list(x) for x in binspace] 
         
         #filesize_sp = [12*1024*i for i in range(1,3)]
-        filesize_sp = range(1, 64, 1) + \
-                      range(64, 256, 8) + \
-                      range(256, 1024, 32) + \
-                      range(1024, 64*1024, 256)
+        if nchunks in [1,2,3]:
+            filesize_sp = range(1, 64, 1) + \
+                          range(64, 256, 8) + \
+                          range(256, 1024, 32) + \
+                          range(1024, 64*1024, 256)
+        else:
+            filesize_sp = range(1, 64, 1) + \
+                          range(64, 256, 16) + \
+                          range(256, 1024, 32) + \
+                          range(1024, 64*1024, 1024)
+
+        random.seed(1)
         randsamples = random.sample(xrange(64*1024), 50)
 
         for s in randsamples:
@@ -215,7 +224,6 @@ def onefile_iter2():
                 filesize_sp.append( s )
         print filesize_sp
         filesize_sp = [ x*1024 for x in filesize_sp ]
-        exit(1)
 
         close_sp = itertools.product( [False, True], repeat=nchunks-1 )
         close_sp = [ list(x)+[True] for x in close_sp ] # always close

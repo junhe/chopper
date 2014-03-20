@@ -73,6 +73,7 @@ def runserver():
             else:
                 fresult.write( df.toStr(header=True, table=True) )
                 hasheader = True
+            fresult.flush()
 
     time.sleep(2)
     manager.shutdown()
