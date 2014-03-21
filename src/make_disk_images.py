@@ -129,17 +129,24 @@ def use_one_image(fstype, disksize, used_ratio):
     fsused = get_fsusedGB(disksize, used_ratio)
     imgpath = get_image_path(fstype, disksize, used_ratio, fsused)
 
-    if not os.path.exists("/mnt/mytmpfs"):
-        print "/mnt/mytmpfs does not exist. Creating..."
-        os.mkdir("/mnt/mytmpfs")
-    MWpyFS.FormatFS.makeLoopDevice(
-            devname="/dev/loop0",
-            tmpfs_mountpoint="/mnt/mytmpfs",
-            sizeMB=disksize/(1024*1024),
-            img_file = imgpath
-            )
-    MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch')
-
+    if not os.path.exists(imgpath):
+        # image is not there, need to make one
+        # then use the one just made
+        print 'need to make a new image'
+        make_one_image(fstype, disksize, used_ratio)
+    else:
+        # there is a image, just use it
+        print 'have the image already, just use it'
+        if not os.path.exists("/mnt/mytmpfs"):
+            print "/mnt/mytmpfs does not exist. Creating..."
+            os.mkdir("/mnt/mytmpfs")
+        MWpyFS.FormatFS.makeLoopDevice(
+                devname="/dev/loop0",
+                tmpfs_mountpoint="/mnt/mytmpfs",
+                sizeMB=disksize/(1024*1024),
+                img_file = imgpath
+                )
+        MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch')
 
 def get_image_path(fstype, disksize, used_ratio, fsused):
     newimagename = ['fstype', fstype, 
@@ -191,9 +198,6 @@ def make_images():
             }
     paras = ParameterCominations(para_dict) 
     for para in paras:
-        make_one_image(fstype=para['fstype'],
-                       disksize=para['disksize'],
-                       used_ratio=para['used_ratio'])
         print 'finished one.............'
         time.sleep(2) 
         use_one_image(fstype=para['fstype'],
