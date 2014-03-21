@@ -5,9 +5,59 @@ import os
 import pprint
 import workload_builder
 import random
-#sys.path.append( os.path.abspath("..") )
+import math
+##sys.path.append( os.path.abspath("..") )
 #import pyWorkload
 
+def read_design_file(filepath):
+    """
+    should put the total number of levels along with levels
+quantative:
+    chunk.number    disk.size   FSused f.dir   file.size   sparse  w.number 
+qualitative:
+    fsync   sync    c.order
+   """
+
+
+    f = open(filepath, 'r')
+    id = 0
+    header = None
+    table = []
+    for line in f:
+        items = line.split()
+        if len(items) == 0:
+            continue
+        if id == 0:
+            header = items
+            id += 1
+            continue
+        d = {}
+        for i, name in enumerate(header):
+            d[name] = int(items[i]) #let's start from 0
+        table.append(d)
+
+    f.close()
+
+    quant_level = 4
+    nlevels = {
+            'disk.size'      : quant_level,
+            'FSused'         : quant_level,
+            'f.dir'          : quant_level,
+            'file.size'      : quant_level,
+            'sparse'         : quant_level,
+            'w.number'       : quant_level
+            }
+    for row in table:
+        nchunks = row['chunk.number']
+        nlevels['fsync'] = 2**nchunks
+        nlevels['sync']  = 2**(nchunks-1)
+        nlevels['c.order'] = math.factorial(nchunks)
+
+        for k,v in nlevels.items():
+            row[k] = str(row[k]-1)+'/'+str(nlevels[k])
+        
+    #pprint.pprint( table )
+    return table
 
 def dir_distance_iter():
     """
@@ -143,6 +193,14 @@ def onefile_iter():
 
 
 ##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
 def one_file_treatment2(filesize, 
                        close_bitmap, 
                        fsync_bitmap,
@@ -251,4 +309,142 @@ def onefile_iter2():
             cnt += 1
             yield trt
 
-onefile_iter2()
+#onefile_iter2()
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+
+def pick_by_level(levelstr, factor_range):
+    ret = factor_range[
+            eval(str(len(factor_range))+'*'+levelstr)]
+    return ret
+
+def row_to_treatment(design_row):
+    """
+    quantative:
+        chunk.number    disk.size   FSused f.dir   file.size   sparse  w.number 
+    qualitative:
+        fsync   sync    c.order
+    """
+    print 'Entering row_to_treatment...'
+    nchunks = design_row['chunk.number']
+
+    # space
+    disk_size_range = [4, 8, 16, 32]
+    FSused_range = [0, 1, 2, 3]
+    f_dir_range = range(32)
+    file_size_range = [ x*1024 for x in [48, 84, 144, 224] ]
+    sparse_range = [0.5, 1, 1.5, 2]
+    w_number_range = [1,2,3,4]
+
+    binspace = itertools.product( [False, True], repeat=nchunks)
+    binspace = [list(x) for x in binspace] 
+    close_sp = itertools.product( [False, True], repeat=nchunks-1 )
+    close_sp = [ list(x)+[True] for x in close_sp ] # always close
+    fsync_sp = binspace
+    write_order_sp = list(itertools.permutations( range(nchunks) ))
+
+    # pick one
+    f_dir = pick_by_level( design_row['f.dir'], f_dir_range )
+    disk_size = pick_by_level( design_row['disk.size'], disk_size_range )
+    FSused = pick_by_level( design_row['FSused'], FSused_range )
+    file_size = pick_by_level( design_row['file.size'], file_size_range )
+    # this is the number of VIRTUAL cores for all the chunk
+    # if there is only one vcore, then all chunks will be written by one
+    # core, like writer_cpu_map: [0,0,0,0]
+    # if there are two vcores, then they will be written by two cores,
+    # like [0,1,0,1], 
+    # if there are 3 vcores, then like [0,1,2,0,1,2]
+    # but the virtual cores will later be mapped to real cores.
+    n_virtual_cores = pick_by_level( design_row['w.number'], w_number_range )
+    writer_cpu_map = list(itertools.repeat( range(n_virtual_cores), 
+                                       1+(nchunks/n_virtual_cores) ))
+    writer_cpu_map = [ y for x in writer_cpu_map for y in x ]
+    writer_cpu_map = writer_cpu_map[0:nchunks]
+    #print writer_cpu_map
+    nrealcores = 2
+    writer_cpu_map = [ x % nrealcores for x in writer_cpu_map ]
+    #print f_dir, disk_size, FSused, file_size
+    #print writer_cpu_map
+    #return
+
+    fsync_bitmap = pick_by_level( design_row['fsync'], fsync_sp )
+    close_bitmap = pick_by_level( design_row['sync'], close_sp )
+    sync_bitmap = close_bitmap
+    write_order = pick_by_level( design_row['c.order'], write_order_sp )
+    #print fsync_bitmap
+    #print close_bitmap
+    #print sync_bitmap
+    #print write_order
+
+    file_treatment = {
+           'parent_dirid' : f_dir, 
+           'fileid'       : 0,
+           'writer_pid'   : 0,
+           'chunks'       : [],
+                          #chunk id is the index here
+           'write_order'  : write_order,
+           # The bitmaps apply to ordered chunkseq
+           'open_bitmap'  : [True]+close_bitmap[0:nchunks-1],
+           'fsync_bitmap' : fsync_bitmap,
+           'close_bitmap' : close_bitmap,
+           'sync_bitmap'  : sync_bitmap,
+           'writer_cpu_map': writer_cpu_map # set affinity to which cpu
+           }
+
+    chunksize = file_size/nchunks
+    for i in range(nchunks):
+        d = {
+             'offset': chunksize*i,
+             'length': chunksize
+            }
+        file_treatment['chunks'].append(d)
+    file_treatment['filesize'] = file_size
+
+    treatment = {
+                  'filesystem': 'ext4',
+                  'disksize'  : disk_size,
+                  'FSused'    : FSused,
+                  'dir_depth'     : 32,
+                  # file id in file_treatment is the index here
+                  'files': [file_treatment],
+                  #'files': [file_treatment],
+                  # the number of item in the following list
+                  # is the number of total chunks of all files
+                  'filechunk_order': [0]*nchunks
+                  #'filechunk_order': [0,0,0,0]
+                }
+    workload_builder.correctize_fileid(treatment)
+    #pprint.pprint( treatment )
+    return treatment
+
+def fourbyfour_iter():
+    design_table = read_design_file('../4by4design.txt')
+    for design_row in design_table:
+        pprint.pprint( row_to_treatment(design_row) )
+        exit(0)
+    
+if __name__ == '__main__':
+    #read_design_file('../4by4design.txt')
+    fourbyfour_iter()
+    exit(0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

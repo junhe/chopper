@@ -209,6 +209,6 @@ def make_images():
 def main():
     make_images()
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+    #main()
 
