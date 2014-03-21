@@ -13,7 +13,7 @@ def read_design_file(filepath):
     """
     should put the total number of levels along with levels
 quantative:
-    chunk.number    disk.size   FSused f.dir   file.size   sparse  w.number 
+    chunk.number    disk.size   disk_used f.dir   file.size   fullness  w.number 
 qualitative:
     fsync   sync    c.order
    """
@@ -41,17 +41,17 @@ qualitative:
     quant_level = 4
     nlevels = {
             'disk.size'      : quant_level,
-            'FSused'         : quant_level,
-            'f.dir'          : quant_level,
+            'disk.used'      : quant_level,
+            'dir.id'          : quant_level,
             'file.size'      : quant_level,
-            'sparse'         : quant_level,
-            'w.number'       : quant_level
+            'fullness'       : quant_level,
+            'num.cores'       : quant_level
             }
     for row in table:
-        nchunks = row['chunk.number']
+        nchunks = row['num.chunks']
         nlevels['fsync'] = 2**nchunks
         nlevels['sync']  = 2**(nchunks-1)
-        nlevels['c.order'] = math.factorial(nchunks)
+        nlevels['chunk.order'] = math.factorial(nchunks)
 
         for k,v in nlevels.items():
             row[k] = str(row[k]-1)+'/'+str(nlevels[k])
@@ -328,20 +328,20 @@ def pick_by_level(levelstr, factor_range):
 def row_to_treatment(design_row):
     """
     quantative:
-        chunk.number    disk.size   FSused f.dir   file.size   sparse  w.number 
+        chunk.number    disk.size   disk_used f.dir   file.size   fullness  w.number 
     qualitative:
         fsync   sync    c.order
     """
     print 'Entering row_to_treatment...'
-    nchunks = design_row['chunk.number']
+    nchunks = design_row['num.chunks']
 
-    # space
-    disk_size_range = [ x*(2**30) for x in [4, 8, 16, 32] ]
-    FSused_range = [0, 1, 2, 3]
-    f_dir_range = range(1,32)
-    file_size_range = [ x*1024 for x in [48, 84, 144, 224] ]
-    sparse_range = [0.25, 0.5, 0.75, 1]
-    w_number_range = [1,2,3,4]
+    # Define space
+    disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
+    disk_used_range  = [0, 1, 2, 3]
+    dir_id_range      = range(1,32)
+    file_size_range  = [ x*1024 for x in [48, 84, 144, 224] ]
+    fullness_range   = [0.25, 0.5, 0.75, 1]
+    num_vcores_range   = [1,2,3,4]
 
     binspace = itertools.product( [False, True], repeat=nchunks)
     binspace = [list(x) for x in binspace] 
@@ -351,11 +351,11 @@ def row_to_treatment(design_row):
     write_order_sp = list(itertools.permutations( range(nchunks) ))
 
     # pick one
-    f_dir = pick_by_level( design_row['f.dir'], f_dir_range )
+    dir_id    = pick_by_level( design_row['dir.id'], dir_id_range )
     disk_size = pick_by_level( design_row['disk.size'], disk_size_range )
-    FSused = pick_by_level( design_row['FSused'], FSused_range )
+    disk_used = pick_by_level( design_row['disk.used'], disk_used_range )
     file_size = pick_by_level( design_row['file.size'], file_size_range )
-    sparse = pick_by_level( design_row['sparse'], sparse_range )
+    fullness  = pick_by_level( design_row['fullness'], fullness_range )
     # this is the number of VIRTUAL cores for all the chunk
     # if there is only one vcore, then all chunks will be written by one
     # core, like writer_cpu_map: [0,0,0,0]
@@ -363,29 +363,29 @@ def row_to_treatment(design_row):
     # like [0,1,0,1], 
     # if there are 3 vcores, then like [0,1,2,0,1,2]
     # but the virtual cores will later be mapped to real cores.
-    n_virtual_cores = pick_by_level( design_row['w.number'], w_number_range )
-    writer_cpu_map = list(itertools.repeat( range(n_virtual_cores), 
+    n_virtual_cores = pick_by_level( design_row['num.cores'], num_vcores_range )
+    writer_cpu_map  = list(itertools.repeat( range(n_virtual_cores), 
                                        1+(nchunks/n_virtual_cores) ))
     writer_cpu_map = [ y for x in writer_cpu_map for y in x ]
     writer_cpu_map = writer_cpu_map[0:nchunks]
     #print writer_cpu_map
     nrealcores = 2
     writer_cpu_map = [ x % nrealcores for x in writer_cpu_map ]
-    #print f_dir, disk_size, FSused, file_size
+    #print f_dir, disk_size, disk_used, file_size
     #print writer_cpu_map
     #return
 
     fsync_bitmap = pick_by_level( design_row['fsync'], fsync_sp )
     close_bitmap = pick_by_level( design_row['sync'], close_sp )
-    sync_bitmap = close_bitmap
-    write_order = pick_by_level( design_row['c.order'], write_order_sp )
+    sync_bitmap  = close_bitmap
+    write_order  = pick_by_level( design_row['chunk.order'], write_order_sp )
     #print fsync_bitmap
     #print close_bitmap
     #print sync_bitmap
     #print write_order
 
     file_treatment = {
-           'parent_dirid' : f_dir, 
+           'parent_dirid' : dir_id, 
            'fileid'       : 0,
            'writer_pid'   : 0,
            'chunks'       : [],
@@ -398,11 +398,11 @@ def row_to_treatment(design_row):
            'sync_bitmap'  : sync_bitmap,
            'writer_cpu_map': writer_cpu_map, # set affinity to which cpu
            'n_virtual_cores': n_virtual_cores,
-           'sparse'       : sparse
+           'fullness'       : fullness
            }
 
-    chunksize = file_size/nchunks
-    solid_region = int(chunksize * sparse)
+    chunksize    = file_size/nchunks
+    solid_region = int(chunksize * fullness)
     hole = chunksize - solid_region
     for i in range(nchunks):
         d = {
@@ -415,7 +415,7 @@ def row_to_treatment(design_row):
     treatment = {
                   'filesystem': 'ext4',
                   'disksize'  : disk_size,
-                  'FSused'    : FSused,
+                  'disk_used'    : disk_used,
                   'dir_depth'     : 32,
                   # file id in file_treatment is the index here
                   'files': [file_treatment],
@@ -429,11 +429,11 @@ def row_to_treatment(design_row):
     #pprint.pprint( treatment )
     return treatment
 
-def fourbyfour_iter():
-    design_table = read_design_file('4by4design.txt')
+def fourbyfour_iter(design_path):
+    design_table = read_design_file(design_path)
     cnt = 0
     for design_row in design_table:
-        #pprint.pprint( row_to_treatment(design_row) )
+        pprint.pprint( row_to_treatment(design_row) )
         #if design_row['chunk.number'] != 4:
             #continue
         yield row_to_treatment(design_row) 
@@ -443,19 +443,6 @@ def fourbyfour_iter():
     
 if __name__ == '__main__':
     #read_design_file('../4by4design.txt')
-    fourbyfour_iter()
+    #fourbyfour_iter()
     exit(0)
-
-
-
-
-
-
-
-
-
-
-
-
-
 

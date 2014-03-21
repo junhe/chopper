@@ -168,10 +168,10 @@ class Walkman:
                                    blocksize=blocksize)
 
     def _remakeExt4(self):
-        FSused = self.confparser.getint('system', 'FSused')
+        disk_used = self.confparser.getint('system', 'disk_used')
         disksize = self.confparser.getint('system', 'disksize')
-        used_ratio=float(FSused*2**30)/disksize
-        print FSused, disksize, used_ratio
+        used_ratio=float(disk_used*2**30)/disksize
+        print disk_used, disksize, used_ratio
         #exit(0)
        
         make_disk_images.use_one_image(fstype='ext4',
@@ -492,7 +492,8 @@ class Executor:
     def run_experiment(self):
         #for treatment in pyWorkload.exp_design.dir_distance_iter():
         #for treatment in pyWorkload.exp_design.onefile_iter():
-        for treatment in pyWorkload.exp_design.fourbyfour_iter():
+        for treatment in pyWorkload.\
+               exp_design.fourbyfour_iter('./4by4design.txt'):
             pprint.pprint(treatment)
             self.run_and_get_df( treatment, savedf=True)
 

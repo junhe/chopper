@@ -3,12 +3,12 @@ import subprocess
 
 #hostsuf = 'ubt8n.plfs'
 #np = 8
-jobmaster = 'h0.ubt32n.plfs'
+#jobmaster = 'h0.ubt32n.plfs'
+jobmaster = 'h0.ubt3125.plfs'
+hostsuf = 'ubt3125.plfs'
+np = 1
 
 hostlist = []
-
-hostsuf = 'ubt32n.plfs'
-np = 32
 for i in range(np):
     prefix = 'h'+str(i)
     hname = '.'.join( [prefix, hostsuf] )
