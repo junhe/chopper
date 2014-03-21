@@ -1,4 +1,5 @@
 import subprocess
+import time
 import MWpyFS
 import os
 import sys
@@ -47,23 +48,18 @@ def produce_new_inputfile(orig_path,
             newline = line
         #print newline,
         new_f.write( newline )
+    orig_f.close()
+    new_f.close()
 
-def make_disk_image():
-    """
-    This function will first make a file system on 
-    loop device. Then, it will run Impressions on it
-    to make a image. The output of Impressions and the input
-    file will be saved along with the image. 
-
-    For each image, it has these attributes:
-    1. disk size
-    2. file system type
-    3. impression configuration
-    """
-    pass
-
-def run_impressions():
-    pass
+def run_impressions(config_dict):
+    inputpath = '/tmp/newinputfile'
+    produce_new_inputfile('./impressions-v1/inputfile.orig',
+                          inputpath,
+                          config_dict)
+    cmd = ['./impressions-v1/impressions',
+           inputpath]
+    proc = subprocess.Popen(cmd)
+    proc.wait()
 
 def make_file_system(fstype, disksize):
     """
@@ -101,31 +97,43 @@ def make_file_system(fstype, disksize):
                                      "jhe", "plfs", 
                                      nbytes=disksize)
 
+def make_one_image(fstype, disksize, used_ratio):
+    make_file_system(fstype=fstype, 
+                     disksize=disksize)
 
-#make_file_system(fstype='btrfs', disksize=256*1024*1024)
-#exit(0)
+    fsused = int((disksize/(2**30))*used_ratio)
 
+    if fsused == 0:
+        pass
+    else:
+        config_dict = {
+                        'Parent_Path:': ['/mnt/scratch/', 1],
+                        'FSused:': [ fsused, 'GB'] 
+                      }
+        pprint.pprint( config_dict )
+        run_impressions(config_dict)
+    
 
 def make_images():
     para_dict = {
             #'fstype': ['ext4', 'xfs', 'btrfs'],
             'fstype': ['ext4'],
-            'disksize': [ x*(2**20) for x in [256, 512]],
-            'used_ratio': [ x/10.0 for x in range(0,10,5) ]
+            'disksize': [ x*(2**30) for x in [8, 16]],
+            'used_ratio': [ x/10.0 for x in range(0,10,2) ]
             }
-    pprint.pprint( ParameterCominations(para_dict) )
+    paras = ParameterCominations(para_dict) 
+    for para in paras:
+        make_one_image(fstype=para['fstype'],
+                       disksize=para['disksize'],
+                       used_ratio=para['used_ratio'])
+        print 'finished one.............'
+        time.sleep(1) 
+
+
+
 
 def main():
     make_images()
-    exit()
-    config_dict = {
-                    'Parent_Path:': ['/mnt/scratch/', 1],
-                    'FSused:': [1, 'GB'] 
-                  }
-    produce_new_inputfile( './impressions-v1/inputfile.orig',
-                           './impressions-v1/newinputfile',
-                           config_dict
-                           )
 
 if __name__ == '__main__':
     main()
