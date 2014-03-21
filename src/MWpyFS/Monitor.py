@@ -598,7 +598,7 @@ class FSMonitor:
             
             ######################
             # get extents of all files
-            extlist = self.getExtentList_of_a_dir(rootdir='./')
+            extlist = self.getExtentList_of_a_dir(rootdir='./dir.1/')
             df_ext = extlist_translate_new_format(extlist)
 
             #print df_ext.toStr()

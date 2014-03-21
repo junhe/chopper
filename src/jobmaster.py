@@ -32,7 +32,8 @@ def runserver():
     fresult = open('aggarated_results.txt', 'w')
     hasheader = False
 
-    jobiter = pyWorkload.exp_design.onefile_iter2()
+    #jobiter = pyWorkload.exp_design.onefile_iter2()
+    jobiter = pyWorkload.exp_design.fourbyfour_iter()
     alldispatched = False
     jobcnt = 0
     resultcnt = 0

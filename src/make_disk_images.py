@@ -134,6 +134,7 @@ def use_one_image(fstype, disksize, used_ratio):
         # then use the one just made
         print 'need to make a new image'
         make_one_image(fstype, disksize, used_ratio)
+        MWpyFS.FormatFS.mkLoopDevOnFile('/dev/loop0', '/mnt/mytmpfs/disk.img')
     else:
         # there is a image, just use it
         print 'have the image already, just use it'
@@ -146,7 +147,7 @@ def use_one_image(fstype, disksize, used_ratio):
                 sizeMB=disksize/(1024*1024),
                 img_file = imgpath
                 )
-        MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch')
+    MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch')
 
 def get_image_path(fstype, disksize, used_ratio, fsused):
     newimagename = ['fstype', fstype, 
@@ -194,7 +195,7 @@ def make_images():
             #'fstype': ['ext4', 'xfs', 'btrfs'],
             'fstype': ['ext4'],
             'disksize': [ x*(2**30) for x in [8]],
-            'used_ratio': [ x/10.0 for x in range(2,5,2) ]
+            'used_ratio': [ x/10.0 for x in range(0,5,2) ]
             }
     paras = ParameterCominations(para_dict) 
     for para in paras:

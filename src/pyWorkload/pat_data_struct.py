@@ -433,7 +433,43 @@ def file_treatment_to_df_foronefile(ftreatment):
     return df
 
 
-
+####################################################
+####################################################
+def treatment_to_df_morefactors(treatment):
+    df = None
+    for fileid,ftreatment in enumerate(treatment['files']):
+        assert fileid == 0
+        tmpdf = file_treatment_to_df_foronefile( ftreatment )
+        if df == None:
+            df = tmpdf
+        else:
+            df.table.extend( tmpdf.table )
+    #print df.toStr()
+    
+    fset = treatment.keys()
+    fset = set(fset)
+    fset.remove('files')
+    
+    for k in fset:
+        if k in ['filechunk_order']:
+            vstr = ",".join([str(x) for x in treatment[k]])
+        else:
+            vstr = treatment[k]
+        df.addColumn(key=k, value=vstr)
+    df.colwidth = 20
+    #print ['00']*100
+    #writer_cpu_map  open_bitmap     close_bitmap    writer_pid      write_order     filesize        sync_bitmap     parent_dirid    chunks          fsync_bitmap    fileid
+    #tokeep = [
+              #'open_bitmap', 'close_bitmap',
+              #'write_order',  'filesize',
+              #'sync_bitmap',  'fsync_bitmap',
+              #'nchunks',  'fileid',
+              #]
+    #headers = copy.deepcopy(df.header)
+    #for colname in headers:
+        #if not colname in tokeep:
+            #df.delColumn(colname)
+    return df
 
 
 

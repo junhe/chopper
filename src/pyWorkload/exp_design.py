@@ -336,11 +336,11 @@ def row_to_treatment(design_row):
     nchunks = design_row['chunk.number']
 
     # space
-    disk_size_range = [4, 8, 16, 32]
+    disk_size_range = [ x*(2**30) for x in [4, 8, 16, 32] ]
     FSused_range = [0, 1, 2, 3]
-    f_dir_range = range(32)
+    f_dir_range = range(1,32)
     file_size_range = [ x*1024 for x in [48, 84, 144, 224] ]
-    sparse_range = [0.5, 1, 1.5, 2]
+    sparse_range = [0.25, 0.5, 0.75, 1]
     w_number_range = [1,2,3,4]
 
     binspace = itertools.product( [False, True], repeat=nchunks)
@@ -355,6 +355,7 @@ def row_to_treatment(design_row):
     disk_size = pick_by_level( design_row['disk.size'], disk_size_range )
     FSused = pick_by_level( design_row['FSused'], FSused_range )
     file_size = pick_by_level( design_row['file.size'], file_size_range )
+    sparse = pick_by_level( design_row['sparse'], sparse_range )
     # this is the number of VIRTUAL cores for all the chunk
     # if there is only one vcore, then all chunks will be written by one
     # core, like writer_cpu_map: [0,0,0,0]
@@ -395,14 +396,18 @@ def row_to_treatment(design_row):
            'fsync_bitmap' : fsync_bitmap,
            'close_bitmap' : close_bitmap,
            'sync_bitmap'  : sync_bitmap,
-           'writer_cpu_map': writer_cpu_map # set affinity to which cpu
+           'writer_cpu_map': writer_cpu_map, # set affinity to which cpu
+           'n_virtual_cores': n_virtual_cores,
+           'sparse'       : sparse
            }
 
     chunksize = file_size/nchunks
+    solid_region = int(chunksize * sparse)
+    hole = chunksize - solid_region
     for i in range(nchunks):
         d = {
-             'offset': chunksize*i,
-             'length': chunksize
+             'offset': chunksize*i+hole,
+             'length': solid_region 
             }
         file_treatment['chunks'].append(d)
     file_treatment['filesize'] = file_size
@@ -425,10 +430,16 @@ def row_to_treatment(design_row):
     return treatment
 
 def fourbyfour_iter():
-    design_table = read_design_file('../4by4design.txt')
+    design_table = read_design_file('4by4design.txt')
+    cnt = 0
     for design_row in design_table:
-        pprint.pprint( row_to_treatment(design_row) )
-        exit(0)
+        #pprint.pprint( row_to_treatment(design_row) )
+        #if design_row['chunk.number'] != 4:
+            #continue
+        yield row_to_treatment(design_row) 
+        cnt += 1
+        #if cnt == 4:
+            #break
     
 if __name__ == '__main__':
     #read_design_file('../4by4design.txt')

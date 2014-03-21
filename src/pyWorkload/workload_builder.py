@@ -306,7 +306,8 @@ def single_workload(filesize,
                     #write_order=[0,1,2]) )
 
 def build_dir_tree_chkeq( depth ):
-    dirpaths = build_dir_tree_path( depth )
+    #dirpaths = build_dir_tree_path( depth )
+    dirpaths = build_dir_ladder_path( depth )
     chkseq = pat_data_struct.get_empty_ChunkSeq() 
 
     for dirpath in dirpaths:
@@ -371,7 +372,33 @@ def build_dir_tree_path( depth ):
 
     return dirpaths
 
+def get_ladder_dir_path( dirid ):
+    if dirid == 0:
+        return ""
 
+    dirs = range(1, dirid+1)
+    dirs = [ 'dir.'+str(dir) for dir in dirs ]
+    ret = '/'.join(dirs)
+    return ret
+
+def build_dir_ladder_path( depth ):
+    """
+    depth:
+    0:
+    /
+    1:
+    /dir.1/
+    2:
+    /dir.1/dir.2/
+    """
+    dirpaths = []
+    for dirid in range(1, depth):
+        print 'dirid', dirid
+        path = get_ladder_dir_path(dirid)
+        print path
+        dirpaths.append( path )
+
+    return dirpaths
 
 def build_conf ( treatment, confparser ):
     """
@@ -403,6 +430,8 @@ def build_conf ( treatment, confparser ):
                   
 
     """
+    #pprint.pprint( treatment )
+    
     if not confparser.has_section('system'):
         confparser.add_section('system')
     if not confparser.has_section('workload'):
@@ -410,20 +439,16 @@ def build_conf ( treatment, confparser ):
 
     confparser.set('system', 'filesystem', treatment['filesystem'])
     confparser.set('system', 'disksize'  , str(treatment['disksize']))
-    confparser.set('system', 'free_space_layout_score', 
-                                   str(treatment['free_space_layout_score']))
-    confparser.set('system', 'free_space_ratio',
-                                   str(treatment['free_space_ratio']))
-    if treatment.has_key('makeloopdevice'):
-        confparser.set('system', 'makeloopdevice', 
-                       treatment['makeloopdevice'])
-
+    confparser.set('system', 'FSused',
+                                   str(treatment['FSused']))
+    confparser.set('system', 'makeloopdevice', 'yes')
 
     chkseq = pat_data_struct.get_empty_ChunkSeq()
 
     # creat directory tree
     dirs_chkseq = build_dir_tree_chkeq( treatment['dir_depth'] )
     chkseq['seq'].extend( dirs_chkseq['seq'] )
+    #pprint.pprint(chkseq)
    
     # Get chunkseq for each file
     nfiles = len( treatment['files'] )
@@ -439,7 +464,6 @@ def build_conf ( treatment, confparser ):
         chkseq['seq'].append( 
                 files_chkseq_list[curfile]['seq'][ ckpos[curfile] ])
         ckpos[curfile] += 1
-    #pprint.pprint( chkseq )
     
     confparser.set('workload', 'files_chkseq', str(chkseq))
         
@@ -484,7 +508,7 @@ def build_file_chunkseq ( file_treatment ):
         cbox['chunk']['fileid'] = file_treatment['fileid']
         cbox['chunk']['parent_dirid'] = file_treatment['parent_dirid']
         cbox['chunk']['filepath'] = os.path.join(
-                get_dir_path(file_treatment['parent_dirid']),
+                get_ladder_dir_path(file_treatment['parent_dirid']),
                 str( file_treatment['fileid'] ) + ".file" )
         cbox['chunk']['writer_pid'] = file_treatment['writer_pid']
         chunkseq['seq'].append( cbox )
