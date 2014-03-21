@@ -97,10 +97,42 @@ def make_file_system(fstype, disksize):
                                      "jhe", "plfs", 
                                      nbytes=disksize)
 
+#def copy_image(tofile):
+    #subprocess.call(['cp', 
+
+#MWpyFS.FormatFS.mkLoopDevOnFile('/dev/loop0', '/mnt/mytmpfs/disk.img')
+#MWpyFS.FormatFS.mountExt4('/dev/loop0', '/mnt/scratch')
+#print 'finished'
+#exit(0)
+
+def release_image():
+    # umount the FS mounted on loop dev
+    devname = '/dev/loop0'
+    if MWpyFS.FormatFS.isMounted(devname):
+        if MWpyFS.FormatFS.umountFS(devname) != 0:
+            print "unable to umount", devname
+            exit(1)
+        else:
+            print devname, 'umounted'
+    else:
+        print devname, "is not mounted"
+
+    # delete the loop device
+    if MWpyFS.FormatFS.isLoopDevUsed(devname):
+        if MWpyFS.FormatFS.delLoopDev(devname) != 0:
+            print "Failed to delete loop device"
+            exit(1)
+    else:
+        print devname, "is not in use"
+
+
 def make_one_image(fstype, disksize, used_ratio):
+    # make a brand new loop device, starting from 
+    # making a tmpfs
     make_file_system(fstype=fstype, 
                      disksize=disksize)
 
+    # use impressions to fill the file system
     fsused = int((disksize/(2**30))*used_ratio)
 
     if fsused == 0:
@@ -112,14 +144,25 @@ def make_one_image(fstype, disksize, used_ratio):
                       }
         pprint.pprint( config_dict )
         run_impressions(config_dict)
-    
+
+    # copy and save the image file
+    release_image()
+    newimagename = ['fstype', fstype, 
+                    'disksize', disksize, 
+                    'fsused', fsused, 'img'] 
+    newimagename = [ str(x) for x in newimagename ]
+    newimagename = '.'.join( newimagename )
+    cmd = ['cp', '/mnt/mytmpfs/disk.img', 
+                  '/proj/plfs/data/jhe/syaas-disk-images/'+newimagename] 
+    print cmd
+    subprocess.call(cmd)
 
 def make_images():
     para_dict = {
             #'fstype': ['ext4', 'xfs', 'btrfs'],
             'fstype': ['ext4'],
-            'disksize': [ x*(2**30) for x in [8, 16]],
-            'used_ratio': [ x/10.0 for x in range(0,10,2) ]
+            'disksize': [ x*(2**30) for x in [8]],
+            'used_ratio': [ x/10.0 for x in range(0,5,2) ]
             }
     paras = ParameterCominations(para_dict) 
     for para in paras:
@@ -128,9 +171,6 @@ def make_images():
                        used_ratio=para['used_ratio'])
         print 'finished one.............'
         time.sleep(1) 
-
-
-
 
 def main():
     make_images()
