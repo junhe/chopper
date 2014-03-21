@@ -88,7 +88,7 @@ def isLoopDevUsed(path):
     else:
         return False
 
-def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
+def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB, img_file=None):
     "size is in MB. The tmpfs for this device might be bigger than sizeMB"
     if not devname.startswith('/dev/loop'):
         print 'you are requesting to create loop device on a non-loop device path'
@@ -128,7 +128,12 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB):
 
     mountTmpfs(tmpfs_mountpoint, int(sizeMB*1024*1024*1.1))
     imgpath = os.path.join(tmpfs_mountpoint, "disk.img")
-    mkImageFile(imgpath, sizeMB)
+    if img_file == None:
+        mkImageFile(imgpath, sizeMB)
+    else:
+        cmd = ['cp', img_file, imgpath]
+        subprocess.call(cmd)
+
     mkLoopDevOnFile(devname, imgpath) 
 
 def makeXFS(devname, blocksize=4096):

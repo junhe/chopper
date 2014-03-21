@@ -125,6 +125,36 @@ def release_image():
     else:
         print devname, "is not in use"
 
+def use_one_image(fstype, disksize, used_ratio):
+    fsused = get_fsusedGB(disksize, used_ratio)
+    imgpath = get_image_path(fstype, disksize, used_ratio, fsused)
+
+    if not os.path.exists("/mnt/mytmpfs"):
+        print "/mnt/mytmpfs does not exist. Creating..."
+        os.mkdir("/mnt/mytmpfs")
+    MWpyFS.FormatFS.makeLoopDevice(
+            devname="/dev/loop0",
+            tmpfs_mountpoint="/mnt/mytmpfs",
+            sizeMB=disksize/(1024*1024),
+            img_file = imgpath
+            )
+    MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch')
+
+
+def get_image_path(fstype, disksize, used_ratio, fsused):
+    newimagename = ['fstype', fstype, 
+                    'disksize', disksize, 
+                    'used_ratio', used_ratio,
+                    'fsusedGB', fsused, 'img'] 
+    newimagename = [ str(x) for x in newimagename ]
+    newimagename = '.'.join( newimagename )
+    #'/proj/plfs/data/jhe/syaas-disk-images/'+newimagename] 
+    dir = '/mnt/scratch-sda4/'
+    return dir + newimagename
+
+def get_fsusedGB(disksize, used_ratio):
+    fsused = int((disksize/(2**30))*used_ratio)
+    return fsused
 
 def make_one_image(fstype, disksize, used_ratio):
     # make a brand new loop device, starting from 
@@ -133,7 +163,7 @@ def make_one_image(fstype, disksize, used_ratio):
                      disksize=disksize)
 
     # use impressions to fill the file system
-    fsused = int((disksize/(2**30))*used_ratio)
+    fsused = get_fsusedGB(disksize, used_ratio)
 
     if fsused == 0:
         pass
@@ -147,13 +177,8 @@ def make_one_image(fstype, disksize, used_ratio):
 
     # copy and save the image file
     release_image()
-    newimagename = ['fstype', fstype, 
-                    'disksize', disksize, 
-                    'fsused', fsused, 'img'] 
-    newimagename = [ str(x) for x in newimagename ]
-    newimagename = '.'.join( newimagename )
-    cmd = ['cp', '/mnt/mytmpfs/disk.img', 
-                  '/proj/plfs/data/jhe/syaas-disk-images/'+newimagename] 
+    newimagepath = get_image_path(fstype, disksize, used_ratio, fsused)
+    cmd = ['cp', '/mnt/mytmpfs/disk.img', newimagepath]
     print cmd
     subprocess.call(cmd)
 
@@ -162,7 +187,7 @@ def make_images():
             #'fstype': ['ext4', 'xfs', 'btrfs'],
             'fstype': ['ext4'],
             'disksize': [ x*(2**30) for x in [8]],
-            'used_ratio': [ x/10.0 for x in range(0,5,2) ]
+            'used_ratio': [ x/10.0 for x in range(2,5,2) ]
             }
     paras = ParameterCominations(para_dict) 
     for para in paras:
@@ -170,7 +195,12 @@ def make_images():
                        disksize=para['disksize'],
                        used_ratio=para['used_ratio'])
         print 'finished one.............'
-        time.sleep(1) 
+        time.sleep(2) 
+        use_one_image(fstype=para['fstype'],
+                       disksize=para['disksize'],
+                       used_ratio=para['used_ratio'])
+        time.sleep(2) 
+        exit(0)
 
 def main():
     make_images()
