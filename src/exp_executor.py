@@ -126,15 +126,13 @@ class Walkman:
             self._remakeBtrfs()
 
     def _remakeBtrfs(self):
-        blockscount = self.confparser.getint('system', 'blockscount')
-        blocksize = self.confparser.getint('system', 'blocksize')
+        disksize = self.confparser.getint('system', 'disksize')
             
-        loodevsizeBytes = blockscount*blocksize
         if self.confparser.get('system', 'makeloopdevice') == 'yes':
             MWpyFS.FormatFS.makeLoopDevice(
                     devname=self.confparser.get('system', 'partition'),
                     tmpfs_mountpoint=self.confparser.get('system', 'tmpfs_mountpoint'),
-                    sizeMB=loodevsizeBytes/(1024*1024))
+                    sizeMB=disksize/(1024*1024))
 
         if not os.path.exists(self.confparser.get('system','mountpoint')):
             os.makedirs(self.confparser.get('system','mountpoint'))
@@ -143,10 +141,9 @@ class Walkman:
                                    mountpoint   =self.confparser.get('system','mountpoint'),
                                    username     =self.confparser.get('system','username'),
                                    groupname    =self.confparser.get('system','groupname'),
-                                   nbytes       =loodevsizeBytes)
+                                   nbytes       =disksize)
 
     def _remakeXFS(self):
-
         blockscount = self.confparser.getint('system', 'blockscount')
         blocksize = self.confparser.getint('system', 'blocksize')
             
@@ -394,7 +391,8 @@ class Executor:
         #for treatment in pyWorkload.exp_design.dir_distance_iter():
         #for treatment in pyWorkload.exp_design.onefile_iter():
         for treatment in pyWorkload.\
-               exp_design.fourbyfour_iter('./4by4design.txt'):
+               exp_design.fourbyfour_iter('./design_blhd-4by4.txt'):
+               #exp_design.fourbyfour_iter('./4by4design.txt'):
             pprint.pprint(treatment)
             self.run_and_get_df( treatment, savedf=True)
 
@@ -455,6 +453,50 @@ class Executor:
                      value = datetime.datetime.now().strftime("%m-%d-%H-%M-%S.%f"))
         df.addColumn(key = 'node_id',
                 value = '.'.join(socket.gethostname().split('.')[0:2]))
+
+        ##############################3
+        # do some clean up
+        # writer_cpu_map       fullness             
+        # open_bitmap          close_bitmap         
+        # nchunks              writer_pid           
+        # n_virtual_cores      write_order          
+        # filesize             sync_bitmap          
+        # parent_dirid         chunks               
+        # fileid               fsync_bitmap         
+        # filechunk_order      disksize            
+        # dir_depth            filesystem           
+        # disk_used            dspan               
+        # treatment_id         node_id
+        tokeep = [
+                  'write_order',  'filesize',
+                  'sync_bitmap',  'fsync_bitmap',
+                  'nchunks',
+                  'n_virtual_cores', 'parent_dirid',
+                  'disksize', 'disk_used',
+                  'dspan', 'fullness'
+                  ]
+        headers = copy.deepcopy(df.header)
+        for colname in headers:
+            if not colname in tokeep:
+                df.delColumn(colname)
+        # keep only one row
+        del df.table[1:]
+
+        translate_dic = {
+                'write_order':'chunk.order',
+                'filesize':'file.size',
+                'sync_bitmap':'sync',
+                'fsync_bitmap':'fsync',
+                'nchunks':'num.chunks',
+                'n_virtual_cores':'num.cores', 
+                'parent_dirid':'dir.id',
+                'disksize':'disk.size',
+                'disk_used':'disk.used'
+              }
+        for i,k in enumerate(df.header):
+            if translate_dic.has_key(k):
+                df.header[i] = translate_dic[k]
+
         if savedf:
             if self.fileout == None:
                 self.fileout = open('result-table.txt', 'w')

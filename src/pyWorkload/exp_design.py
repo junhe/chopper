@@ -59,6 +59,39 @@ qualitative:
     #pprint.pprint( table )
     return table
 
+def read_design_file_blhd(filepath):
+    f = open(filepath, 'r')
+    id = 0
+    header = None
+    table = []
+    for line in f:
+        items = line.split()
+        if len(items) == 0:
+            continue
+        if id == 0:
+            header = items
+            id += 1
+            continue
+        d = {}
+        for i, name in enumerate(header):
+            d[name] = items[i] #let's start from 0
+        table.append(d)
+    f.close()
+
+    nlevels = {}
+    for row in table:
+        row['num.chunks'] = int(row['num.chunks'])
+        nchunks = row['num.chunks']
+        nlevels['fsync'] = 2**nchunks
+        nlevels['sync']  = 2**(nchunks-1)
+        nlevels['chunk.order'] = math.factorial(nchunks)
+
+        for k,v in nlevels.items():
+            row[k] = str(int(row[k])-1)+'/'+str(nlevels[k])
+
+    #pprint.pprint( table )
+    return table
+
 def dir_distance_iter():
     """
     Each yield is a treatment
@@ -321,8 +354,8 @@ def onefile_iter2():
 ##########################################################
 
 def pick_by_level(levelstr, factor_range):
-    ret = factor_range[
-            eval(str(len(factor_range))+'*'+levelstr)]
+    i = int(eval(str(len(factor_range)-1)+'*'+levelstr))
+    ret = factor_range[i]
     return ret
 
 def row_to_treatment(design_row):
@@ -332,15 +365,31 @@ def row_to_treatment(design_row):
     qualitative:
         fsync   sync    c.order
     """
-    print 'Entering row_to_treatment...'
+    #print 'Entering row_to_treatment...'
+    #print design_row
     nchunks = design_row['num.chunks']
 
     # Define space
+    #disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
+    #disk_used_range  = range(3) 
+    #dir_id_range      = range(0,32)
+    #file_size_range  = [ x*1024 for x in [48, 84, 144, 224] ]
+    #fullness_range   = [1.5, 2, 3, 4]
+    #num_vcores_range   = [1,2,3,4]
+
+    #binspace = itertools.product( [False, True], repeat=nchunks)
+    #binspace = [list(x) for x in binspace] 
+    #close_sp = itertools.product( [False, True], repeat=nchunks-1 )
+    #close_sp = [ list(x)+[True] for x in close_sp ] # always close
+    #fsync_sp = binspace
+    #write_order_sp = list(itertools.permutations( range(nchunks) ))
+
+    # Define space
     disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
-    disk_used_range  = [0, 0, 0, 0]
-    dir_id_range      = [0]*32 #range(0,32)
-    file_size_range  = [ x*1024 for x in [48, 84, 144, 224] ]
-    fullness_range   = [1.5, 2, 3, 4]
+    disk_used_range  = range(3) 
+    dir_id_range      = range(0,32)
+    file_size_range  = [ x*1024 for x in range(12, 180, 1) ]
+    fullness_range   = [x/10.0 for x in range(1, 30)]
     num_vcores_range   = [1,2,3,4]
 
     binspace = itertools.product( [False, True], repeat=nchunks)
@@ -349,6 +398,7 @@ def row_to_treatment(design_row):
     close_sp = [ list(x)+[True] for x in close_sp ] # always close
     fsync_sp = binspace
     write_order_sp = list(itertools.permutations( range(nchunks) ))
+
 
     # pick one
     dir_id    = pick_by_level( design_row['dir.id'], dir_id_range )
@@ -435,7 +485,7 @@ def row_to_treatment(design_row):
         filechunk_order += [i] * len(filetreat['chunks'])
 
     treatment = {
-                  'filesystem': 'ext4',
+                  'filesystem': 'xfs',
                   'disksize'  : disk_size,
                   'disk_used'    : disk_used,
                   'dir_depth'     : 32,
@@ -454,7 +504,8 @@ def row_to_treatment(design_row):
     return treatment
 
 def fourbyfour_iter(design_path):
-    design_table = read_design_file(design_path)
+    #design_table = read_design_file(design_path)
+    design_table = read_design_file_blhd(design_path)
     cnt = 0
     for design_row in design_table:
         #pprint.pprint( row_to_treatment(design_row) )
@@ -463,12 +514,12 @@ def fourbyfour_iter(design_path):
             #continue
         yield row_to_treatment(design_row) 
         cnt += 1
-        break
+        #break
         #if cnt == 4:
             #break
     
 if __name__ == '__main__':
-    #read_design_file('../4by4design.txt')
-    fourbyfour_iter('../4by4design.txt')
+    #read_design_file_blhd('../design_blhd-4by4.txt')
+    fourbyfour_iter('../design_blhd-4by4.txt')
     exit(0)
 
