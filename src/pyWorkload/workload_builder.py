@@ -453,14 +453,15 @@ def build_conf ( treatment, confparser ):
     # Get chunkseq for each file
     nfiles = len( treatment['files'] )
     files_chkseq_list = []
-    for fileid, file_treatment in enumerate(treatment['files']):
-        #file_treatment['fileid'] = fileid
+    for file_treatment in treatment['files']:
         files_chkseq_list.append( 
                     build_file_chunkseq( file_treatment ) )
 
     # mix the chunks of all files
     ckpos = [0] * nfiles
     for curfile in treatment['filechunk_order']:
+        # curfile is not file id.
+        # it is the position in files_chkseq_list
         chkseq['seq'].append( 
                 files_chkseq_list[curfile]['seq'][ ckpos[curfile] ])
         ckpos[curfile] += 1

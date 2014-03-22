@@ -362,105 +362,6 @@ class Walkman:
         proc.wait()
         return proc.returncode
 
-    def _play_single_file_traverse(self):
-        chunks = self.confparser.get(self.confparser.get('workload','name'),
-                                        'chunks')
-        chunks = literal_eval(chunks)
-        wrappers = self.confparser.get(self.confparser.get('workload','name'),
-                                        'wrappers')
-        wrappers = literal_eval(wrappers)
-
-        pyWorkload.pattern_iter.GenWorkloadFromChunks(
-                chunks, wrappers,
-                rootdir  = self.confparser.get('system', 'mountpoint'),
-                tofile   = self.confparser.get('system', 'workloadbufpath'))
-
-        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
-                self.confparser.get('workload','np'), 
-                self.confparser.get('system','playerpath'), 
-                self.confparser.get('system','workloadbufpath')]
-        cmd = [str(x) for x in cmd]
-
-        proc = subprocess.Popen(cmd) 
-        proc.wait()
-        return proc.returncode
-
-    def _play_fb_workload(self):
-        wpd = {
-                'segment_size': 100,
-                'write_size'  : 50,
-                'file_size'   : 200,
-                #'direction'   : 'INCREASE'
-                'direction'   : 'DECREASE'
-              }
-        pyWorkload.producer.GenFBWorkload(
-                                  write_pattern_dic= wpd,
-                                  writes_per_flush = 2,
-                                  rootdir          = self.confparser.get('system', 'mountpoint'),
-                                  tofile           = self.confparser.get('system','workloadbufpath'))
-
-        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
-                self.confparser.get('workload','np'), 
-                self.confparser.get('system','playerpath'), 
-                self.confparser.get('system','workloadbufpath')]
-        cmd = [str(x) for x in cmd]
-
-        proc = subprocess.Popen(cmd) 
-        proc.wait()
-        return proc.returncode
-
-    def _play_ibench(self, year, season):
-        ret = pyWorkload.tools.run_ibench(1, 
-                                    "{year}.{season}".format(year=year, season=season), 
-                                    self.confparser.get("system", "mountpoint"))
-        return ret
-
-    def _play_test(self, ext4debug=False):
-        """
-        Generate the workload based on the config file, and then
-        play it by our external player
-        """
-        wl_producer = pyWorkload.producer.Producer()
-
-        wl_producer.produce(
-            np              = self.confparser.getint('workload', 'np'),
-            startOff        = self.confparser.getint('workload', 'startOff'),
-            nwrites_per_file= self.confparser.getint('workload', 'nwrites_per_file'),
-            nfile_per_dir   = self.confparser.getint('workload', 'nfile_per_dir'),
-            ndir_per_pid    = self.confparser.getint('workload', 'ndir_per_pid'),
-            wsize           = self.confparser.getint('workload', 'wsize'),
-            wstride         = self.confparser.getint('workload', 'wstride'),
-            rootdir         = os.path.join(self.confparser.get('system','mountpoint')),
-            tofile          = self.confparser.get('system','workloadbufpath'),
-            fsync_per_write = self.confparser.getint('workload', 'fsync_per_write'),
-            fsync_before_close
-                            = self.confparser.getint('workload', 'fsync_before_close')
-            )
-
-        cmd = [self.confparser.get('system','mpirunpath'), "-np", 
-                self.confparser.get('workload','np'), 
-                self.confparser.get('system','playerpath'), 
-                self.confparser.get('system','workloadbufpath')]
-        cmd = [str(x) for x in cmd]
-
-        # turn on ext4 debug if necessary
-        if self.confparser.get('system', 'filesystem') == 'ext4' \
-           and ext4debug == True:
-            MWpyFS.FormatFS.enable_ext4_mballoc_debug(True)
-            MWpyFS.FormatFS.send_dmesg("Turned on mballoc debug. MARKER_MBALLOC_ON")
-
-        proc = subprocess.Popen(cmd) 
-        proc.wait()
-
-        # turn on ext4 debug if necessary
-        if self.confparser.get('system', 'filesystem') == 'ext4'  \
-            and ext4debug == True:
-            MWpyFS.FormatFS.enable_ext4_mballoc_debug(True)
-            MWpyFS.FormatFS.send_dmesg("Turned off mballoc debug. MARKER_MBALLOC_OFF")
-
-        return proc.returncode
-
-
 class Executor:
     def __init__(self, confparser):
         self.confparser = confparser 
@@ -545,7 +446,6 @@ class Executor:
         """
         #df = pyWorkload.pat_data_struct.treatment_to_df_foronefile(treatment)
         df = pyWorkload.pat_data_struct.treatment_to_df_morefactors(treatment)
-        print df.toStr()
 
         # put response to df
         ret = self.get_response(treatment)
@@ -562,8 +462,6 @@ class Executor:
             else:
                 self.fileout.write(df.toStr(header=False, table=True)) 
         return df
-
-
 
 walkmanlog = open('/tmp/walkman.log', 'a')
     

@@ -437,8 +437,7 @@ def file_treatment_to_df_foronefile(ftreatment):
 ####################################################
 def treatment_to_df_morefactors(treatment):
     df = None
-    for fileid,ftreatment in enumerate(treatment['files']):
-        assert fileid == 0
+    for ftreatment in treatment['files']:
         tmpdf = file_treatment_to_df_foronefile( ftreatment )
         if df == None:
             df = tmpdf

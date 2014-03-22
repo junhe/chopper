@@ -337,10 +337,10 @@ def row_to_treatment(design_row):
 
     # Define space
     disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
-    disk_used_range  = [0, 1, 2, 3]
+    disk_used_range  = [0, 0, 0, 0]
     dir_id_range      = range(1,32)
     file_size_range  = [ x*1024 for x in [48, 84, 144, 224] ]
-    fullness_range   = [0.25, 0.5, 0.75, 1]
+    fullness_range   = [1.5, 2, 3, 4]
     num_vcores_range   = [1,2,3,4]
 
     binspace = itertools.product( [False, True], repeat=nchunks)
@@ -384,6 +384,9 @@ def row_to_treatment(design_row):
     #print sync_bitmap
     #print write_order
 
+    ###############################################
+    ###############################################
+    ###############################################
     file_treatment = {
            'parent_dirid' : dir_id, 
            'fileid'       : 0,
@@ -398,19 +401,38 @@ def row_to_treatment(design_row):
            'sync_bitmap'  : sync_bitmap,
            'writer_cpu_map': writer_cpu_map, # set affinity to which cpu
            'n_virtual_cores': n_virtual_cores,
-           'fullness'       : fullness
+           'fullness'       : fullness,
+           'filesize'       : file_size
            }
 
-    chunksize    = file_size/nchunks
-    solid_region = int(chunksize * fullness)
-    hole = chunksize - solid_region
-    for i in range(nchunks):
-        d = {
-             'offset': chunksize*i+hole,
-             'length': solid_region 
-            }
-        file_treatment['chunks'].append(d)
-    file_treatment['filesize'] = file_size
+    chunksize = file_size/nchunks
+
+    filetreatment_list = []
+    fullnessLeft = fullness
+    #fullnessLeft = 2.5
+    while fullnessLeft > 0:
+        if fullnessLeft > 1:
+            curfullness = 1
+            fullnessLeft -= 1
+        else:
+            curfullness = fullnessLeft
+            fullnessLeft = 0
+
+        solid_region = int(chunksize * curfullness)
+        hole = chunksize - solid_region
+        file_treatment['chunks'] = []
+        for i in range(nchunks):
+            d = {
+                 'offset': chunksize*i+hole,
+                 'length': solid_region 
+                }
+            file_treatment['chunks'].append(d)
+        filetreatment_list.append( 
+                       copy.deepcopy(file_treatment) )
+    
+    filechunk_order = []
+    for i,filetreat in enumerate(filetreatment_list):
+        filechunk_order += [i] * len(filetreat['chunks'])
 
     treatment = {
                   'filesystem': 'ext4',
@@ -418,14 +440,16 @@ def row_to_treatment(design_row):
                   'disk_used'    : disk_used,
                   'dir_depth'     : 32,
                   # file id in file_treatment is the index here
-                  'files': [file_treatment],
+                  'files': filetreatment_list,
                   #'files': [file_treatment],
                   # the number of item in the following list
                   # is the number of total chunks of all files
-                  'filechunk_order': [0]*nchunks
+                  'filechunk_order': filechunk_order
                   #'filechunk_order': [0,0,0,0]
                 }
-    workload_builder.correctize_fileid(treatment)
+    # shold not correct now, because I will write the 
+    # same file many times
+    #workload_builder.correctize_fileid(treatment)
     #pprint.pprint( treatment )
     return treatment
 
@@ -433,16 +457,18 @@ def fourbyfour_iter(design_path):
     design_table = read_design_file(design_path)
     cnt = 0
     for design_row in design_table:
-        pprint.pprint( row_to_treatment(design_row) )
+        #pprint.pprint( row_to_treatment(design_row) )
+        #row_to_treatment(design_row) 
         #if design_row['chunk.number'] != 4:
             #continue
         yield row_to_treatment(design_row) 
         cnt += 1
+        #break
         #if cnt == 4:
             #break
     
 if __name__ == '__main__':
     #read_design_file('../4by4design.txt')
-    #fourbyfour_iter()
+    fourbyfour_iter('../4by4design.txt')
     exit(0)
 
