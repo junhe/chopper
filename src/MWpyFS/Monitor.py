@@ -469,12 +469,13 @@ class FSMonitor:
 
         return mydict
 
-    def getAllInodePaths(self, rootdir="."):
+    def getAllInodePaths(self, target="."):
         "it returns paths of all files and diretories"
         rootpath = os.path.join(self.mountpoint)
         paths = []
         with cd(rootpath):
-            cmd = ['find', rootdir]
+            cmd = ['find', target]
+            print cmd
             proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
             for line in proc.stdout:
@@ -483,11 +484,11 @@ class FSMonitor:
             
         return paths
 
-    def getExtentList_of_a_dir(self, rootdir="."):
+    def getExtentList_of_a_dir(self, target="."):
         if self.filesystem != 'ext4':
             return 
 
-        files = self.getAllInodePaths(rootdir)
+        files = self.getAllInodePaths(target)
         #print files
         #exit(1)
         df = dataframe.DataFrame()
@@ -598,7 +599,10 @@ class FSMonitor:
             
             ######################
             # get extents of all files
-            extlist = self.getExtentList_of_a_dir(rootdir='./dir.1/')
+            extlist0 = self.getExtentList_of_a_dir(target="0.file")
+            extlist = self.getExtentList_of_a_dir(target='./dir.1/')
+            extlist.table.extend( extlist0.table )
+            
             df_ext = extlist_translate_new_format(extlist)
 
             #print df_ext.toStr()

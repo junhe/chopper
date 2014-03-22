@@ -338,7 +338,7 @@ def row_to_treatment(design_row):
     # Define space
     disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
     disk_used_range  = [0, 0, 0, 0]
-    dir_id_range      = range(1,32)
+    dir_id_range      = [0]*32 #range(0,32)
     file_size_range  = [ x*1024 for x in [48, 84, 144, 224] ]
     fullness_range   = [1.5, 2, 3, 4]
     num_vcores_range   = [1,2,3,4]
@@ -463,7 +463,7 @@ def fourbyfour_iter(design_path):
             #continue
         yield row_to_treatment(design_row) 
         cnt += 1
-        #break
+        break
         #if cnt == 4:
             #break
     
