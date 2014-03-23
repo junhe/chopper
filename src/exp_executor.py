@@ -118,6 +118,18 @@ class Walkman:
 
     def _remake_fs(self):
         fs = self.confparser.get('system', 'filesystem')
+
+        disk_used = self.confparser.getint('system', 'disk_used')
+        disksize = self.confparser.getint('system', 'disksize')
+        used_ratio=float(disk_used*2**30)/disksize
+        print disk_used, disksize, used_ratio
+       
+        make_disk_images.use_one_image(fstype=fs,
+                                       disksize=disksize,
+                               used_ratio=used_ratio)
+
+        return
+
         if fs == 'ext4':
             self._remakeExt4()
         elif fs == 'xfs':

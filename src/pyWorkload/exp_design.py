@@ -354,7 +354,11 @@ def onefile_iter2():
 ##########################################################
 
 def pick_by_level(levelstr, factor_range):
-    i = int(eval(str(len(factor_range)-1)+'*'+levelstr))
+    count = len(factor_range)
+    assert count > 0
+    i = int(eval(str(count)+'*'+levelstr))
+    if i == count:
+        i -= 1
     ret = factor_range[i]
     return ret
 
@@ -385,11 +389,25 @@ def row_to_treatment(design_row):
     #write_order_sp = list(itertools.permutations( range(nchunks) ))
 
     # Define space
-    disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
-    disk_used_range  = range(3) 
+    #disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
+    #disk_used_range  = range(3) 
+    #dir_id_range      = range(0,32)
+    #file_size_range  = [ x*1024 for x in range(12, 180, 1) ]
+    #fullness_range   = [x/10.0 for x in range(1, 30)]
+    #num_vcores_range   = [1,2,3,4]
+
+    #binspace = itertools.product( [False, True], repeat=nchunks)
+    #binspace = [list(x) for x in binspace] 
+    #close_sp = itertools.product( [False, True], repeat=nchunks-1 )
+    #close_sp = [ list(x)+[True] for x in close_sp ] # always close
+    #fsync_sp = binspace
+    #write_order_sp = list(itertools.permutations( range(nchunks) ))
+
+    disk_size_range  = [x*(2**30) for x in range(4, 20) ]
+    disk_used_range  = [0,1,2,3] 
     dir_id_range      = range(0,32)
-    file_size_range  = [ x*1024 for x in range(12, 180, 1) ]
-    fullness_range   = [x/10.0 for x in range(1, 30)]
+    file_size_range  = [ x*1024 for x in range(12, 1024, 1) ]
+    fullness_range   = [x/10.0 for x in range(1, 40)]
     num_vcores_range   = [1,2,3,4]
 
     binspace = itertools.product( [False, True], repeat=nchunks)
@@ -485,7 +503,7 @@ def row_to_treatment(design_row):
         filechunk_order += [i] * len(filetreat['chunks'])
 
     treatment = {
-                  'filesystem': 'xfs',
+                  'filesystem': 'ext4',
                   'disksize'  : disk_size,
                   'disk_used'    : disk_used,
                   'dir_depth'     : 32,
@@ -514,7 +532,6 @@ def fourbyfour_iter(design_path):
             #continue
         yield row_to_treatment(design_row) 
         cnt += 1
-        #break
         #if cnt == 4:
             #break
     

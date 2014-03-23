@@ -132,6 +132,7 @@ def makeLoopDevice(devname, tmpfs_mountpoint, sizeMB, img_file=None):
         mkImageFile(imgpath, sizeMB)
     else:
         cmd = ['cp', img_file, imgpath]
+        print 'doing...', cmd
         subprocess.call(cmd)
 
     mkLoopDevOnFile(devname, imgpath) 
