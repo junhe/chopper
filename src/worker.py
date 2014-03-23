@@ -33,7 +33,8 @@ def batch_worker(shared_job_q, shared_result_q):
     while True:
         batchjobs = []
         
-        batchsize = random.randint(10,20)
+        #batchsize = random.randint(10,20)
+        batchsize = 1
         for i in range(batchsize):
             # we wait for a while,
             # if no other jobs, we do a smaller batch
@@ -54,7 +55,7 @@ def batch_worker(shared_job_q, shared_result_q):
             #results.append(1)
             #continue
 
-            #pprint.pprint(treatment)
+            print nodeinfo, myhostname, treatment
             df = experiment_worker( treatment )
             results.append( df.toDic() )
         

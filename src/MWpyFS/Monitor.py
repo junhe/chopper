@@ -26,6 +26,7 @@ import re
 import shlex
 import os
 import pprint
+import shutil
 
 import btrfs_db_parser
 import xfs_db_parser
@@ -646,17 +647,20 @@ class FSMonitor:
                 f.write( h + df_ext.toStr() )
 
         elif self.filesystem == 'btrfs':
+            # too many files thera sometimes, let me remove some
+            remove_unecessary(self.mountpoint)
+
             tree_lines = btrfs_db_parser.btrfs_debug_tree(self.devname)
 
             tree_parser = btrfs_db_parser.TreeParser(tree_lines)
             df_dic = tree_parser.parse()
             df_rawext = df_dic['extents']
             df_chunk = df_dic['chunks']
-            df_map0 = btrfs_db_parser.get_filepath_inode_map(
-                        self.mountpoint, "0.file")
+            #df_map0 = btrfs_db_parser.get_filepath_inode_map(
+                        #self.mountpoint, "0.file")
             df_map = btrfs_db_parser.get_filepath_inode_map(
                         self.mountpoint, "./dir.1/")
-            df_map.table.extend( df_map0.table )
+            #df_map.table.extend( df_map0.table )
 
             #print df_ext.toStr()
             #print df_chunk.toStr()
@@ -751,6 +755,20 @@ class FSMonitor:
 
 
 ############################################
+def remove_unecessary(top):
+    objlist = os.listdir(top)
+    for name in objlist:
+        if name.endswith('.file') or name.startswith('dir.'):
+            continue
+        path = os.path.join(top, name)
+        if os.path.isfile(path):
+            os.remove(path)
+            #print 'remove FILE:', path
+        else:
+            shutil.rmtree(path)
+            #print 'remove DIR:', path
+    subprocess.call('sync')
+
 def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
     """
     It only cares about physical block positions.

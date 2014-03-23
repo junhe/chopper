@@ -403,6 +403,8 @@ def row_to_treatment(design_row):
     #fsync_sp = binspace
     #write_order_sp = list(itertools.permutations( range(nchunks) ))
 
+
+    # This is the setting with bug fixed from Duy's reporting
     disk_size_range  = [x*(2**30) for x in range(4, 20) ]
     disk_used_range  = [0,1,2,3] 
     dir_id_range      = range(0,32)
@@ -417,6 +419,20 @@ def row_to_treatment(design_row):
     fsync_sp = binspace
     write_order_sp = list(itertools.permutations( range(nchunks) ))
 
+    # temp
+    #disk_size_range  = [x*(2**30) for x in range(4,5) ]
+    #disk_used_range  = [2] 
+    #dir_id_range      = range(0,32)
+    #file_size_range  = [ x*1024 for x in range(12, 1024, 1) ]
+    #fullness_range   = [x/10.0 for x in range(1, 40)]
+    #num_vcores_range   = [1,2,3,4]
+
+    #binspace = itertools.product( [False, True], repeat=nchunks)
+    #binspace = [list(x) for x in binspace] 
+    #close_sp = itertools.product( [False, True], repeat=nchunks-1 )
+    #close_sp = [ list(x)+[True] for x in close_sp ] # always close
+    #fsync_sp = binspace
+    #write_order_sp = list(itertools.permutations( range(nchunks) ))
 
     # pick one
     dir_id    = pick_by_level( design_row['dir.id'], dir_id_range )
@@ -503,7 +519,7 @@ def row_to_treatment(design_row):
         filechunk_order += [i] * len(filetreat['chunks'])
 
     treatment = {
-                  'filesystem': 'ext4',
+                  'filesystem': 'btrfs',
                   'disksize'  : disk_size,
                   'disk_used'    : disk_used,
                   'dir_depth'     : 32,
@@ -525,15 +541,20 @@ def fourbyfour_iter(design_path):
     #design_table = read_design_file(design_path)
     design_table = read_design_file_blhd(design_path)
     cnt = 0
+    #design_table = [ design_table[i] 
+             #for i in sorted(range(len(design_table)), reverse=True)]
     for design_row in design_table:
         #pprint.pprint( row_to_treatment(design_row) )
         #row_to_treatment(design_row) 
         #if design_row['chunk.number'] != 4:
             #continue
-        yield row_to_treatment(design_row) 
+        treatment = row_to_treatment(design_row)
+        #pprint.pprint( treatment )
+        yield treatment
         cnt += 1
-        #if cnt == 4:
-            #break
+        #break
+        #if cnt <= 168:
+            #continue
     
 if __name__ == '__main__':
     #read_design_file_blhd('../design_blhd-4by4.txt')
