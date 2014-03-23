@@ -460,7 +460,6 @@ class Executor:
         # put response to df
         ret = self.get_response(treatment)
         
-        df.addColumn(key = 'jobid', value=treatment['jobid'])
         df.addColumn(key = 'dspan', value=ret['d_span'])
         df.addColumn(key = 'treatment_id', 
                      value = datetime.datetime.now().strftime("%m-%d-%H-%M-%S.%f"))

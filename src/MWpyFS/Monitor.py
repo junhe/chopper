@@ -656,11 +656,13 @@ class FSMonitor:
             df_dic = tree_parser.parse()
             df_rawext = df_dic['extents']
             df_chunk = df_dic['chunks']
-            #df_map0 = btrfs_db_parser.get_filepath_inode_map(
-                        #self.mountpoint, "0.file")
             df_map = btrfs_db_parser.get_filepath_inode_map(
                         self.mountpoint, "./dir.1/")
-            #df_map.table.extend( df_map0.table )
+            if os.path.exists( os.path.join(self.mountpoint,
+                                    "./0.file") ):
+                df_map0 = btrfs_db_parser.get_filepath_inode_map(
+                            self.mountpoint, "0.file")
+                df_map.table.extend( df_map0.table )
 
             #print df_ext.toStr()
             #print df_chunk.toStr()

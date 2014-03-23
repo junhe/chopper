@@ -57,6 +57,10 @@ def batch_worker(shared_job_q, shared_result_q):
 
             print nodeinfo, myhostname, treatment
             df = experiment_worker( treatment )
+            #result_pack = {
+                            #'treatment':treatment,
+                            #'df'       :df.toDic()
+                          #}
             results.append( df.toDic() )
         
         for result in results:

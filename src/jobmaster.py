@@ -38,7 +38,6 @@ def runserver():
     alldispatched = False
     jobcnt = 0
     resultcnt = 0
-    jobleft = set()
     while not (alldispatched == True and jobcnt == resultcnt):
         qmax = 100 
         # Fill the job queue
@@ -49,12 +48,12 @@ def runserver():
         # only add job when delta is large
         for i in range(delta): 
             try:
+                # job is actually a treatment
                 job = jobiter.next() 
-                jobleft.add(jobcnt)
                 job['jobid'] = jobcnt
                 shared_job_q.put( job )
                 jobcnt += 1
-                print 'jobcnt',jobcnt, 'resultcnt', resultcnt
+                print 'jobcnt', jobcnt, 'resultcnt', resultcnt
             except StopIteration:
                 print 'alldispatched!'
                 alldispatched = True
@@ -65,12 +64,6 @@ def runserver():
         while not shared_result_q.empty():
             try:
                 r = shared_result_q.get(block=True, timeout=1)
-                
-                # get the finished jobid
-                i = r['header'].index('jobid')
-                rjobid = r['table'][0][i]
-                jobleft.remove(rjobid)
-                print jobleft
                 local_results.append( r )
                 resultcnt += 1
                 print 'jobcnt',jobcnt, 'resultcnt', resultcnt
