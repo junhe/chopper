@@ -38,6 +38,7 @@ def runserver():
     alldispatched = False
     jobcnt = 0
     resultcnt = 0
+    job_dispatched_unfinished = set()
     while not (alldispatched == True and jobcnt == resultcnt):
         qmax = 100 
         # Fill the job queue
@@ -52,6 +53,7 @@ def runserver():
                 job = jobiter.next() 
                 job['jobid'] = jobcnt
                 shared_job_q.put( job )
+                job_dispatched_unfinished.add(jobcnt)
                 jobcnt += 1
                 print 'jobcnt', jobcnt, 'resultcnt', resultcnt
             except StopIteration:
@@ -69,7 +71,13 @@ def runserver():
                 print 'jobcnt',jobcnt, 'resultcnt', resultcnt
             except Queue.Empty:
                 break
-        for dfdic in local_results:
+        for result_pack in local_results:
+            dfdic = result_pack['response.data.frame']
+            treatment = result_pack['treatment']
+
+            jobid = treatment['jobid']
+            job_dispatched_unfinished.remove(jobid)
+            #pprint.pprint(treatment)
             df = MWpyFS.dataframe.DataFrame() 
             df.fromDic(dfdic)
             if hasheader:
@@ -78,6 +86,8 @@ def runserver():
                 fresult.write( df.toStr(header=True, table=True) )
                 hasheader = True
             fresult.flush()
+        if len(local_results) > 0:
+            print "dispatched unfinished jobs:", job_dispatched_unfinished
 
     time.sleep(2)
     manager.shutdown()

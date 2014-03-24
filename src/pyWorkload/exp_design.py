@@ -406,7 +406,7 @@ def row_to_treatment(design_row):
 
     # This is the setting with bug fixed from Duy's reporting
     disk_size_range  = [x*(2**30) for x in range(4, 20) ]
-    disk_used_range  = [0,1,2,3] 
+    disk_used_range  = [0,0,0,0] 
     dir_id_range      = range(0,32)
     file_size_range  = [ x*1024 for x in range(12, 1024, 1) ]
     fullness_range   = [x/10.0 for x in range(1, 40)]
