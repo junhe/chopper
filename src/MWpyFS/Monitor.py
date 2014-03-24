@@ -19,6 +19,17 @@
 #  extents to the logically contiguous blocks.)
 #       I expect the following from the output of this per FS:
 #       JUST LIKE THE ORIGINAL OUTPUT BUT FORMAT IT A LITTLE BIT
+#
+#
+# 
+#
+# TODO: 
+# 1. I need to figure out a good way to figure out
+#    dspan of the interested files.
+# 2. Is there a better way in btrfs to find only the
+#    interested file, other than deleting all the 
+#    uninteresting file.
+#
 
 import subprocess
 from time import strftime, localtime, sleep

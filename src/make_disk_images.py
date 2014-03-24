@@ -1,3 +1,8 @@
+# TODO:
+# 1. copy a sparse file faster
+# 2. make the image even smaller, by David?
+
+
 import subprocess
 import time
 import MWpyFS
@@ -5,6 +10,7 @@ import os
 import sys
 import itertools
 import pprint
+
 
 def ParameterCominations(parameter_dict):
     """
