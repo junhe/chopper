@@ -52,6 +52,11 @@ def runserver():
                 # job is actually a treatment
                 job = jobiter.next() 
                 job['jobid'] = jobcnt
+                if not jobcnt in [19,20]:
+                    jobcnt += 1
+                    continue
+                print jobcnt
+                print job
                 shared_job_q.put( job )
                 job_dispatched_unfinished.add(jobcnt)
                 jobcnt += 1

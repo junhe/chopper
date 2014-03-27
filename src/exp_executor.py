@@ -486,7 +486,7 @@ class Executor:
                   'n_virtual_cores', 'parent_dirid',
                   'disksize', 'disk_used',
                   'dspan', 'fullness',
-                  'jobid'
+                  'jobid', 'filesystem'
                   ]
         headers = copy.deepcopy(df.header)
         for colname in headers:
@@ -504,7 +504,8 @@ class Executor:
                 'n_virtual_cores':'num.cores', 
                 'parent_dirid':'dir.id',
                 'disksize':'disk.size',
-                'disk_used':'disk.used'
+                'disk_used':'disk.used',
+                'filesystem':'file.system'
               }
         for i,k in enumerate(df.header):
             if translate_dic.has_key(k):
