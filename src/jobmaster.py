@@ -34,7 +34,8 @@ def runserver():
 
     #jobiter = pyWorkload.exp_design.onefile_iter2()
     jobiter = pyWorkload.exp_design.\
-                fourbyfour_iter('./design_blhd-4by4.txt')
+                fourbyfour_iter('./design-blhd-4x7-header-changed.txt')
+                #fourbyfour_iter('./design_blhd-4by4.txt')
     alldispatched = False
     jobid = 0
     resultcnt = 0

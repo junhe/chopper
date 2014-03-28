@@ -74,7 +74,11 @@ def read_design_file_blhd(filepath):
             continue
         d = {}
         for i, name in enumerate(header):
-            d[name] = items[i] #let's start from 0
+            try:
+                d[name] = items[i] #let's start from 0
+            except:
+                print line
+                print header
         table.append(d)
     f.close()
 
