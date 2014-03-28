@@ -5,6 +5,7 @@ from multiprocessing.managers import SyncManager
 import pyWorkload
 import pprint
 import MWpyFS
+import os
 
 # This jobmaster uses workload iterator to find
 # jobs and put them to the job queue. The workers
@@ -29,17 +30,54 @@ def runserver():
     shared_result_q = manager.get_result_q()
 
 
-    fresult = open('aggarated_results.txt', 'w')
-    hasheader = False
+
 
     #jobiter = pyWorkload.exp_design.onefile_iter2()
     jobiter = pyWorkload.exp_design.\
                 fourbyfour_iter('./design_blhd-4by4.txt')
     alldispatched = False
-    jobcnt = 0
+    jobid = 0
     resultcnt = 0
     job_dispatched_unfinished = set()
-    while not (alldispatched == True and jobcnt == resultcnt):
+    if os.path.isfile('finished_joblist.txt'):
+        choice = \
+                raw_input("finished_joblist.txt exist, use it? [y|n]")
+        if choice == 'y':
+            exclude_finished_jobs = True
+            print "finished_joblist will be used"
+        else:
+            exclude_finished_jobs = False
+            print "finished_joblist will be not used"
+        time.sleep(1)
+    else:
+        exclude_finished_jobs = False
+
+    # finished_joblist.txt will store the jobid
+    # that has been finished so far. And it will add
+    # more jobid to it as more runs have been done.
+    # If the user chooses not to use the joblist file
+    # the contents of the file will be overwritten by
+    # the new finished jobs
+    f_finished_job = open('finished_joblist.txt', 'r+')
+    finished_joblist = []
+    if exclude_finished_jobs:
+        # fill the list, and not do them later
+        # new finished job ids will be added to it
+        # this list will later be saved to the file
+        for line in f_finished_job:
+            finished_joblist.append(int(line.strip()))
+    print finished_joblist
+    #exit(0)
+
+    if exclude_finished_jobs == True:
+        fresult = open('aggarated_results.txt', 'a')
+        hasheader = True
+    else:
+        fresult = open('aggarated_results.txt', 'w')
+        hasheader = False
+
+    while not (alldispatched == True \
+               and len(job_dispatched_unfinished)==0):
         qmax = 100 
         # Fill the job queue
         qsz = shared_job_q.qsize()
@@ -51,16 +89,13 @@ def runserver():
             try:
                 # job is actually a treatment
                 job = jobiter.next() 
-                job['jobid'] = jobcnt
-                if not jobcnt in [19,20]:
-                    jobcnt += 1
-                    continue
-                print jobcnt
-                print job
-                shared_job_q.put( job )
-                job_dispatched_unfinished.add(jobcnt)
-                jobcnt += 1
-                print 'jobcnt', jobcnt, 'resultcnt', resultcnt
+                job['jobid'] = jobid
+
+                if not jobid in finished_joblist:
+                    shared_job_q.put( job )
+                    print 'last dispatched jobid', jobid, 'resultcnt', resultcnt
+                    job_dispatched_unfinished.add(jobid)
+                jobid += 1
             except StopIteration:
                 print 'alldispatched!'
                 alldispatched = True
@@ -73,15 +108,15 @@ def runserver():
                 r = shared_result_q.get(block=True, timeout=1)
                 local_results.append( r )
                 resultcnt += 1
-                print 'jobcnt',jobcnt, 'resultcnt', resultcnt
+                print 'last dispatched jobid',jobid, 'resultcnt', resultcnt
             except Queue.Empty:
                 break
         for result_pack in local_results:
             dfdic = result_pack['response.data.frame']
             treatment = result_pack['treatment']
 
-            jobid = treatment['jobid']
-            job_dispatched_unfinished.remove(jobid)
+            result_jobid = treatment['jobid']
+            job_dispatched_unfinished.remove(result_jobid)
             #pprint.pprint(treatment)
             df = MWpyFS.dataframe.DataFrame() 
             df.fromDic(dfdic)
@@ -91,11 +126,15 @@ def runserver():
                 fresult.write( df.toStr(header=True, table=True) )
                 hasheader = True
             fresult.flush()
+
+            f_finished_job.write( str(result_jobid) + '\n')
+            f_finished_job.flush()
         if len(local_results) > 0:
             print "dispatched unfinished jobs:", job_dispatched_unfinished
 
     time.sleep(2)
     manager.shutdown()
+    f_finished_job.close()
 
 def make_server_manager(port, authkey):
     """ Create a manager for the server, listening on the given port.
