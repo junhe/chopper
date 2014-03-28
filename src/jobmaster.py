@@ -66,6 +66,8 @@ def runserver():
         # this list will later be saved to the file
         for line in f_finished_job:
             finished_joblist.append(int(line.strip()))
+    else:
+        f_finished_job.truncate()
     print finished_joblist
     #exit(0)
 
