@@ -1,0 +1,20 @@
+Device: /dev/loop0
+Blocksize: 4096 bytes
+Total blocks: 1048576
+Free blocks: 997298 (95.1%)
+
+Min. free extent: 20 KB 
+Max. free extent: 523260 KB
+Avg. free extent: 70768 KB
+Num. free extent: 12
+
+HISTOGRAM OF FREE EXTENT SIZES:
+Extent Size Range :  Free extents   Free Blocks  Percent
+   16K...   32K-  :             1             5    0.00%
+  256K...  512K-  :             1           106    0.01%
+  512K... 1024K-  :             3           722    0.07%
+    1M...    2M-  :             3          1048    0.11%
+    4M...    8M-  :             1          1097    0.11%
+   64M...  128M-  :             1         23523    2.36%
+  128M...  256M-  :             1         54992    5.51%
+  256M...  512M-  :             1        130815   13.12%

@@ -1,0 +1,248 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.6	//
+ACTUAL_FILE_CREATION	impress.cpp	/^int ACTUAL_FILE_CREATION = 1;$/;"	v
+ACTUAL_LOG_CREATION	impress.cpp	/^int ACTUAL_LOG_CREATION = 0;$/;"	v
+ATTR_FILE_SIZE	impress.cpp	/^int ATTR_FILE_SIZE = 0;$/;"	v
+ATTR_NUM_DIRS	impress.cpp	/^int ATTR_NUM_DIRS  = 0;$/;"	v
+ATTR_NUM_FILES	impress.cpp	/^int ATTR_NUM_FILES = 0;$/;"	v
+Accuracy_Mode	ssp-working.cpp	24;"	d	file:
+Accuracy_Mode	ssp.cpp	24;"	d	file:
+BETA_MAX	ssp-working.cpp	18;"	d	file:
+BETA_MAX	ssp.cpp	18;"	d	file:
+BETA_MAX_1	ssp-working.cpp	19;"	d	file:
+BETA_MAX_1	ssp.cpp	19;"	d	file:
+CC	Makefile	/^CC = g++$/;"	m
+CFLAGS	Makefile	/^CFLAGS = -g $/;"	m
+CPP	extension.cpp	30;"	d	file:
+DIR_DEPTH	impress.cpp	18;"	d	file:
+DIR_SIZE_DIRS	impress.cpp	17;"	d	file:
+DIR_SIZE_FILES	impress.cpp	16;"	d	file:
+DLL	extension.cpp	33;"	d	file:
+DirDepthmultimap	montecarlo.cpp	/^multimap<int, dir> DirDepthmultimap;$/;"	v
+DirIDmap	montecarlo.cpp	/^map<int, dir> DirIDmap;$/;"	v
+Dircountfilesmmap	montecarlo.cpp	/^multimap<int, int> Dircountfilesmmap[DEPTH_ENTRIES]; $/;"	v
+Dirs	montecarlo.cpp	/^dir *Dirs;$/;"	v
+EXE	extension.cpp	29;"	d	file:
+EXT_HELPERS	extension.cpp	24;"	d	file:
+EXT_SIZE	extension.cpp	11;"	d	file:
+FILE_SIZE	impress.cpp	10;"	d	file:
+FILE_TRUNCATOR	impress.cpp	/^int FILE_TRUNCATOR = 0; \/\/ or (ATTR_NUM_DIRS || ATTR_NUM_FILES);$/;"	v
+FILE_contentfilters	get_spec.cpp	/^char FILE_contentfilters[FILENAME_SIZE];$/;"	v
+FILE_fsparam	get_spec.cpp	/^char FILE_fsparam[FILENAME_SIZE];$/;"	v
+FILE_input_dist	get_spec.cpp	/^char FILE_input_dist[FILENAME_SIZE];$/;"	v
+FINAL_DEBUG	impress.cpp	8;"	d	file:
+GIF	extension.cpp	34;"	d	file:
+H	extension.cpp	32;"	d	file:
+HTM	extension.cpp	31;"	d	file:
+IMP_input	impress.cpp	/^inputset * IMP_input;$/;"	v
+JPG	extension.cpp	28;"	d	file:
+LD	montecarlo.cpp	/^list<dir> LD;$/;"	v
+LFLAGS	Makefile	/^LFLAGS = -lm$/;"	m
+LIB	extension.cpp	39;"	d	file:
+LONG_TAIL	extension.cpp	74;"	d	file:
+MP3	extension.cpp	38;"	d	file:
+MPG	extension.cpp	43;"	d	file:
+Mdir	montecarlo.cpp	/^dir Mdir;$/;"	v
+NUL	extension.cpp	26;"	d	file:
+NUM_DIR_ATTRIBS	impress.cpp	21;"	d	file:
+NUM_EXTENSIONS	extension.cpp	12;"	d	file:
+NUM_FILE_ATTRIBS	impress.cpp	14;"	d	file:
+PARENT_DIR	impress.cpp	11;"	d	file:
+PARENT_PATH	impress.cpp	/^char PARENT_PATH[1024] = "\/nitin\/beagle\/impress_home";$/;"	v
+PCH	extension.cpp	37;"	d	file:
+PDB	extension.cpp	35;"	d	file:
+PDF	extension.cpp	42;"	d	file:
+PST	extension.cpp	36;"	d	file:
+ScaleByUnit	get_spec.cpp	/^long int ScaleByUnit(char * unit) {$/;"	f
+TAL	extension.cpp	44;"	d	file:
+TOTAL_POPULARITY	extension.cpp	/^int TOTAL_POPULARITY=0;$/;"	v
+TXT	extension.cpp	27;"	d	file:
+Total_depthcount_prob	depth.cpp	25;"	d	file:
+UNKNOWN	extension.cpp	75;"	d	file:
+VHD	extension.cpp	41;"	d	file:
+WMA	extension.cpp	40;"	d	file:
+aging_end	impress.cpp	/^               aging_start, aging_end, \\$/;"	v	typeref:struct:
+aging_start	impress.cpp	/^               aging_start, aging_end, \\$/;"	v	typeref:struct:
+aging_total	impress.cpp	/^               word_model_total, extension_total, aging_total, \\$/;"	v
+alpha1	impress.cpp	/^double alpha1;$/;"	v
+bias	impress.cpp	/^double bias = 0; $/;"	v
+bincounter	impress.cpp	/^int bincounter[FILE_SIZE_BINS];$/;"	v
+bincounter_1	ssp-working.cpp	/^int bincounter_1[50], bincounter_2[50];$/;"	v
+bincounter_1	ssp.cpp	/^int bincounter_1[50], bincounter_2[50];$/;"	v
+bincounter_2	ssp-working.cpp	/^int bincounter_1[50], bincounter_2[50];$/;"	v
+bincounter_2	ssp.cpp	/^int bincounter_1[50], bincounter_2[50];$/;"	v
+binsize	impress.cpp	/^long double binsize[FILE_SIZE_BINS];$/;"	v
+binsize_1	ssp-working.cpp	/^long double binsize_1[50], binsize_2[50];$/;"	v
+binsize_1	ssp.cpp	/^long double binsize_1[50], binsize_2[50];$/;"	v
+binsize_2	ssp-working.cpp	/^long double binsize_1[50], binsize_2[50];$/;"	v
+binsize_2	ssp.cpp	/^long double binsize_1[50], binsize_2[50];$/;"	v
+bnc_popular_word	word.cpp	/^int bnc_popular_word(char * random_word) {$/;"	f
+bnc_popularity	word.cpp	/^float bnc_popularity[SIZE_BNC_CORPUS];$/;"	v
+bnc_wordlen	word.cpp	/^int bnc_wordlen[SIZE_BNC_CORPUS];$/;"	v
+bnc_words	word.cpp	/^char bnc_words[SIZE_BNC_CORPUS][SIZE_BNC_MAX_WORDLEN];$/;"	v
+compfunc	extension.cpp	/^int compfunc(const void *x, const void *y)$/;"	f
+compfunc	ssp-working.cpp	/^int compfunc(const void *x, const void *y) $/;"	f
+compfunc	ssp.cpp	/^int compfunc(const void *x, const void *y) $/;"	f
+create_gif	gif.c	/^int create_gif(int argc, char *argv[])$/;"	f
+cur	impress.cpp	/^map<int, dir>::iterator cur;\/\/  = DirIDmap.find((int)data2);$/;"	v
+deep_tree	montecarlo.cpp	/^int deep_tree(int numdirs) {$/;"	f
+depth_meansize	depth.cpp	/^double depth_meansize[] = {$/;"	v
+depthcare_end	impress.cpp	/^               depthcare_start, depthcare_end, \\$/;"	v	typeref:struct:
+depthcare_start	impress.cpp	/^               depthcare_start, depthcare_end, \\$/;"	v	typeref:struct:
+depthcare_total	impress.cpp	/^               file_creation_total, depthcare_total, poisson_total, \\$/;"	v
+depthcount_prob	depth.cpp	/^double depthcount_prob[] = {$/;"	v
+deseeder	impress.cpp	/^int deseeder() {$/;"	f
+diff_time	impress.cpp	/^double diff_time(struct timeval st, struct timeval et)$/;"	f
+diff_time_sec	impress.cpp	/^int diff_time_sec(struct timeval st, struct timeval et)$/;"	f
+diff_time_sec2	impress.cpp	/^double diff_time_sec2(struct timeval st, struct timeval et)$/;"	f
+dir	montecarlo.cpp	/^dir::dir () {$/;"	f	class:dir
+dir	montecarlo.cpp	/^dir::dir (int ID_a) {$/;"	f	class:dir
+dircountfiles_end	impress.cpp	/^               dircountfiles_start, dircountfiles_end, \\$/;"	v	typeref:struct:
+dircountfiles_prob	impress.cpp	/^double dircountfiles_prob[FILES_PERDIR];$/;"	v
+dircountfiles_start	impress.cpp	/^               dircountfiles_start, dircountfiles_end, \\$/;"	v	typeref:struct:
+dircountfiles_total	impress.cpp	/^               filesize_total, dircountfiles_total;$/;"	v
+dirppp	impress.cpp	/^pair<multimap<int, dir>::iterator, multimap<int, dir>::iterator> dirppp, dirppp2;$/;"	v
+dirppp2	impress.cpp	/^pair<multimap<int, dir>::iterator, multimap<int, dir>::iterator> dirppp, dirppp2;$/;"	v
+dirtree_end	impress.cpp	/^               dirtree_start, dirtree_end, \\$/;"	v	typeref:struct:
+dirtree_start	impress.cpp	/^               dirtree_start, dirtree_end, \\$/;"	v	typeref:struct:
+dirtree_total	impress.cpp	/^double main_time_total, dirtree_total, filecontent_total, \\$/;"	v
+exit	impress.cpp	/^void exit () {$/;"	f
+experimental_center	impress.cpp	/^int experimental_center (long double data1, long double data3) {$/;"	f
+experimental_center_1	ssp-working.cpp	/^int experimental_center_1 (double data1) {$/;"	f
+experimental_center_1	ssp.cpp	/^int experimental_center_1 (double data1) {$/;"	f
+experimental_center_2	ssp-working.cpp	/^int experimental_center_2 (double data1) {$/;"	f
+experimental_center_2	ssp.cpp	/^int experimental_center_2 (double data1) {$/;"	f
+ext_extnum	extension.cpp	/^int ext_extnum (char *ext){$/;"	f
+extension_array	extension.cpp	/^char extension_array[][4] = {"nul", "txt", "jpg", "exe", "cpp", "htm", "h__", "dll", "gif", "pdb", "pst", "pch", "mp3", "lib", "wma", "vhd", "pdf","mpg","tal" };$/;"	v
+extension_end	impress.cpp	/^               extension_start, extension_end, \\$/;"	v	typeref:struct:
+extension_header	extension.cpp	/^char extension_header[][100] = {"", "", "FFD8\\n", "", "", "", "",  "", "GIF89a\\n", "", "", "", "", "", "", "",  "%PDF-1.4\\n", "", "" };$/;"	v
+extension_popularity	extension.cpp	/^float * extension_popularity;$/;"	v
+extension_popularity_default	extension.cpp	/^float extension_popularity_default[] = {6.91, 3.64, 3.08, 2.88, 3.26, 4.45, 6.69, 6.63, 6.77, 1.34, UNKNOWN, UNKNOWN, UNKNOWN, 1.46, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, LONG_TAIL};$/;"	v
+extension_popularity_large	extension.cpp	/^float extension_popularity_large[] = {7.79, 5.02, 1.45, 2.08, 4.88, 3.24, 9.32, 3.64, 3.43, 1.94, 0.00, 0.10, 0.16, 1.76, 0.19, 0.01, 0.04, 0.00, 0.00};$/;"	v
+extension_start	impress.cpp	/^               extension_start, extension_end, \\$/;"	v	typeref:struct:
+extension_total	impress.cpp	/^               word_model_total, extension_total, aging_total, \\$/;"	v
+file_creation_end	impress.cpp	/^               file_creation_start, file_creation_end;$/;"	v	typeref:struct:
+file_creation_start	impress.cpp	/^               file_creation_start, file_creation_end;$/;"	v	typeref:struct:
+file_creation_total	impress.cpp	/^               file_creation_total, depthcare_total, poisson_total, \\$/;"	v
+filearray	impress.cpp	/^long double *filearray;$/;"	v
+filecontent_end	impress.cpp	/^               filecontent_start, filecontent_end, \\$/;"	v	typeref:struct:
+filecontent_start	impress.cpp	/^               filecontent_start, filecontent_end, \\$/;"	v	typeref:struct:
+filecontent_total	impress.cpp	/^double main_time_total, dirtree_total, filecontent_total, \\$/;"	v
+filesize_end	impress.cpp	/^               filesize_start, filesize_end, \\$/;"	v	typeref:struct:
+filesize_start	impress.cpp	/^               filesize_start, filesize_end, \\$/;"	v	typeref:struct:
+filesize_total	impress.cpp	/^               filesize_total, dircountfiles_total;$/;"	v
+filesizearray	impress.cpp	/^long double * filesizearray;$/;"	v
+flat_tree	montecarlo.cpp	/^int flat_tree(int numdirs) {$/;"	f
+fn_depthsize_prob	depth.cpp	/^int fn_depthsize_prob (long double filesize) {$/;"	f
+fp_contentfilters	get_spec.cpp	/^FILE *fp_fsparam, *fp_input_dist, *fp_contentfilters;$/;"	v
+fp_fsparam	get_spec.cpp	/^FILE *fp_fsparam, *fp_input_dist, *fp_contentfilters;$/;"	v
+fp_input_dist	get_spec.cpp	/^FILE *fp_fsparam, *fp_input_dist, *fp_contentfilters;$/;"	v
+fragment	fragment.cpp	/^int fragment(int turn) {$/;"	f
+get_input_specification	get_spec.cpp	/^int get_input_specification(char * input_file)$/;"	f
+get_random_ext	extension.cpp	/^int get_random_ext(char *random_ext) {$/;"	f
+getdepth	montecarlo.cpp	/^int dir::getdepth() {$/;"	f	class:dir
+getid	montecarlo.cpp	/^int dir::getid() {$/;"	f	class:dir
+idcit1	impress.cpp	/^multimap<int, int>::iterator idcit1, idcit2;$/;"	v
+idcit2	impress.cpp	/^multimap<int, int>::iterator idcit1, idcit2;$/;"	v
+idcppp	impress.cpp	/^pair<multimap<int, int>::iterator, multimap<int, int>::iterator> idcppp, idcppp2;$/;"	v
+idcppp2	impress.cpp	/^pair<multimap<int, int>::iterator, multimap<int, int>::iterator> idcppp, idcppp2;$/;"	v
+increment_subdirs	montecarlo.cpp	/^int dir::increment_subdirs () {$/;"	f	class:dir
+init	impress.cpp	/^void init () {$/;"	f
+init_ext_popularity	extension.cpp	/^int init_ext_popularity() {$/;"	f
+init_files_dirs_for_capacity	impress.cpp	/^int init_files_dirs_for_capacity() {$/;"	f
+init_word_bnc_frequency_list	word.cpp	/^int init_word_bnc_frequency_list () {$/;"	f
+input_tokenizer	get_spec.cpp	/^int input_tokenizer(char * line, double * dest_array){$/;"	f
+input_tokenizer_int	get_spec.cpp	/^int input_tokenizer_int(char * line, int * dest_array){$/;"	f
+it3	impress.cpp	/^multimap<int, dir>::iterator it3, it4;$/;"	v
+it4	impress.cpp	/^multimap<int, dir>::iterator it3, it4;$/;"	v
+li	montecarlo.cpp	/^list<dir>::iterator li;$/;"	v
+log_error	posix_lib.c	/^int log_error(char * errmsg, int err_code, int exit_on_error)$/;"	f
+ltint	montecarlo.cpp	/^struct ltint {$/;"	s	file:
+main	impress.cpp	/^int main(int argc, char * argv[]) {$/;"	f
+main_time_end	impress.cpp	/^struct timeval main_time_start, main_time_end, \\$/;"	v	typeref:struct:
+main_time_start	impress.cpp	/^struct timeval main_time_start, main_time_end, \\$/;"	v	typeref:struct:timeval
+main_time_total	impress.cpp	/^double main_time_total, dirtree_total, filecontent_total, \\$/;"	v
+make_ascii_file	extension.cpp	/^int make_ascii_file(char * filepath, long double size, int extension_num) {$/;"	f
+make_binary_file	extension.cpp	/^int make_binary_file(char * filepath, long double size, int extension_num) {$/;"	f
+make_frag_file	fragment.cpp	/^int make_frag_file(char * filepath, long double size) {$/;"	f
+make_generic_file	extension.cpp	/^long double make_generic_file(char * filepath, long double size, int depth, FILE * fp_log) {$/;"	f
+max_dir_depth	montecarlo.cpp	/^int max_dir_depth;$/;"	v
+meanfilesize	impress.cpp	/^long double stdev=0, meanfilesize=0;$/;"	v
+montecarlo	montecarlo.cpp	/^int montecarlo(int numdirs) {$/;"	f
+montecarlo_dirfilescount	impress.cpp	/^int montecarlo_dirfilescount() {$/;"	f
+montecarlo_extension	extension.cpp	/^int montecarlo_extension() {$/;"	f
+montecarlo_word	word.cpp	/^int montecarlo_word(char * random_word) {$/;"	f
+my_gettimeofday	montecarlo.cpp	/^int my_gettimeofday() {$/;"	f
+ni	montecarlo.cpp	/^list<dir>::iterator ni;$/;"	v
+operator ()	montecarlo.cpp	/^    bool operator() (const int a, const int b) const {$/;"	f	struct:ltint
+operator <	montecarlo.cpp	/^int dir::operator<(const dir &rhs) const{$/;"	f	class:dir
+operator <<	montecarlo.cpp	/^ostream &operator<<(ostream &output, const dir &aaa)$/;"	f
+operator =	montecarlo.cpp	/^dir& dir::operator=(const dir &rhs)$/;"	f	class:dir
+operator ==	montecarlo.cpp	/^int dir::operator==(const dir &rhs) const $/;"	f	class:dir
+parent_path	impress.cpp	/^char parent_path[1024], strerr[100];$/;"	v
+pareto_base1	impress.cpp	/^double pareto_base1; $/;"	v
+pareto_shape1	impress.cpp	/^double pareto_shape1;$/;"	v
+poisson_end	impress.cpp	/^               poisson_start, poisson_end, \\$/;"	v	typeref:struct:
+poisson_mu	impress.cpp	/^double poisson_mu;$/;"	v
+poisson_sigma	impress.cpp	/^double poisson_sigma;$/;"	v
+poisson_start	impress.cpp	/^               poisson_start, poisson_end, \\$/;"	v	typeref:struct:
+poisson_total	impress.cpp	/^               file_creation_total, depthcare_total, poisson_total, \\$/;"	v
+poly_degree	impress.cpp	/^double poly_degree=0, poly_offset = 0;$/;"	v
+poly_offset	impress.cpp	/^double poly_degree=0, poly_offset = 0;$/;"	v
+pos_access	posix_lib.c	/^int pos_access(const char *pathname, int mode)$/;"	f
+pos_chdir	posix_lib.c	/^int pos_chdir(const char *path)$/;"	f
+pos_chmod	posix_lib.c	/^int pos_chmod(const char *path, mode_t mode)$/;"	f
+pos_chown	posix_lib.c	/^int pos_chown(const char *path, uid_t owner, gid_t group)$/;"	f
+pos_chroot	posix_lib.c	/^int pos_chroot(const char *path)$/;"	f
+pos_close	posix_lib.c	/^int pos_close(int fd)$/;"	f
+pos_creat	posix_lib.c	/^int pos_creat(const char *pathname, mode_t mode)$/;"	f
+pos_creat_open	posix_lib.c	/^int pos_creat_open(const char *pathname, int flags, mode_t mode)$/;"	f
+pos_fsync	posix_lib.c	/^int pos_fsync(int fd)$/;"	f
+pos_getdirentries	posix_lib.c	/^ssize_t pos_getdirentries(int fd, char *buf, size_t  nbytes, off_t *basep)$/;"	f
+pos_link	posix_lib.c	/^int pos_link(const char *oldpath, const char *newpath)$/;"	f
+pos_lstat	posix_lib.c	/^int pos_lstat(const char *file_name, struct stat *buf)$/;"	f
+pos_mkdir	posix_lib.c	/^int pos_mkdir(const char *pathname, mode_t mode)$/;"	f
+pos_mount	posix_lib.c	/^int pos_mount(const char *source, const char *target, const char *filesystemtype, unsigned long mountflags, const void *data)$/;"	f
+pos_open	posix_lib.c	/^int pos_open(const char *pathname, int flags)$/;"	f
+pos_read	posix_lib.c	/^int pos_read(int fd, void *buf, size_t count)$/;"	f
+pos_readlink	posix_lib.c	/^int pos_readlink(const char *path, char *buf, size_t bufsiz)$/;"	f
+pos_rename	posix_lib.c	/^int pos_rename(const char *oldpath, const char *newpath)$/;"	f
+pos_rmdir	posix_lib.c	/^int pos_rmdir(const char *pathname)$/;"	f
+pos_stat	posix_lib.c	/^int pos_stat(const char *file_name, struct stat *buf)$/;"	f
+pos_statfs	posix_lib.c	/^int pos_statfs(const char *path, struct statfs *buf)$/;"	f
+pos_symlink	posix_lib.c	/^int pos_symlink(const char *oldpath, const char *newpath)$/;"	f
+pos_sync	posix_lib.c	/^void pos_sync(void)$/;"	f
+pos_truncate	posix_lib.c	/^int pos_truncate(const char *path, off_t length)$/;"	f
+pos_umask	posix_lib.c	/^mode_t pos_umask(mode_t mask)$/;"	f
+pos_umount	posix_lib.c	/^int pos_umount(const char *target)$/;"	f
+pos_unlink	posix_lib.c	/^int pos_unlink(const char *pathname)$/;"	f
+pos_utimes	posix_lib.c	/^int pos_utimes(char *filename, struct timeval *tvp)$/;"	f
+pos_write	posix_lib.c	/^int pos_write(int fd, const void *buf, size_t count)$/;"	f
+precision	word.cpp	/^int precision = 1;$/;"	v
+print	montecarlo.cpp	/^void dir::print () {$/;"	f	class:dir
+printIMP_input	get_spec.cpp	/^int printIMP_input(inputset * input) {$/;"	f
+random_word	word.cpp	/^char random_word[MAX_WORD_LENGTH];$/;"	v
+random_word_block	word.cpp	/^int random_word_block(char * buf) {$/;"	f
+rv_dfc	impress.cpp	/^Random rv_extension, rv_dfc, rv_dfc2;$/;"	v
+rv_dfc2	impress.cpp	/^Random rv_extension, rv_dfc, rv_dfc2;$/;"	v
+rv_extension	impress.cpp	/^Random rv_extension, rv_dfc, rv_dfc2;$/;"	v
+sec_main_time_total	impress.cpp	/^int sec_main_time_total;$/;"	v
+set_word_popularity	word.cpp	/^void set_word_popularity () {$/;"	f
+setid	montecarlo.cpp	/^void dir::setid(int id_A) {    $/;"	f	class:dir
+setparent_depth	montecarlo.cpp	/^void dir::setparent_depth(int my_parent, int parent_depth, char parent_path[1024]) {$/;"	f	class:dir
+setroot	montecarlo.cpp	/^void dir::setroot() {    $/;"	f	class:dir
+stdev	impress.cpp	/^long double stdev=0, meanfilesize=0;$/;"	v
+strerr	impress.cpp	/^char parent_path[1024], strerr[100];$/;"	v
+subsetsumconstraint	ssp-working.cpp	/^int subsetsumconstraint(long double * Numbers, int N) {$/;"	f
+subsetsumconstraint	ssp.cpp	/^int subsetsumconstraint(long double * Numbers_orig, int N) {$/;"	f
+to_bw_paletted_image	gif.c	/^Image * to_bw_paletted_image(Image *img)$/;"	f
+total_dfc	impress.cpp	/^int total_dfc=0;$/;"	v
+totalfilesize	impress.cpp	/^long double totalfilesize=0; \/\/ this is the sum of the original sample$/;"	v
+word_model_end	impress.cpp	/^               word_model_start, word_model_end, \\$/;"	v	typeref:struct:
+word_model_start	impress.cpp	/^               word_model_start, word_model_end, \\$/;"	v	typeref:struct:
+word_model_total	impress.cpp	/^               word_model_total, extension_total, aging_total, \\$/;"	v
+word_popularity	word.cpp	/^double word_popularity[MAX_WORD_LENGTH];$/;"	v

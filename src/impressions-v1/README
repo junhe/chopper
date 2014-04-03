@@ -1,0 +1,115 @@
+Nitin Agrawal
+nitina@cs.wisc.edu
+
+
+Impressions Readme
+---------------
+
+To install:
+run make in the impressions directory
+
+To run:
+./impress <inputfile>
+
+Default input file is ./inputfile
+
+Additional software required in extension_helpers:
+id3v2 for mp3
+gif for gif/jpeg files
+
+Input file format:
+
+Parent_Path: /nitin/beagle/impress_home/ 1
+
+Specify where to create the test file system
+1/0 toggles whether this will be used or not
+
+Actuallogfile: /root/impress/Desksearch/Results/Logs 0
+
+Specify where log files will be maintained
+1/0 toggles whether this will be used or not
+
+Randseeds: Direct 10 10 20 30 40 50 60 70 80 90 100
+
+Specify seeds for random number generators to ensure reproducibility
+If more randseeds are needed, change the number right after "Direct"
+which specifies the number of random seeds
+
+FScapacity: 100 GB
+
+Total capacity of the disk, does not affect anything.
+
+FSused: 45 GB
+
+Size of the desired file system. The actual created file system
+can be a  little off from the desired value.
+
+Numfiles: NO K
+
+Number of files desired. First arg is number, second arg is unit
+N for 10^0, K for 10^3, M for 10^6, B for 10^9
+if first arg is NO implies Impressions will calculate based on FSused.
+
+Numdirs: NO K
+
+Number of directories desired. First arg is number, second arg is unit
+N for 10^0, K for 10^3, M for 10^6, B for 10^9
+if first arg is NO implies Impressions will calculate based on FSused.
+
+Filesperdir: 10.2 N
+
+Mean number of files in a directory
+
+FilesizeDistr: Direct 3 99994 29 0.91 
+
+File size distribution. 3 is number of params.
+First arg is bias for lognormal out of 100000
+Second arg is exponent for pareto base (Xm)
+Third arg is pareto shape (alpha)
+
+FilecountDistr: Direct 2 9.48 2.45663283
+File count/size distribution lognormal
+First arg is mu
+Second arg is sigma
+
+Dircountfiles: Direct 2 2 2.36
+Directory sizes inverse polynomial distribution
+
+DirsizesubdirDistr: Indir DirsizesubdirDistr.txt
+
+Fileswithdepth: Direct 10
+
+Layoutscore: 1.0 
+
+Desired layout score, 1.0 is perfectly laid out
+
+Actualfilecreation: 1
+
+If this is 0 then no files and dirs will be created
+if this is 2 then only dirs will be created
+
+SpecialFlags: 10
+Flat 0  // create a flat tree
+Deep 0  // create a deep tree
+Ext -1  // let impressions select extensions, if a number
+        // is specified here that corresponds to the
+        // extension number for all files
+Wordfreq 0 // type of content inside files
+Large2Small 0 // not used currently
+Small2Large 0 // not used currently
+Depthwithcare 1 // places files carefully according to depth distributions
+Filedepthpoisson 1 // use the poisson distribution choice for file depth
+Dircountfiles 0
+Constraint 0    // activate constraint solving for FSused and numfiles
+Printwhat: 10   // Decides what statistics get printed
+ext 0
+sizebin 0
+size 0
+initial 0
+final 1
+depth 0
+tree 0
+subdirs 0
+dircountfiles 0
+constraint 0
+SpecialDirBias

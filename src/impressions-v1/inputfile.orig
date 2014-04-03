@@ -1,0 +1,41 @@
+Parent_Path: ./impress_home/ 1
+Actuallogfile: ./logs 0
+Randseeds: Direct 10 100000 200000 300000 400000 500000 600000 700000 800000 900000 100000
+FScapacity: 100 GB
+FSused: 45 GB
+Numfiles: NO K
+Numdirs: NO K
+Filesperdir: 10.2 N
+FilesizeDistr: Direct 3 99994 29 0.91 
+FilecountDistr: Direct 2 9.48 2.45663283
+Dircountfiles: Direct 2 2 2.36
+DirsizesubdirDistr: Indir DirsizesubdirDistr.txt
+Fileswithdepth: Direct 10
+Layoutscore: 1.0
+Actualfilecreation: 1
+SpecialFlags: 10
+Flat 0
+Deep 0
+Ext -1
+Wordfreq 0
+Large2Small 0
+Small2Large 0
+Depthwithcare 1
+Filedepthpoisson 1
+Dircountfiles 0
+Constraint 0
+Printwhat: 10
+ext 0
+sizebin 0
+size 0
+initial 0
+final 1
+depth 0
+tree 0
+subdirs 0
+dircountfiles 0
+constraint 0
+SpecialDirBias
+
+######### REAL SPEC ENDS ######################
+
