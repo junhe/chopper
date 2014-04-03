@@ -11,7 +11,7 @@ FilecountDistr: Direct 2 9.48 2.45663283
 Dircountfiles: Direct 2 2 2.36
 DirsizesubdirDistr: Indir DirsizesubdirDistr.txt
 Fileswithdepth: Direct 10
-Layoutscore: 0.8 
+Layoutscore: 1
 Actualfilecreation: 1
 SpecialFlags: 10
 Flat 0

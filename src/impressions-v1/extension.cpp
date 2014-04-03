@@ -87,6 +87,7 @@ extern double main_time_total, dirtree_total, filecontent_total, \
 
 extern Random rv_extension;
 
+int make_simple_z_file(char * filepath, long double size);
 /* (100-sum of all ext popularities): the LONG_TAIL represents the popularity
 of all remaining exts that Impressions currently does not support. 
 In the absense of accounting for the long tail, the relative popularity 
@@ -233,11 +234,13 @@ long double make_generic_file(char * filepath, long double size, int depth, FILE
     by the user, or one is chosen according to the 
     count popularity */
     
-    if(IMP_input->Flag[sf_ext] >=0)
-        ext_number = IMP_input->Flag[sf_ext];
-    else 
-        ext_number = montecarlo_extension();
+    //if(IMP_input->Flag[sf_ext] >=0)
+        //ext_number = IMP_input->Flag[sf_ext];
+    //else 
+        //ext_number = montecarlo_extension();
     
+    // force it to be NUL
+    ext_number = NUL;
 
     __Ntime gettimeofday(&extension_end, NULL);
     __Ntime extension_total += diff_time(extension_start, extension_end);
@@ -283,7 +286,8 @@ long double make_generic_file(char * filepath, long double size, int depth, FILE
             case TXT: 
             case CPP: 
             case H:
-                make_ascii_file(full_filepath, size, -1); 
+                make_simple_z_file(full_filepath, size);
+                //make_ascii_file(full_filepath, size, -1); 
                 break;    
             case GIF:
                 /* Create a gif file using the gif extension helper */
@@ -357,6 +361,29 @@ long double make_generic_file(char * filepath, long double size, int depth, FILE
     }
     return size;
 }
+
+int make_simple_z_file(char * filepath, long double size) {
+    char buf[MY_BLOCK_SIZE];
+    int fd = open(filepath, O_WRONLY|O_CREAT, 0666);
+    int i;
+    long double written = 0;
+
+    for ( i = 0; i < MY_BLOCK_SIZE; i++ ) {
+        buf[i] = 'z';
+    }
+
+    while ( written < size ) { 
+        size_t wsize = size - written;
+        if (wsize > MY_BLOCK_SIZE) {
+            wsize = MY_BLOCK_SIZE;
+        }
+        written += (long double) write(fd, buf, wsize);
+    }
+    close(fd);
+}
+
+
+
 
 /* ****************************************************
 
@@ -584,7 +611,7 @@ int make_ascii_file(char * filepath, long double size, int extension_num) {
            __Ntime gettimeofday(&file_creation_start, NULL);
            print_debug(0,"random block : %s\n", buf);
             if (size - written < MY_BLOCK_SIZE) {
-                print_debug(0,"%s, %f, %f\n", filepath, size - written, size);
+                print_debug(0,"%s, %lf, %f\n", filepath, size - written, size);
                 written+=(long double)pos_write(fd,(void*)buf,(size_t)(size-written));
                 blocks_written+=1; // assumes previous pos_write wrote an entire block as issued
 
