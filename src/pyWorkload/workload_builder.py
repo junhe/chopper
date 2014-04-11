@@ -393,9 +393,9 @@ def build_dir_ladder_path( depth ):
     """
     dirpaths = []
     for dirid in range(1, depth):
-        print 'dirid', dirid
+        #print 'dirid', dirid
         path = get_ladder_dir_path(dirid)
-        print path
+        #print path
         dirpaths.append( path )
 
     return dirpaths

@@ -533,18 +533,43 @@ def row_to_treatment(design_row):
             file_treatment['chunks'].append(d)
         filetreatment_list.append( 
                        copy.deepcopy(file_treatment) )
-    
+
+    # number of concurrent writing files
+    nfiles = 2 
+
     filechunk_order = []
-    for i,filetreat in enumerate(filetreatment_list):
-        filechunk_order += [i] * len(filetreat['chunks'])
+    for i,ft in enumerate(filetreatment_list):
+        filechunk_order += [i]*len(ft['write_order'])
+    # a round is a time you use a filetreatment for a fileid
+    # you may use a fileid for many rounds.
+    # This filerounds indicates the number rounds you used
+    # a particular file id.
+    filerounds = len(filetreatment_list)
+    #[ x+k*off for x in l for k in range(off)  ]
+    # make the files interleave
+    filechunk_order = [ x+k*filerounds for x in filechunk_order \
+                                        for k in range(nfiles) ]
+        
+    nfiletreatment_list = []
+    filepos = 0
+    for filei in range(nfiles):
+        ftreat_list = copy.deepcopy( filetreatment_list )
+        # update file id
+        for ftreat in ftreat_list:
+            ftreat['fileid'] = filei
+        nfiletreatment_list.append( ftreat_list )
+
+    #filechunk_order = []
+    #for i,filetreat in enumerate(filetreatment_list):
+        #filechunk_order += [i] * len(filetreat['chunks'])
 
     treatment = {
-                  'filesystem': 'ext4',
+                  'filesystem': None, # will be replaced later
                   'disksize'  : disk_size,
                   'disk_used'    : disk_used,
                   'dir_depth'     : 32,
                   # file id in file_treatment is the index here
-                  'files': filetreatment_list,
+                  'files': nfiletreatment_list,
                   #'files': [file_treatment],
                   # the number of item in the following list
                   # is the number of total chunks of all files
