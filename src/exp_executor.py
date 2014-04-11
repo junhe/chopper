@@ -466,6 +466,7 @@ class Executor:
         df.addColumn(key = 'node_id',
                 value = '.'.join(socket.gethostname().split('.')[0:2]))
 
+        print df.toStr()
         ##############################3
         # do some clean up
         # writer_cpu_map       fullness             
@@ -486,7 +487,8 @@ class Executor:
                   'n_virtual_cores', 'parent_dirid',
                   'disksize', 'disk_used',
                   'dspan', 'fullness',
-                  'jobid', 'filesystem'
+                  'jobid', 'filesystem',
+                  'dir.span', 'num.files'
                   ]
         headers = copy.deepcopy(df.header)
         for colname in headers:

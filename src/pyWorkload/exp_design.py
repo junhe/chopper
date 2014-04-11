@@ -433,14 +433,14 @@ def row_to_recipe(design_row):
             'num.chunks':nchunks,
             'disk.size':disk_size,
             'disk.used':disk_used,
-            'dir.span' :dir_span, # not implemented
+            'dir.span' :8, # not implemented
             'file.size':file_size,
             'fullness' :fullness,
             'num.cores':n_virtual_cores,
             'fsync'    :fsync_bitmap,
             'sync'     :sync_bitmap,
             'chunk.order': write_order,
-            'num.files'  : num_files   # not implemented
+            'num.files'  : 2   # not implemented
         }
     return recipe
 
@@ -563,7 +563,7 @@ def recipe_to_treatment(recipe):
         for ftreat in ftreat_list:
             ftreat['fileid'] = filei
             ftreat['parent_dirid']  = dirid
-        nfiletreatment_list.append( ftreat_list )
+        nfiletreatment_list.extend( ftreat_list )
 
     #filechunk_order = []
     #for i,filetreat in enumerate(filetreatment_list):
@@ -576,6 +576,9 @@ def recipe_to_treatment(recipe):
                   'dir_depth'     : 32,
                   # file id in file_treatment is the index here
                   'files': nfiletreatment_list,
+                  # for display only, no effect
+                  'num.files': nfiles,
+                  'dir.span' : r['dir.span'],
                   #'files': [file_treatment],
                   # the number of item in the following list
                   # is the number of total chunks of all files
@@ -600,18 +603,20 @@ def fourbyfour_iter(design_path):
             #row_to_treatment(design_row) 
             #if design_row['chunk.number'] != 4:
                 #continue
-            treatment = row_to_treatment(design_row)
+            recipe = row_to_recipe( design_row )
+            treatment = recipe_to_treatment(recipe) 
             treatment['filesystem'] = fs
-            #pprint.pprint( treatment )
+            pprint.pprint( treatment )
             yield treatment
             cnt += 1
-            #break
-            #if cnt <= 168:
-                #continue
+            break
+            if cnt == 3:
+                break
     
 if __name__ == '__main__':
     #read_design_file_blhd('../design_blhd-4by4.txt')
-    #fourbyfour_iter('../design_blhd-4by4.txt')
+    fourbyfour_iter('../design_blhd-4by4.txt')
+    exit(0)
 
     recipe = {
             'num.chunks': 2,
