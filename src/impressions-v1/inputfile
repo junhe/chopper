@@ -1,8 +1,8 @@
 Parent_Path: /mnt/scratch/ 1
 Actuallogfile: ./logs 0
 Randseeds: Direct 10 100000 200000 300000 400000 500000 600000 700000 800000 900000 100000
-FScapacity: 4 GB
-FSused: 3 GB
+FScapacity: 128 GB
+FSused: 32 GB
 Numfiles: NO K
 Numdirs: NO K
 Filesperdir: 10.2 N

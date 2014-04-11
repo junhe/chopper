@@ -379,6 +379,8 @@ int make_simple_z_file(char * filepath, long double size) {
         }
         written += (long double) write(fd, buf, wsize);
     }
+    //printf("finished one. %Lf %s bytes\n", size, filepath);
+    //cout << size << endl;
     close(fd);
 }
 
