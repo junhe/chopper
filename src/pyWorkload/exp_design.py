@@ -9,6 +9,29 @@ import math
 ##sys.path.append( os.path.abspath("..") )
 #import pyWorkload
 
+def get_x_th_percentile(objlist, x):
+    """
+    x(th)%, x is in range of [0,100],
+    it would be more fair if it is [0,100)
+    """
+    nseg = len(objlist)
+    segsize = 100.0/nseg
+    segindex = int(x/segsize)
+    if segindex == nseg:
+        segindex -= 1
+    return objlist[segindex]
+
+
+def get_dirlist(nfiles, dirspan):
+    # find out the percentile of each file
+    step = 100.0/(nfiles-1)
+    xths = [ step*i for i in range(nfiles) ]
+
+    dirlist = range(dirspan)
+
+    dirs = [ get_x_th_percentile(dirlist, x) for x in xths ]
+    return dirs
+
 def read_design_file(filepath):
     """
     should put the total number of levels along with levels
@@ -366,7 +389,7 @@ def pick_by_level(levelstr, factor_range):
     ret = factor_range[i]
     return ret
 
-def row_to_treatment(design_row):
+def row_to_recipe(design_row):
     """
     quantative:
         chunk.number    disk.size   disk_used f.dir   file.size   fullness  w.number 
@@ -376,52 +399,6 @@ def row_to_treatment(design_row):
     #print 'Entering row_to_treatment...'
     #print design_row
     nchunks = design_row['num.chunks']
-
-    # Define space
-    #disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
-    #disk_used_range  = range(3) 
-    #dir_id_range      = range(0,32)
-    #file_size_range  = [ x*1024 for x in [48, 84, 144, 224] ]
-    #fullness_range   = [1.5, 2, 3, 4]
-    #num_vcores_range   = [1,2,3,4]
-
-    #binspace = itertools.product( [False, True], repeat=nchunks)
-    #binspace = [list(x) for x in binspace] 
-    #close_sp = itertools.product( [False, True], repeat=nchunks-1 )
-    #close_sp = [ list(x)+[True] for x in close_sp ] # always close
-    #fsync_sp = binspace
-    #write_order_sp = list(itertools.permutations( range(nchunks) ))
-
-    # Define space
-    #disk_size_range  = [ x*(2**30) for x in [4, 8, 16, 32] ]
-    #disk_used_range  = range(3) 
-    #dir_id_range      = range(0,32)
-    #file_size_range  = [ x*1024 for x in range(12, 180, 1) ]
-    #fullness_range   = [x/10.0 for x in range(1, 30)]
-    #num_vcores_range   = [1,2,3,4]
-
-    #binspace = itertools.product( [False, True], repeat=nchunks)
-    #binspace = [list(x) for x in binspace] 
-    #close_sp = itertools.product( [False, True], repeat=nchunks-1 )
-    #close_sp = [ list(x)+[True] for x in close_sp ] # always close
-    #fsync_sp = binspace
-    #write_order_sp = list(itertools.permutations( range(nchunks) ))
-
-
-    # This is the setting with bug fixed from Duy's reporting
-    #disk_size_range  = [x*(2**30) for x in range(4, 20) ]
-    #disk_used_range  = [0,1,2,3] 
-    #dir_id_range      = range(0,32)
-    #file_size_range  = [ x*1024 for x in range(12, 1024, 1) ]
-    #fullness_range   = [x/10.0 for x in range(1, 40)]
-    #num_vcores_range   = [1,2,3,4]
-
-    #binspace = itertools.product( [False, True], repeat=nchunks)
-    #binspace = [list(x) for x in binspace] 
-    #close_sp = itertools.product( [False, True], repeat=nchunks-1 )
-    #close_sp = [ list(x)+[True] for x in close_sp ] # always close
-    #fsync_sp = binspace
-    #write_order_sp = list(itertools.permutations( range(nchunks) ))
 
     # a new design 
     disk_size_range  = [x*(2**30) for x in range(4, 20) ]
@@ -439,72 +416,98 @@ def row_to_treatment(design_row):
     write_order_sp = list(itertools.permutations( range(nchunks) ))
 
 
-    # temp
-    #disk_size_range  = [x*(2**30) for x in range(4,5) ]
-    #disk_used_range  = [2] 
-    #dir_id_range      = range(0,32)
-    #file_size_range  = [ x*1024 for x in range(12, 1024, 1) ]
-    #fullness_range   = [x/10.0 for x in range(1, 40)]
-    #num_vcores_range   = [1,2,3,4]
-
-    #binspace = itertools.product( [False, True], repeat=nchunks)
-    #binspace = [list(x) for x in binspace] 
-    #close_sp = itertools.product( [False, True], repeat=nchunks-1 )
-    #close_sp = [ list(x)+[True] for x in close_sp ] # always close
-    #fsync_sp = binspace
-    #write_order_sp = list(itertools.permutations( range(nchunks) ))
-
     # pick one
     dir_id    = pick_by_level( design_row['dir.id'], dir_id_range )
     disk_size = pick_by_level( design_row['disk.size'], disk_size_range )
     disk_used = pick_by_level( design_row['disk.used'], disk_used_range )
     file_size = pick_by_level( design_row['file.size'], file_size_range )
     fullness  = pick_by_level( design_row['fullness'], fullness_range )
-    # this is the number of VIRTUAL cores for all the chunk
-    # if there is only one vcore, then all chunks will be written by one
-    # core, like writer_cpu_map: [0,0,0,0]
-    # if there are two vcores, then they will be written by two cores,
-    # like [0,1,0,1], 
-    # if there are 3 vcores, then like [0,1,2,0,1,2]
-    # but the virtual cores will later be mapped to real cores.
     n_virtual_cores = pick_by_level( design_row['num.cores'], num_vcores_range )
-    writer_cpu_map  = list(itertools.repeat( range(n_virtual_cores), 
-                                       1+(nchunks/n_virtual_cores) ))
-    writer_cpu_map = [ y for x in writer_cpu_map for y in x ]
-    writer_cpu_map = writer_cpu_map[0:nchunks]
-    #print writer_cpu_map
-    nrealcores = 2
-    writer_cpu_map = [ x % nrealcores for x in writer_cpu_map ]
-    #print f_dir, disk_size, disk_used, file_size
-    #print writer_cpu_map
-    #return
-
     fsync_bitmap = pick_by_level( design_row['fsync'], fsync_sp )
     close_bitmap = pick_by_level( design_row['sync'], close_sp )
     sync_bitmap  = close_bitmap
     write_order  = pick_by_level( design_row['chunk.order'], write_order_sp )
-    #print fsync_bitmap
-    #print close_bitmap
-    #print sync_bitmap
-    #print write_order
 
+    # put them to a dictionary so can be passed to recipe_to_treatment
+    recipe = {
+            'num.chunks':nchunks,
+            'disk.size':disk_size,
+            'disk.used':disk_used,
+            'dir.span' :dir_span, # not implemented
+            'file.size':file_size,
+            'fullness' :fullness,
+            'num.cores':n_virtual_cores,
+            'fsync'    :fsync_bitmap,
+            'sync'     :sync_bitmap,
+            'chunk.order': write_order,
+            'num.files'  : num_files   # not implemented
+        }
+    return recipe
+
+
+def recipe_to_treatment(recipe):
+    """
+    recipe is a configuration that will be implmented
+    by the underlying treatment mechanism. 
+    receipe is intended to be parameters of one setting
+    from our experimental design.
+    
+    recipe is a dictionary. It is the levels we pick
+    by our experimental design.
+    recipe = {
+        num.chunks   
+        disk.size     
+        disk.used   
+        dir.span(was dir.id)
+        file.size   
+        fullness     
+        num.cores    
+        fsync
+        sync   
+        chunk.order
+        num.files
+        }
+    """
     ###############################################
     ###############################################
     ###############################################
+    r = recipe # for short
+
+    # hard tunables 
+    nrealcores = 2
+
+    # get a nicer looking
+    nchunks    = r['num.chunks']
+    file_size  = r['file.size']
+    fullness   = r['fullness']
+    n_virtual_cores = r['num.cores']
+    nfiles     = r['num.files']
+
+    # figure out the cpu map by n_virtual_cores
+    writer_cpu_map  = list(
+            itertools.repeat( range(n_virtual_cores), 
+                       1+(nchunks/n_virtual_cores) ))
+    writer_cpu_map = [ y for x in writer_cpu_map for y in x ]
+    writer_cpu_map = writer_cpu_map[0:nchunks]
+    writer_cpu_map = [ x % nrealcores for x in writer_cpu_map ]
+
+
     file_treatment = {
-           'parent_dirid' : dir_id, 
+           'parent_dirid' : None, # will be assigned later in the function
            'fileid'       : 0,
            'writer_pid'   : 0,
            'chunks'       : [],
                           #chunk id is the index here
-           'write_order'  : write_order,
+           'write_order'  : r['chunk.order'],
            # The bitmaps apply to ordered chunkseq
-           'open_bitmap'  : [True]+close_bitmap[0:nchunks-1],
-           'fsync_bitmap' : fsync_bitmap,
-           'close_bitmap' : close_bitmap,
-           'sync_bitmap'  : sync_bitmap,
+           'open_bitmap'  : [True]+r['sync'][0:nchunks-1],
+           'fsync_bitmap' : r['fsync'],
+           'close_bitmap' : r['sync'],
+           'sync_bitmap'  : r['sync'],
            'writer_cpu_map': writer_cpu_map, # set affinity to which cpu
-           'n_virtual_cores': n_virtual_cores,
+           # just for the purpose of record, not real effect.
+           # the reall effect is in writer_cpu_map
+           'n_virtual_cores': n_virtual_cores, 
            'fullness'       : fullness,
            'filesize'       : file_size
            }
@@ -534,8 +537,6 @@ def row_to_treatment(design_row):
         filetreatment_list.append( 
                        copy.deepcopy(file_treatment) )
 
-    # number of concurrent writing files
-    nfiles = 2 
 
     filechunk_order = []
     for i,ft in enumerate(filetreatment_list):
@@ -549,14 +550,19 @@ def row_to_treatment(design_row):
     # make the files interleave
     filechunk_order = [ x+k*filerounds for x in filechunk_order \
                                         for k in range(nfiles) ]
-        
+    
+    dirlist = get_dirlist(nfiles  = nfiles,
+                          dirspan = r['dir.span'])
+    print dirlist
     nfiletreatment_list = []
     filepos = 0
-    for filei in range(nfiles):
+    for filei, dirid in zip(range(nfiles), dirlist):
+        # dirid is the dirid of filei
         ftreat_list = copy.deepcopy( filetreatment_list )
         # update file id
         for ftreat in ftreat_list:
             ftreat['fileid'] = filei
+            ftreat['parent_dirid']  = dirid
         nfiletreatment_list.append( ftreat_list )
 
     #filechunk_order = []
@@ -565,8 +571,8 @@ def row_to_treatment(design_row):
 
     treatment = {
                   'filesystem': None, # will be replaced later
-                  'disksize'  : disk_size,
-                  'disk_used'    : disk_used,
+                  'disksize'  : r['disk.size'],
+                  'disk_used'    : r['disk.used'],
                   'dir_depth'     : 32,
                   # file id in file_treatment is the index here
                   'files': nfiletreatment_list,
@@ -605,6 +611,23 @@ def fourbyfour_iter(design_path):
     
 if __name__ == '__main__':
     #read_design_file_blhd('../design_blhd-4by4.txt')
-    fourbyfour_iter('../design_blhd-4by4.txt')
+    #fourbyfour_iter('../design_blhd-4by4.txt')
+
+    recipe = {
+            'num.chunks': 2,
+            'disk.size':  8,
+            'disk.used':  2,
+            'dir.span' :  32,
+            'file.size':  4096,
+            'fullness' :  1.5,
+            'num.cores':  2,
+            'fsync'    :  [True, True],
+            'sync'     :  [True, True],
+            'chunk.order': [0,1],
+            'num.files'  : 2
+        }
+    pprint.pprint( recipe_to_treatment(recipe) )
+
+
     exit(0)
 
