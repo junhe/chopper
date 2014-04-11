@@ -168,7 +168,7 @@ def get_image_path(fstype, disksize, used_ratio, fsused):
     return dir + newimagename
 
 def get_fsusedGB(disksize, used_ratio):
-    fsused = int((disksize/(2**30))*used_ratio)
+    fsused = int((disksize/(2**20))*used_ratio)
     return fsused
 
 def make_one_image(fstype, disksize, used_ratio):
@@ -185,7 +185,7 @@ def make_one_image(fstype, disksize, used_ratio):
     else:
         config_dict = {
                         'Parent_Path:': ['/mnt/scratch/', 1],
-                        'FSused:': [ fsused, 'GB'] 
+                        'FSused:': [ fsused, 'MB'] 
                       }
         pprint.pprint( config_dict )
         run_impressions(config_dict)

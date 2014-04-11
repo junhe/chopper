@@ -119,9 +119,11 @@ class Walkman:
     def _remake_fs(self):
         fs = self.confparser.get('system', 'filesystem')
 
-        disk_used = self.confparser.getint('system', 'disk_used')
+        disk_used = self.confparser.getfloat('system', 'disk_used')
+        assert disk_used >= 0 and disk_used <= 1, "now it is a ratio"
         disksize = self.confparser.getint('system', 'disksize')
-        used_ratio=float(disk_used*2**30)/disksize
+        #used_ratio=float(disk_used*2**30)/disksize
+        used_ratio = disk_used 
         print disk_used, disksize, used_ratio
        
         make_disk_images.use_one_image(fstype=fs,

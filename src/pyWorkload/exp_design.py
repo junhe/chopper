@@ -402,7 +402,7 @@ def row_to_recipe(design_row):
 
     # a new design 
     disk_size_range  = [x*(2**30) for x in range(4, 20) ]
-    disk_used_range  = [0,1,2,3] 
+    disk_used_range  = [0, 0.1, 0.2, 0.3] 
     dir_id_range      = range(0,16)
     file_size_range  = [ x*1024 for x in range(12, 524, 4) ]
     fullness_range   = [x/10.0 for x in range(1, 21)]
@@ -475,6 +475,7 @@ def recipe_to_treatment(recipe):
 
     # hard tunables 
     nrealcores = 2
+    dir_depth = 32
 
     # get a nicer looking
     nchunks    = r['num.chunks']
@@ -553,7 +554,7 @@ def recipe_to_treatment(recipe):
     
     dirlist = get_dirlist(nfiles  = nfiles,
                           dirspan = r['dir.span'])
-    print dirlist
+    #print dirlist
     nfiletreatment_list = []
     filepos = 0
     for filei, dirid in zip(range(nfiles), dirlist):
@@ -573,7 +574,7 @@ def recipe_to_treatment(recipe):
                   'filesystem': None, # will be replaced later
                   'disksize'  : r['disk.size'],
                   'disk_used'    : r['disk.used'],
-                  'dir_depth'     : 32,
+                  'dir_depth'     : dir_depth,
                   # file id in file_treatment is the index here
                   'files': nfiletreatment_list,
                   # for display only, no effect
@@ -607,6 +608,7 @@ def fourbyfour_iter(design_path):
             treatment = recipe_to_treatment(recipe) 
             treatment['filesystem'] = fs
             pprint.pprint( treatment )
+            #exit(0)
             yield treatment
             cnt += 1
             break
