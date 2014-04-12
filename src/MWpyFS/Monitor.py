@@ -38,6 +38,7 @@ import shlex
 import os
 import pprint
 import shutil
+import fnmatch
 
 import btrfs_db_parser
 import xfs_db_parser
@@ -496,15 +497,20 @@ class FSMonitor:
             
         return paths
 
-    def getExtentList_of_a_dir(self, target="."):
+    def getExtentList_of_a_dir(self, target):
+        """
+        this only works for absolute path 
+        """
         if self.filesystem != 'ext4':
             return 
-
-        files = self.getAllInodePaths(target)
+        
+        #files = self.getAllInodePaths(target)
+        files = get_all_my_files(target)
         #print files
         #exit(1)
         df = dataframe.DataFrame()
         for f in files:
+            f = os.path.relpath(f, target)
             if len(df.header) == 0:
                 df = self.dump_extents_of_a_file(f)
             else:
@@ -611,9 +617,9 @@ class FSMonitor:
             
             ######################
             # get extents of all files
-            extlist0 = self.getExtentList_of_a_dir(target="0.file")
-            extlist = self.getExtentList_of_a_dir(target='./dir.1/')
-            extlist.table.extend( extlist0.table )
+            extlist = self.getExtentList_of_a_dir(target=self.mountpoint)
+            #extlist = self.getExtentList_of_a_dir(target='./dir.1/')
+            #extlist.table.extend( extlist0.table )
             
             df_ext = extlist_translate_new_format(extlist)
 
@@ -642,9 +648,9 @@ class FSMonitor:
                 #f.write(dumpfs_header + freespaces['freeinodes'].toStr())
 
         elif self.filesystem == 'xfs':
-            df_ext0 = self.xfs_getExtentList_of_a_dir('0.file')
-            df_ext = self.xfs_getExtentList_of_a_dir('./dir.1/')
-            df_ext.table.extend(df_ext0.table)
+            df_ext = self.xfs_getExtentList_of_a_dir(self.mountpoint)
+            #df_ext = self.xfs_getExtentList_of_a_dir('./dir.1/')
+            #df_ext.table.extend(df_ext0.table)
             df_ext = extlist_translate_new_format(df_ext)
             
             if savedata and df_ext != None:
@@ -667,17 +673,13 @@ class FSMonitor:
             df_dic = tree_parser.parse()
             df_rawext = df_dic['extents']
             df_chunk = df_dic['chunks']
-            df_map = btrfs_db_parser.get_filepath_inode_map(
-                        self.mountpoint, "./dir.1/")
-            if os.path.exists( os.path.join(self.mountpoint,
-                                    "./0.file") ):
-                df_map0 = btrfs_db_parser.get_filepath_inode_map(
-                            self.mountpoint, "0.file")
-                df_map.table.extend( df_map0.table )
+            paths = get_all_my_files(self.mountpoint)
+            df_map = btrfs_db_parser.get_filepath_inode_map2(paths)
 
-            #print df_ext.toStr()
-            #print df_chunk.toStr()
-
+            print df_rawext.toStr()
+            print df_chunk.toStr()
+            print df_map.toStr()
+            exit(0)
 
             df_ext = btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map)
 
@@ -756,7 +758,8 @@ class FSMonitor:
 
     def xfs_getExtentList_of_a_dir(self, target="."):
         "rootdir is actually relative to mountpoint. Seems bad"
-        files = self.getAllInodePaths(target)
+        #files = self.getAllInodePaths(target)
+        files = get_all_my_files(target)
         df = dataframe.DataFrame()
         for f in files:
             #print "UU____UU"
@@ -781,6 +784,15 @@ def remove_unecessary(top):
             shutil.rmtree(path)
             #print 'remove DIR:', path
     subprocess.call('sync')
+
+def get_all_my_files( target ):
+    matches = []
+    for root, dirnames, filenames in os.walk(target):
+      for filename in fnmatch.filter(filenames, '*.file'):
+          matches.append(os.path.join(root, filename))
+      dirnames[:] = fnmatch.filter(dirnames, 'dir.*')
+    return matches
+
 
 def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
     """

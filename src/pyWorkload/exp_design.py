@@ -598,7 +598,7 @@ def fourbyfour_iter(design_path):
     cnt = 0
     #design_table = [ design_table[i] 
              #for i in sorted(range(len(design_table)), reverse=True)]
-    for fs in ['btrfs']:
+    for fs in ['ext4','xfs']:
         for design_row in design_table:
             #pprint.pprint( row_to_treatment(design_row) )
             #row_to_treatment(design_row) 
@@ -611,7 +611,7 @@ def fourbyfour_iter(design_path):
             #exit(0)
             yield treatment
             cnt += 1
-            break
+            #break
             if cnt == 3:
                 break
     

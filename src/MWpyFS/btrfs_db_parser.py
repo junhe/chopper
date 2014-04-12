@@ -224,6 +224,15 @@ def get_filepath_inode_map(mountpoint, dir):
 
     return df
 
+def get_filepath_inode_map2(paths):
+    "paths should be absolute paths"
+    df = dataframe.DataFrame()
+    df.header = ['filepath', 'inode_number']
+    for path in paths:
+        inode_number = Monitor.stat_a_file(path)['inode_number']
+        df.addRowByList([path, inode_number])
+
+    return df
 
 def line_parts(line):
     """
