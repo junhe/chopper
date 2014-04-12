@@ -652,6 +652,9 @@ class FSMonitor:
             #df_ext = self.xfs_getExtentList_of_a_dir('./dir.1/')
             #df_ext.table.extend(df_ext0.table)
             df_ext = extlist_translate_new_format(df_ext)
+
+            #print df_ext.toStr()
+            #exit(1)
             
             if savedata and df_ext != None:
                 df_ext.addColumns(keylist=["HEADERMARKER_extlist",
@@ -704,7 +707,7 @@ class FSMonitor:
         
         # calculate return value
         ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
-                                        'file')
+                                        '.file')
         myfiles = [
                     #'./pid00000.dir00000/pid.00000.file.00000'
                     #'./pid00000.dir00000/pid.00000.file.00001'
