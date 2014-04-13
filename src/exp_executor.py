@@ -124,7 +124,7 @@ class Walkman:
         disksize = self.confparser.getint('system', 'disksize')
         #used_ratio=float(disk_used*2**30)/disksize
         used_ratio = disk_used 
-        print disk_used, disksize, used_ratio
+        #print disk_used, disksize, used_ratio
        
         make_disk_images.use_one_image(fstype=fs,
                                        disksize=disksize,
@@ -182,7 +182,7 @@ class Walkman:
         disk_used = self.confparser.getint('system', 'disk_used')
         disksize = self.confparser.getint('system', 'disksize')
         used_ratio=float(disk_used*2**30)/disksize
-        print disk_used, disksize, used_ratio
+        #print disk_used, disksize, used_ratio
         #exit(0)
        
         make_disk_images.use_one_image(fstype='ext4',
@@ -405,9 +405,9 @@ class Executor:
         #for treatment in pyWorkload.exp_design.dir_distance_iter():
         #for treatment in pyWorkload.exp_design.onefile_iter():
         for treatment in pyWorkload.\
-               exp_design.fourbyfour_iter('./design_blhd-4by4.txt'):
+               exp_design.fourbyfour_iter('./designs/design_blhd-4by4.tmp.txt'):
                #exp_design.fourbyfour_iter('./4by4design.txt'):
-            pprint.pprint(treatment)
+            #pprint.pprint(treatment)
             self.run_and_get_df( treatment, savedf=True)
 
     def sampleworkload(self):
@@ -468,7 +468,7 @@ class Executor:
         df.addColumn(key = 'node_id',
                 value = '.'.join(socket.gethostname().split('.')[0:2]))
 
-        print df.toStr()
+        #print df.toStr()
         ##############################3
         # do some clean up
         # writer_cpu_map       fullness             

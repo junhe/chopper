@@ -24,10 +24,14 @@ def get_x_th_percentile(objlist, x):
 
 def get_dirlist(nfiles, dirspan):
     # find out the percentile of each file
-    step = 100.0/(nfiles-1)
-    xths = [ step*i for i in range(nfiles) ]
+    if nfiles == 1:
+        xths = [0]
+    else:
+        step = 100.0/(nfiles-1)
+        xths = [ step*i for i in range(nfiles) ]
 
     dirlist = range(dirspan)
+    #print 'dirspan', dirspan
 
     dirs = [ get_x_th_percentile(dirlist, x) for x in xths ]
     return dirs
@@ -105,6 +109,7 @@ def read_design_file_blhd(filepath):
         table.append(d)
     f.close()
 
+    # formatting each row
     nlevels = {}
     for row in table:
         row['num.chunks'] = int(row['num.chunks'])
@@ -114,7 +119,7 @@ def read_design_file_blhd(filepath):
         nlevels['chunk.order'] = math.factorial(nchunks)
 
         for k,v in nlevels.items():
-            row[k] = str(int(row[k])-1)+'/'+str(nlevels[k])
+            row[k] = str(int(row[k])-1)+'/float('+str(nlevels[k])+')'
 
     #pprint.pprint( table )
     return table
@@ -389,59 +394,92 @@ def pick_by_level(levelstr, factor_range):
     ret = factor_range[i]
     return ret
 
-def row_to_recipe(design_row):
-    """
-    quantative:
-        chunk.number    disk.size   disk_used f.dir   file.size   fullness  w.number 
-    qualitative:
-        fsync   sync    c.order
-    """
-    #print 'Entering row_to_treatment...'
-    #print design_row
-    nchunks = design_row['num.chunks']
-
-    # a new design 
-    disk_size_range  = [x*(2**30) for x in range(4, 20) ]
-    disk_used_range  = [0, 0.1, 0.2, 0.3] 
-    dir_id_range      = range(0,16)
-    file_size_range  = [ x*1024 for x in range(12, 524, 4) ]
-    fullness_range   = [x/10.0 for x in range(1, 21)]
-    num_vcores_range   = [1,2]
-
+def get_factor_spaces_SAMPLE(nchunks):
     binspace = itertools.product( [False, True], repeat=nchunks)
     binspace = [list(x) for x in binspace] 
+
     close_sp = itertools.product( [False, True], repeat=nchunks-1 )
     close_sp = [ list(x)+[True] for x in close_sp ] # always close
-    fsync_sp = binspace
-    write_order_sp = list(itertools.permutations( range(nchunks) ))
 
+
+    space_dic = {}
+    space_dic['disk.size']    = [x*(2**30) for x in range(4, 20) ]
+    space_dic['disk.used']    = [0, 0.25, 0.5, 0.75] 
+    space_dic['dir.span']     = range(0,32) 
+    space_dic['file.size']    = [ x*1024 for x in range(12, 524, 4) ]
+    space_dic['fullness']     = [x/10.0 for x in range(1, 21)]
+    space_dic['num.cores']    = [1,2]
+    space_dic['fsync']        = binspace
+    space_dic['sync']         = close_sp
+    space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
+    space_dic['num.files']    = binspace
+
+    return space_dic
+
+def get_factor_spaces(nchunks):
+    binspace = itertools.product( [False, True], repeat=nchunks)
+    binspace = [list(x) for x in binspace] 
+
+    close_sp = itertools.product( [False, True], repeat=nchunks-1 )
+    close_sp = [ list(x)+[True] for x in close_sp ] # always close
+
+
+    space_dic = {}
+    #space_dic['disk.size']    = [x*(2**30) for x in range(4, 20) ]
+    space_dic['disk.used']    = [0, 0.1, 0.2, 0.3] 
+    space_dic['dir.span']     = range(1,33) 
+    space_dic['file.size']    = [ x*1024 for x in range(12, 524, 4) ]
+    space_dic['fullness']     = [x/10.0 for x in range(1, 21)]
+    space_dic['num.cores']    = [1,2]
+    space_dic['fsync']        = binspace
+    space_dic['sync']         = close_sp
+    space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
+    space_dic['num.files']    = range(1,4)
+
+    return space_dic
+
+def row_to_recipe(design_row):
+    print design_row
+    recipe = {}
+    
+    nchunks = design_row['num.chunks']
+
+    space_dic = get_factor_spaces(nchunks)
 
     # pick one
-    dir_id    = pick_by_level( design_row['dir.id'], dir_id_range )
-    disk_size = pick_by_level( design_row['disk.size'], disk_size_range )
-    disk_used = pick_by_level( design_row['disk.used'], disk_used_range )
-    file_size = pick_by_level( design_row['file.size'], file_size_range )
-    fullness  = pick_by_level( design_row['fullness'], fullness_range )
-    n_virtual_cores = pick_by_level( design_row['num.cores'], num_vcores_range )
-    fsync_bitmap = pick_by_level( design_row['fsync'], fsync_sp )
-    close_bitmap = pick_by_level( design_row['sync'], close_sp )
-    sync_bitmap  = close_bitmap
-    write_order  = pick_by_level( design_row['chunk.order'], write_order_sp )
+    for k,space in space_dic.items():
+        recipe[k] = pick_by_level( design_row[k], space )
+
+    
+    # hard coded factors
+    recipe['num.chunks'] = nchunks
+    recipe['disk.size'] = 4*2**30
+
+    #dir_id    = pick_by_level( design_row['dir.id'], dir_id_range )
+    #disk_size = pick_by_level( design_row['disk.size'], disk_size_range )
+    #disk_used = pick_by_level( design_row['disk.used'], disk_used_range )
+    #file_size = pick_by_level( design_row['file.size'], file_size_range )
+    #fullness  = pick_by_level( design_row['fullness'], fullness_range )
+    #n_virtual_cores = pick_by_level( design_row['num.cores'], num_vcores_range )
+    #fsync_bitmap = pick_by_level( design_row['fsync'], fsync_sp )
+    #close_bitmap = pick_by_level( design_row['sync'], close_sp )
+    #sync_bitmap  = close_bitmap
+    #write_order  = pick_by_level( design_row['chunk.order'], write_order_sp )
 
     # put them to a dictionary so can be passed to recipe_to_treatment
-    recipe = {
-            'num.chunks':nchunks,
-            'disk.size':disk_size,
-            'disk.used':disk_used,
-            'dir.span' :8, # not implemented
-            'file.size':file_size,
-            'fullness' :fullness,
-            'num.cores':n_virtual_cores,
-            'fsync'    :fsync_bitmap,
-            'sync'     :sync_bitmap,
-            'chunk.order': write_order,
-            'num.files'  : 2   # not implemented
-        }
+    #recipe = {
+            #'num.chunks':nchunks,
+            #'disk.size':disk_size,
+            #'disk.used':disk_used,
+            #'dir.span' :8, # not implemented
+            #'file.size':file_size,
+            #'fullness' :fullness,
+            #'num.cores':n_virtual_cores,
+            #'fsync'    :fsync_bitmap,
+            #'sync'     :sync_bitmap,
+            #'chunk.order': write_order,
+            #'num.files'  : 2   # not implemented
+        #}
     return recipe
 
 
@@ -598,26 +636,28 @@ def fourbyfour_iter(design_path):
     cnt = 0
     #design_table = [ design_table[i] 
              #for i in sorted(range(len(design_table)), reverse=True)]
-    for fs in ['xfs']:
+    for fs in ['btrfs', 'xfs', 'ext4']:
         for design_row in design_table:
             #pprint.pprint( row_to_treatment(design_row) )
             #row_to_treatment(design_row) 
             #if design_row['chunk.number'] != 4:
                 #continue
             recipe = row_to_recipe( design_row )
+            #pprint.pprint( recipe )
             treatment = recipe_to_treatment(recipe) 
             treatment['filesystem'] = fs
-            pprint.pprint( treatment )
+            #pprint.pprint( treatment )
             #exit(0)
             yield treatment
             cnt += 1
             #break
-            if cnt == 3:
-                break
+            #if cnt == 3:
+                #continue
+                #break
     
 if __name__ == '__main__':
     #read_design_file_blhd('../design_blhd-4by4.txt')
-    fourbyfour_iter('../design_blhd-4by4.txt')
+    fourbyfour_iter('../designs/design_blhd-4by4.tmp.txt')
     exit(0)
 
     recipe = {

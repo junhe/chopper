@@ -679,10 +679,10 @@ class FSMonitor:
             paths = get_all_my_files(self.mountpoint)
             df_map = btrfs_db_parser.get_filepath_inode_map2(paths)
 
-            print df_rawext.toStr()
-            print df_chunk.toStr()
-            print df_map.toStr()
-            exit(0)
+            #print df_rawext.toStr()
+            #print df_chunk.toStr()
+            #print df_map.toStr()
+            #exit(0)
 
             df_ext = btrfs_convert_rawext_to_ext(df_rawext, df_chunk, df_map)
 
