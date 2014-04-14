@@ -707,8 +707,12 @@ class FSMonitor:
             f.close()
         
         # calculate return value
+        print df_ext.toStr()
         ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
                                         '.file')
+        ret_dict['layout_index'] = \
+                get_layoutindex_from_extent_list(df_ext, '.file')
+        assert ret_dict['layout_index'] >= 0, 'layout_index should be >=0'
         myfiles = [
                     #'./pid00000.dir00000/pid.00000.file.00000'
                     #'./pid00000.dir00000/pid.00000.file.00001'
@@ -785,6 +789,7 @@ def get_layout_index(extentlist):
         [ {'off':xxx, 'len':xxx}, {..}, ..]
     This unit is byte.
     """
+    print extentlist
     # for each extent
     distsum = 0
     n = 0
@@ -807,6 +812,9 @@ def extent_distant_sum(extent):
     return ret
 
 def extent_pair_distant_sum( extent1, extent2 ):
+    "ext1 and ext2 cannot overlap!"
+    if extent1['off'] > extent2['off']:
+        extent1, extent2 = extent2, extent1
     m = get_num_sectors(extent1['len'])
     n = get_num_sectors(extent2['len'])
     k = (extent2['off']-extent1['off']-extent1['len'])/SECTORSIZE
@@ -1067,6 +1075,26 @@ def get_d_span_from_extent_list(df_ext, filepath):
         return 'NA'
     else:
         return byte_max - byte_min 
+
+def get_layoutindex_from_extent_list(df_ext, filepath):
+    hdr = df_ext.header
+
+    extlist = []
+    for row in df_ext.table:
+        if filepath in row[hdr.index('filepath')] and \
+           row[hdr.index('Level_index')] != '-1'  and \
+           row[hdr.index('Level_index')] == row[hdr.index('Max_level')]:
+            #print row
+            physical_start = int(row[hdr.index('Physical_start')])
+            physical_end = int(row[hdr.index('Physical_end')])
+            d = {
+                    'off': physical_start,
+                    'len': physical_end - physical_start
+                }
+            extlist.append( d )
+
+    layoutindex = get_layout_index( extlist ) 
+    return layoutindex
 
 def stat_a_file(filepath):
     filepath = os.path.join(filepath)

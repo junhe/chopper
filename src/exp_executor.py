@@ -463,6 +463,7 @@ class Executor:
         ret = self.get_response(treatment)
         
         df.addColumn(key = 'dspan', value=ret['d_span'])
+        df.addColumn(key = 'layout_index', value=ret['layout_index'])
         df.addColumn(key = 'treatment_id', 
                      value = datetime.datetime.now().strftime("%m-%d-%H-%M-%S.%f"))
         df.addColumn(key = 'node_id',
@@ -490,7 +491,8 @@ class Executor:
                   'disksize', 'disk_used',
                   'dspan', 'fullness',
                   'jobid', 'filesystem',
-                  'dir.span', 'num.files'
+                  'dir.span', 'num.files',
+                  'layout_index'
                   ]
         headers = copy.deepcopy(df.header)
         for colname in headers:
