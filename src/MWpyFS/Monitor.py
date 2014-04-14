@@ -39,6 +39,7 @@ import os
 import pprint
 import shutil
 import fnmatch
+import itertools
 
 import btrfs_db_parser
 import xfs_db_parser
@@ -774,6 +775,51 @@ class FSMonitor:
 
 
 ############################################
+SECTORSIZE=512
+def get_num_sectors(length):
+    return (length+SECTORSIZE-1)/SECTORSIZE
+
+def get_layout_index(extentlist):
+    """
+    extentlist is a list like:
+        [ {'off':xxx, 'len':xxx}, {..}, ..]
+    This unit is byte.
+    """
+    # for each extent
+    distsum = 0
+    n = 0
+    for ext in extentlist:
+        distsum += extent_distant_sum(ext)
+        n += get_num_sectors(ext['len'])
+    for ext1, ext2 in itertools.combinations(extentlist, 2):
+        distsum += extent_pair_distant_sum(ext1, ext2)
+    return distsum/float(extent_distant_sum({'off':None, 'len':n*SECTORSIZE}))
+
+def extent_distant_sum(extent):
+    """
+    The sum of all pair distance inside the extent is:
+    n(n-1)(n+1)/6
+    """
+    # doing a trick to get ceiling without floats
+    n = get_num_sectors(extent['len'])
+    ret = n*(n-1)*(n+1)/6 
+    print extent, ret
+    return ret
+
+def extent_pair_distant_sum( extent1, extent2 ):
+    m = get_num_sectors(extent1['len'])
+    n = get_num_sectors(extent2['len'])
+    k = (extent2['off']-extent1['off']-extent1['len'])/SECTORSIZE
+    ret = m*n*(m+n+2*k)/2
+    print extent1, extent2, ret
+    return ret
+
+if __name__ == '__main__':
+    print get_layout_index( [
+                    {'off':0, 'len':512},
+                    #{'off':512, 'len':512}] )
+                    {'off':512*10, 'len':512}] )
+
 def remove_unecessary(top):
     objlist = os.listdir(top)
     for name in objlist:
