@@ -461,9 +461,16 @@ class Executor:
 
         # put response to df
         ret = self.get_response(treatment)
+
+        # calculate the ideal distance_sum
+        ideal_sum = MWpyFS.Monitor.\
+            extent_distant_sum({'off':None, 
+                                'len':treatment['unique.bytes']})
+
         
         df.addColumn(key = 'dspan', value=ret['d_span'])
-        df.addColumn(key = 'layout_index', value=ret['layout_index'])
+        df.addColumn(key = 'layout_index', 
+                     value = ret['distance_sum']/float(ideal_sum))
         df.addColumn(key = 'treatment_id', 
                      value = datetime.datetime.now().strftime("%m-%d-%H-%M-%S.%f"))
         df.addColumn(key = 'node_id',

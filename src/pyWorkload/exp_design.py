@@ -426,7 +426,7 @@ def get_factor_spaces(nchunks):
 
     space_dic = {}
     #space_dic['disk.size']    = [x*(2**30) for x in range(4, 20) ]
-    space_dic['disk.used']    = [0, 0.1, 0.2, 0.3] 
+    space_dic['disk.used']    = [0]#[0, 0.25, 0.5, 0.75] 
     space_dic['dir.span']     = range(1,33) 
     space_dic['file.size']    = [ x*1024 for x in range(12, 524, 4) ]
     space_dic['fullness']     = [x/10.0 for x in range(1, 21)]
@@ -434,12 +434,12 @@ def get_factor_spaces(nchunks):
     space_dic['fsync']        = binspace
     space_dic['sync']         = close_sp
     space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
-    space_dic['num.files']    = range(1,4)
+    space_dic['num.files']    = range(1,2)
 
     return space_dic
 
 def row_to_recipe(design_row):
-    print design_row
+    #print design_row
     recipe = {}
     
     nchunks = design_row['num.chunks']
@@ -453,7 +453,7 @@ def row_to_recipe(design_row):
     
     # hard coded factors
     recipe['num.chunks'] = nchunks
-    recipe['disk.size'] = 4*2**30
+    recipe['disk.size'] = 64*2**30
 
     #dir_id    = pick_by_level( design_row['dir.id'], dir_id_range )
     #disk_size = pick_by_level( design_row['disk.size'], disk_size_range )
@@ -607,6 +607,11 @@ def recipe_to_treatment(recipe):
     #filechunk_order = []
     #for i,filetreat in enumerate(filetreatment_list):
         #filechunk_order += [i] * len(filetreat['chunks'])
+    
+    if fullness > 1:
+        unique_bytes = nfiles * file_size * 1
+    else:
+        unique_bytes = nfiles * file_size * fullness
 
     treatment = {
                   'filesystem': None, # will be replaced later
@@ -621,8 +626,9 @@ def recipe_to_treatment(recipe):
                   #'files': [file_treatment],
                   # the number of item in the following list
                   # is the number of total chunks of all files
-                  'filechunk_order': filechunk_order
+                  'filechunk_order': filechunk_order,
                   #'filechunk_order': [0,0,0,0]
+                  'unique.bytes'   : unique_bytes 
                 }
     # shold not correct now, because I will write the 
     # same file many times

@@ -710,9 +710,11 @@ class FSMonitor:
         print df_ext.toStr()
         ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
                                         '.file')
-        ret_dict['layout_index'] = \
-                get_layoutindex_from_extent_list(df_ext, '.file')
-        assert ret_dict['layout_index'] >= 0, 'layout_index should be >=0'
+        ret_dict['distance_sum'] = \
+                get_distant_sum_from_extent_list(df_ext, '.file')
+        if ret_dict['distance_sum'] < 0:
+            print 'distance_sum should be >=0'
+
         myfiles = [
                     #'./pid00000.dir00000/pid.00000.file.00000'
                     #'./pid00000.dir00000/pid.00000.file.00001'
@@ -783,13 +785,13 @@ SECTORSIZE=512
 def get_num_sectors(length):
     return (length+SECTORSIZE-1)/SECTORSIZE
 
-def get_layout_index(extentlist):
+def get_distant_sum(extentlist):
     """
     extentlist is a list like:
         [ {'off':xxx, 'len':xxx}, {..}, ..]
     This unit is byte.
     """
-    print extentlist
+    #print extentlist
     # for each extent
     distsum = 0
     n = 0
@@ -798,7 +800,7 @@ def get_layout_index(extentlist):
         n += get_num_sectors(ext['len'])
     for ext1, ext2 in itertools.combinations(extentlist, 2):
         distsum += extent_pair_distant_sum(ext1, ext2)
-    return distsum/float(extent_distant_sum({'off':None, 'len':n*SECTORSIZE}))
+    return distsum
 
 def extent_distant_sum(extent):
     """
@@ -808,7 +810,7 @@ def extent_distant_sum(extent):
     # doing a trick to get ceiling without floats
     n = get_num_sectors(extent['len'])
     ret = n*(n-1)*(n+1)/6 
-    print extent, ret
+    #print extent, ret
     return ret
 
 def extent_pair_distant_sum( extent1, extent2 ):
@@ -819,11 +821,11 @@ def extent_pair_distant_sum( extent1, extent2 ):
     n = get_num_sectors(extent2['len'])
     k = (extent2['off']-extent1['off']-extent1['len'])/SECTORSIZE
     ret = m*n*(m+n+2*k)/2
-    print extent1, extent2, ret
+    #print extent1, extent2, ret
     return ret
 
 if __name__ == '__main__':
-    print get_layout_index( [
+    print get_distant_sum( [
                     {'off':0, 'len':512},
                     #{'off':512, 'len':512}] )
                     {'off':512*10, 'len':512}] )
@@ -1076,7 +1078,7 @@ def get_d_span_from_extent_list(df_ext, filepath):
     else:
         return byte_max - byte_min 
 
-def get_layoutindex_from_extent_list(df_ext, filepath):
+def get_distant_sum_from_extent_list(df_ext, filepath):
     hdr = df_ext.header
 
     extlist = []
@@ -1093,8 +1095,8 @@ def get_layoutindex_from_extent_list(df_ext, filepath):
                 }
             extlist.append( d )
 
-    layoutindex = get_layout_index( extlist ) 
-    return layoutindex
+    distsum = get_distant_sum( extlist ) 
+    return distsum 
 
 def stat_a_file(filepath):
     filepath = os.path.join(filepath)
