@@ -262,19 +262,27 @@ class Walkman:
     def _RecordStatus(self, year, season, savedata=True):
         subprocess.call(['sync'])
         if self.confparser.get('system', 'filesystem') == 'xfs':
+            print 'freezing...'
+            MWpyFS.FormatFS.xfs_freeze(self.confparser.get('system', 'mountpoint'))
+            print 'unfreezing...'
+            MWpyFS.FormatFS.xfs_unfreeze(self.confparser.get('system', 'mountpoint'))
+
+            print 'remounting...'
             MWpyFS.FormatFS.remountFS(devname=self.confparser.get('system', 'partition'),
                                       mountpoint=self.confparser.get('system', 'mountpoint'))
             MWpyFS.FormatFS.umountFS(self.confparser.get('system', 'partition'))
             MWpyFS.FormatFS.mountXFS(self.confparser.get('system', 'partition'),
                                      self.confparser.get('system', 'mountpoint'))
-
+            print 'waiting for log to apply'
             time.sleep(1) # TODO: find a better way to make sure all logs
                           # are replayed.
         elif self.confparser.get('system', 'filesystem') == 'btrfs':
             MWpyFS.FormatFS.remountFS(devname=self.confparser.get('system', 'partition'),
                                       mountpoint=self.confparser.get('system', 'mountpoint'))
+            print 'waiting for log to apply'
             time.sleep(1)
 
+        print 'BEFORE DISLAY .............................'
         ret = self.monitor.display(savedata=savedata, 
                     logfile=self._getLogFilenameBySeasonYear(season,year),
                     monitorid=self._getYearSeasonStr(year=year, season=season),

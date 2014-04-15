@@ -162,6 +162,7 @@ def makeExt4(devname, blockscount=16777216, blocksize=4096):
     print "makeExt4:", p.returncode
     return p.returncode
 
+
 def umountFS(mountpoint):
     cmd = ["umount", mountpoint]
     p = subprocess.Popen(cmd)
@@ -344,6 +345,8 @@ def btrfs_remake(partition, mountpoint, username, groupname,
 
     # all of the above has to success except this one
     chDirOwner(mountpoint, username, groupname)
+
+
 
 #buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
 
