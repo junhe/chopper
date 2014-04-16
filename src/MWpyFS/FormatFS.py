@@ -162,6 +162,15 @@ def makeExt4(devname, blockscount=16777216, blocksize=4096):
     print "makeExt4:", p.returncode
     return p.returncode
 
+def makeExt3(devname, blockscount, blocksize):
+    cmd = ['mkfs.ext3',
+           '-b', blocksize,
+           devname, blockscount]
+    cmd = [str(x) for x in cmd]
+    p = subprocess.Popen(cmd)
+    p.wait()
+    print "makeExt3:", p.returncode
+    return p.returncode
 
 def umountFS(mountpoint):
     cmd = ["umount", mountpoint]
@@ -267,6 +276,33 @@ def remakeExt4(partition, mountpoint, username, groupname,
     ret = mountExt4(partition, mountpoint)
     if ret != 0:
         print "Error in mountExt4: this should not happen"
+        exit(1)
+
+    # all of the above has to success except this one
+    chDirOwner(mountpoint, username, groupname)
+
+def remakeExt3(partition, mountpoint, username, groupname, 
+                blockscount=16777216, blocksize=4096):
+    "= format that partition"
+    print "remaking ext3...."
+    if isMounted(mountpoint):
+        print mountpoint, "is mounted"
+        ret = umountFS(mountpoint)
+        if ret != 0:
+            print "Error in umountFS: this should not happen"
+            exit(1)
+        else:
+            print mountpoint, "is umounted"
+    else:
+        print mountpoint, "is NOT mounted."
+
+    ret = makeExt3(partition, blockscount, blocksize)
+    if ret != 0:
+        print "Error in makeExt3: this should not happen"
+        exit(1)
+    ret = mountFS(partition, mountpoint)
+    if ret != 0:
+        print "Error in mountExt3: this should not happen"
         exit(1)
 
     # all of the above has to success except this one

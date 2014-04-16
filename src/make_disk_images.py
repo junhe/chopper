@@ -97,6 +97,12 @@ def make_file_system(fstype, disksize):
                                    "jhe", "plfs", 
                                    blockscount=disksize/4096, 
                                    blocksize=4096)
+    elif fstype == 'ext3':
+        MWpyFS.FormatFS.remakeExt4("/dev/loop0", 
+                                   "/mnt/scratch/", 
+                                   "jhe", "plfs", 
+                                   blockscount=disksize/4096, 
+                                   blocksize=4096)
     elif fstype == 'btrfs':
         MWpyFS.FormatFS.btrfs_remake("/dev/loop0", 
                                      "/mnt/scratch/", 

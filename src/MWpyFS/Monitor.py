@@ -717,7 +717,7 @@ class FSMonitor:
         
         # calculate return value
         print df_ext.toStr()
-        exit(0)
+        #exit(0)
         ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
                                         '.file')
         ret_dict['distance_sum'] = \
@@ -1162,7 +1162,7 @@ def isfilefrag_ext_line(line):
 
 def filefrag(filepath):
     cmd = ["filefrag", "-sv", filepath]
-    print cmd
+    #print cmd
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
     df_ext = dataframe.DataFrame()
@@ -1196,7 +1196,7 @@ def filefrag(filepath):
                 }
             df_ext.addRowByDict(d)
             #pprint.pprint(d)
-    print df_ext.toStr()
+    #print df_ext.toStr()
 
     proc.wait()
     return df_ext
