@@ -602,7 +602,16 @@ class FSMonitor:
             fullpath = os.path.join(self.logdir, filename)
             f = open(fullpath, 'w')
 
-        if self.filesystem == 'ext4':
+        if self.filesystem == 'ext3':
+            extlist = ext34_getExtentList_of_myfiles(target=self.mountpoint)
+            df_ext  = extlist_block_to_byte(extlist)
+
+            if savedata and extlist != None:
+                h = "---------------- extent list -------------------\n"
+                f.write(extlist.toStr())
+
+
+        elif self.filesystem == 'ext4':
             ######################
             # get per file block count
             #df_bcounts = self.getPerFileBlockCounts()
@@ -853,6 +862,15 @@ def get_all_my_files( target ):
       dirnames[:] = fnmatch.filter(dirnames, 'dir.*')
     return matches
 
+def ext34_getExtentList_of_myfiles(target):
+    files = get_all_my_files(target)
+    df = dataframe.DataFrame()
+    for f in files:
+        if len(df.header) == 0:
+            df = filefrag(f)
+        else:
+            df.table.extend( filefrag(f).table )
+    return df
 
 def get_physical_layout_hash(df_ext, filter_str, merge_contiguous=False):
     """
@@ -1184,7 +1202,10 @@ def filefrag(filepath):
     return df_ext
 
 if __name__ == '__main__':
-    filefrag('/mnt/scratch-sda4/initrd.img-3.12.5-031205-generic')
+    #filefrag('/mnt/scratch-sda4/initrd.img-3.12.5-031205-generic')
+    df = ext34_getExtentList_of_myfiles('/mnt/scratch/')
+    df = extlist_block_to_byte(df)
+    print df.toStr()
 
 
 # Testing
