@@ -708,6 +708,7 @@ class FSMonitor:
         
         # calculate return value
         print df_ext.toStr()
+        exit(0)
         ret_dict['d_span'] = get_d_span_from_extent_list(df_ext, 
                                         '.file')
         ret_dict['distance_sum'] = \
@@ -1041,7 +1042,7 @@ def extlist_block_to_byte(df_ext):
     BLOCKSIZE = 4096
 
     colnames = ['Logical_start', 'Logical_end', 
-                'Physical_start', 'Physical_end']
+                'Physical_start', 'Physical_end', 'Length']
 
     hdr = df_ext.header
     for row in df_ext.table:
@@ -1131,6 +1132,59 @@ def get_all_paths(mountpoint, dir):
             paths.append(line.replace("\n", ""))
         proc.wait()
     return paths
+
+def isfilefrag_ext_line(line):
+    if 'Filesystem' in line or \
+        'blocksize' in line or \
+        ('logical'   in line and 'length' in line)  or\
+        ('extent' in line and 'found' in line):
+        return False
+    else:
+        return True
+
+def filefrag(filepath):
+    cmd = ["filefrag", "-sv", filepath]
+    print cmd
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+    df_ext = dataframe.DataFrame()
+    header = ["Level_index", "Max_level", 
+             "Entry_index", "N_Entry",
+             "Logical_start", "Logical_end",
+             "Physical_start", "Physical_end",
+             "Length", "Flag", "filepath"]
+    df_ext.header = header
+     #ext logical physical expected length flags
+       #0       0     1545              12 merged
+    for line in proc.stdout:
+        if isfilefrag_ext_line(line):
+            items = line.split() 
+            assert len(items) >= 5
+            if len(items) == 5:
+                items.insert(3, -1)
+            #print items
+            d = {
+                'Level_index': 0,
+                'Max_level'  : 0,
+                'Entry_index': int(items[0]),
+                'N_Entry'    : 'NA',
+                'Logical_start': int(items[1]),
+                'Logical_end': int(items[1]) + int(items[4]),
+                'Physical_start': int(items[2]),
+                'Physical_end': int(items[2]) + int(items[4]),
+                'Length'      : int(items[4]),
+                'Flag'       : 'NA',
+                'filepath'   : filepath
+                }
+            df_ext.addRowByDict(d)
+            #pprint.pprint(d)
+    print df_ext.toStr()
+
+    proc.wait()
+    return df_ext
+
+if __name__ == '__main__':
+    filefrag('/mnt/scratch-sda4/initrd.img-3.12.5-031205-generic')
 
 
 # Testing

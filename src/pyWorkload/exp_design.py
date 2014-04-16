@@ -426,7 +426,7 @@ def get_factor_spaces(nchunks):
 
     space_dic = {}
     #space_dic['disk.size']    = [x*(2**30) for x in range(4, 20) ]
-    space_dic['disk.used']    = [0, 0.25, 0.5, 0.75] 
+    space_dic['disk.used']    = [0]#, 0.25, 0.5, 0.75] 
     space_dic['dir.span']     = range(1,33) 
     space_dic['file.size']    = [ x*1024 for x in range(12, 524, 4) ]
     space_dic['fullness']     = [x/10.0 for x in range(1, 21)]
@@ -642,7 +642,7 @@ def fourbyfour_iter(design_path):
     cnt = 0
     #design_table = [ design_table[i] 
              #for i in sorted(range(len(design_table)), reverse=True)]
-    for fs in ['xfs', 'btrfs']:
+    for fs in ['xfs', 'btrfs', 'ext4']:
         for design_row in design_table:
             #pprint.pprint( row_to_treatment(design_row) )
             #row_to_treatment(design_row) 
@@ -655,9 +655,9 @@ def fourbyfour_iter(design_path):
             #pprint.pprint( treatment )
             #exit(0)
             cnt += 1
-            if cnt == 1:
-                print 'bypassing cnt 1!!!!!!!!!!!!!!!!!!'
-                continue
+            #if cnt == 1:
+                #print 'bypassing cnt 1!!!!!!!!!!!!!!!!!!'
+                #continue
             yield treatment
             #break
             #if cnt == 3:
