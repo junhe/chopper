@@ -502,7 +502,7 @@ class Executor:
                   'write_order',  'filesize',
                   'sync_bitmap',  'fsync_bitmap',
                   'nchunks',
-                  'n_virtual_cores', 'parent_dirid',
+                  'n_virtual_cores', 
                   'disksize', 'disk_used',
                   'dspan', 'fullness',
                   'jobid', 'filesystem',

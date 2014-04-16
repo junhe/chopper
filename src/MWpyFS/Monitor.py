@@ -1177,8 +1177,10 @@ def filefrag(filepath):
     for line in proc.stdout:
         if isfilefrag_ext_line(line):
             items = line.split() 
-            assert len(items) >= 5
-            if len(items) == 5:
+            # it is 4 because there might be some line without
+            # both expected and flags
+            assert len(items) >= 4, line 
+            if len(items) == 5 or len(items) == 4:
                 items.insert(3, -1)
             #print items
             d = {
