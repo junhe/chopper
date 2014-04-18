@@ -425,11 +425,11 @@ def get_factor_spaces(nchunks):
 
 
     space_dic = {}
-    #space_dic['disk.size']    = [x*(2**30) for x in range(4, 20) ]
+    space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
     space_dic['disk.used']    = [0, 0.25, 0.5, 0.75] 
     space_dic['dir.span']     = range(1,33) 
     space_dic['file.size']    = [ x*1024 for x in range(12, 524, 4) ]
-    space_dic['fullness']     = [x/10.0 for x in range(1, 21)]
+    space_dic['fullness']     = [x/10.0 for x in range(1, 31)]
     space_dic['num.cores']    = [1,2]
     space_dic['fsync']        = binspace
     space_dic['sync']         = close_sp
@@ -449,37 +449,8 @@ def row_to_recipe(design_row):
     # pick one
     for k,space in space_dic.items():
         recipe[k] = pick_by_level( design_row[k], space )
-
-    
-    # hard coded factors
     recipe['num.chunks'] = nchunks
-    recipe['disk.size'] = 64*2**30
 
-    #dir_id    = pick_by_level( design_row['dir.id'], dir_id_range )
-    #disk_size = pick_by_level( design_row['disk.size'], disk_size_range )
-    #disk_used = pick_by_level( design_row['disk.used'], disk_used_range )
-    #file_size = pick_by_level( design_row['file.size'], file_size_range )
-    #fullness  = pick_by_level( design_row['fullness'], fullness_range )
-    #n_virtual_cores = pick_by_level( design_row['num.cores'], num_vcores_range )
-    #fsync_bitmap = pick_by_level( design_row['fsync'], fsync_sp )
-    #close_bitmap = pick_by_level( design_row['sync'], close_sp )
-    #sync_bitmap  = close_bitmap
-    #write_order  = pick_by_level( design_row['chunk.order'], write_order_sp )
-
-    # put them to a dictionary so can be passed to recipe_to_treatment
-    #recipe = {
-            #'num.chunks':nchunks,
-            #'disk.size':disk_size,
-            #'disk.used':disk_used,
-            #'dir.span' :8, # not implemented
-            #'file.size':file_size,
-            #'fullness' :fullness,
-            #'num.cores':n_virtual_cores,
-            #'fsync'    :fsync_bitmap,
-            #'sync'     :sync_bitmap,
-            #'chunk.order': write_order,
-            #'num.files'  : 2   # not implemented
-        #}
     return recipe
 
 
@@ -642,8 +613,8 @@ def fourbyfour_iter(design_path):
     cnt = 0
     #design_table = [ design_table[i] 
              #for i in sorted(range(len(design_table)), reverse=True)]
-    #fses = ['ext3','xfs', 'btrfs', 'ext4']
-    fses = ['ext3']
+    fses = ['ext3', 'xfs', 'btrfs', 'ext4']
+    #fses = ['ext3']
     for fs in fses:
         for design_row in design_table:
             #pprint.pprint( row_to_treatment(design_row) )
@@ -668,7 +639,7 @@ def fourbyfour_iter(design_path):
     
 if __name__ == '__main__':
     #read_design_file_blhd('../design_blhd-4by4.txt')
-    fourbyfour_iter('../designs/design_blhd-4by4.tmp.txt')
+    fourbyfour_iter('../designs/blhd-11-factors-4by7.txt')
     exit(0)
 
     recipe = {

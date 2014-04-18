@@ -409,11 +409,11 @@ class Executor:
         ret = self._walkman_walk(conf)
         return ret
 
-    def run_experiment(self):
+    def run_experiment(self, designfile):
         #for treatment in pyWorkload.exp_design.dir_distance_iter():
         #for treatment in pyWorkload.exp_design.onefile_iter():
         for treatment in pyWorkload.\
-               exp_design.fourbyfour_iter('./designs/design_blhd-4by4.tmp.txt'):
+               exp_design.fourbyfour_iter(designfile):
                #exp_design.fourbyfour_iter('./4by4design.txt'):
             #pprint.pprint(treatment)
             self.run_and_get_df( treatment, savedf=True)
@@ -553,5 +553,5 @@ except:
 exp_exe = Executor(confparser)
 
 if __name__ == '__main__':
-    exp_exe.run_experiment()
+    exp_exe.run_experiment('./designs/blhd-11-factors-4by4.txt')
 
