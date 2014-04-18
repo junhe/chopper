@@ -30,21 +30,29 @@ def batch_worker(shared_job_q, shared_result_q):
     """
     myhostname = socket.gethostname().split('.')[0]
     nodeinfo = 'WORKERINFO ['+str(myhostname)+']:'
+    print nodeinfo, 'start'
+    sys.stdout.flush()
     while True:
         batchjobs = []
         
-        batchsize = random.randint(10,20)
-        #batchsize = 1
-        for i in range(batchsize):
+        fetchsize = 1 # get one job group at a time 
+        for i in range(fetchsize):
             # we wait for a while,
             # if no other jobs, we do a smaller batch
             try:
-                batchjobs.append(
-                    shared_job_q.get(block=True, timeout=2)) 
+                # decompose the groups to jobs and 
+                # put them to batchjobs
+                group = shared_job_q.get(block=True, timeout=2)
+                print nodeinfo, 'Grabbed group', group['groupid'], \
+                        'with', len(group['joblist']), 'jobs'
+                sys.stdout.flush()
+                for job in group['joblist']:
+                    batchjobs.append( job )
             except Queue.Empty:
                 break
             except  EOFError:
                 print nodeinfo, 'master is closed'
+                sys.stdout.flush()
                 time.sleep(1)
                 break
             except:
@@ -69,6 +77,7 @@ def batch_worker(shared_job_q, shared_result_q):
         if len(results) > 0:
             print nodeinfo, myhostname, 'just finished', \
                     len(results), 'jobs'
+            sys.stdout.flush()
 
 def runclient(masterip):
     manager = make_client_manager(masterip, PORTNUM, AUTHKEY)

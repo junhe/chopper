@@ -4,9 +4,9 @@ import subprocess
 #hostsuf = 'ubt8n.plfs'
 #np = 8
 #jobmaster = 'h0.ubt32n.plfs'
-jobmaster = 'h0.noloop8n.plfs'
-hostsuf = 'noloop8n.plfs'
-np = 32 
+jobmaster = 'h0.noloop1n.plfs'
+hostsuf = 'noloop1n.plfs'
+np = 1
 
 hostlist = []
 for i in range(np):

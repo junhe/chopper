@@ -23,13 +23,158 @@ import os
 PORTNUM=8848
 AUTHKEY='11'
 
-def runserver():
+
+def get_joblist():
+    jobiter = pyWorkload.exp_design.\
+                fourbyfour_iter('./designs/blhd-11-factors-4by4.txt')
+                #fourbyfour_iter('./designs/design_blhd-4by4.tmp.txt')
+                #fourbyfour_iter('./design_blhd-4by4.txt')
+    joblist = list(jobiter) 
+    for id, treatment in enumerate(joblist):
+        treatment['jobid'] = id
+
+    return joblist
+
+
+def remove_finished_jobs(joblist, finished_joblist ):
+    ret_joblist = [treatment for treatment in joblist \
+                    if not (treatment['jobid'] in finished_joblist)]
+    return ret_joblist
+
+def groupby_signature( joblist ):
+    """
+    structure of one group:
+        {
+            'groupid':
+            'joblist':[treatment1, treatment2....]
+        }
+    """
+    jobbuckets = {} 
+    for treatment in joblist:
+        signature = ( 
+                treatment['filesystem'],
+                treatment['disksize'],
+                treatment['disk_used']
+                )
+        if not jobbuckets.has_key(signature):
+            jobbuckets[signature] = [ treatment ]
+        else:
+            jobbuckets[signature].append( treatment )
+    jobgroups = []
+    for id, joblist in enumerate(jobbuckets.values()):
+        d = {
+                'groupid':id,
+                'joblist':joblist
+            }
+        jobgroups.append(d)
+    #pprint.pprint( jobgroups ) 
+    #print jobbuckets
+    #print jobgroups
+    return jobgroups
+
+
+def runserver_locality():
     # Start a shared manager server and access its queues
     manager = make_server_manager(PORTNUM, AUTHKEY)
     shared_job_q = manager.get_job_q()
     shared_result_q = manager.get_result_q()
 
+    # whether we should continue the previous
+    # unfinished jobs?
+    finished_joblist = []
+    f_finished_job = open('finished_joblist.txt', 'r+')
+    if os.path.isfile('finished_joblist.txt'):
+        choice = \
+                raw_input("finished_joblist.txt exist, use it? [y|n]")
 
+        if choice == 'y':
+            for line in f_finished_job:
+                finished_joblist.append(int(line.strip()))
+
+            fresult = open('aggarated_results.txt', 'a')
+            hasheader = True
+        else:
+            f_finished_job.truncate()
+            print "finished_joblist will be not used."\
+                    " new finished jobs will put in it"
+            f_finished_job.flush()
+            
+            # open result file
+            fresult = open('aggarated_results.txt', 'w')
+            fresult.truncate()
+            hasheader = False
+        time.sleep(1)
+    else:
+        exclude_finished_jobs = False
+
+    joblist = get_joblist()
+    print 'finished_joblist', finished_joblist
+    joblist = remove_finished_jobs(joblist, finished_joblist)
+    jobgroups = groupby_signature( joblist )
+    #pprint.pprint( jobgroups )
+    #exit(0)
+
+    # put all job groups into job queue
+    job_total = 0
+    for group in jobgroups:
+        job_total += len( group['joblist'] )
+        #print group['groupid'], len(group['joblist'])
+        shared_job_q.put( group )
+    #pprint.pprint( jobgroups )
+    print 'All groups have been put into job queue'
+
+    resultcnt = 0
+    while resultcnt < job_total: 
+        # some results have not been returned
+
+        # grab to local list
+        local_results = []
+        while not shared_result_q.empty():
+            try:
+                r = shared_result_q.get(block=True, timeout=1)
+                local_results.append( r )
+                resultcnt += 1
+                #print 'total groups:', len(jobgroups), \
+                        #job_total', job_total, 'resultcnt', resultcnt
+            except Queue.Empty:
+                break
+
+        # put results to file
+        for result_pack in local_results:
+            dfdic = result_pack['response.data.frame']
+            treatment = result_pack['treatment']
+
+            result_jobid = treatment['jobid']
+            df = MWpyFS.dataframe.DataFrame() 
+            df.fromDic(dfdic)
+            if hasheader:
+                fresult.write( df.toStr(header=False, table=True) )
+            else:
+                fresult.write( df.toStr(header=True, table=True) )
+                hasheader = True
+            fresult.flush()
+
+            f_finished_job.write( str(result_jobid) + '\n')
+            f_finished_job.flush()
+        if len(local_results) > 0:
+            print 'Wow, just got', len(local_results), 'results from workers'
+        else:
+            print '*** total groups:', len(jobgroups), \
+                    'job_total', job_total, 'resultcnt', resultcnt, '***',
+            print 'polled, no result this time. sleep for a while ...'
+            time.sleep(2)
+
+    time.sleep(2)
+    manager.shutdown()
+    f_finished_job.close()
+    fresult.close()
+
+
+def runserver():
+    # Start a shared manager server and access its queues
+    manager = make_server_manager(PORTNUM, AUTHKEY)
+    shared_job_q = manager.get_job_q()
+    shared_result_q = manager.get_result_q()
 
 
     #jobiter = pyWorkload.exp_design.onefile_iter2()
@@ -162,6 +307,6 @@ def make_server_manager(port, authkey):
     return manager
 
 if __name__ == '__main__':
-    runserver()
+    runserver_locality()
 
 
