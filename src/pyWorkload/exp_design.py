@@ -426,7 +426,7 @@ def get_factor_spaces(nchunks):
 
     space_dic = {}
     space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
-    space_dic['disk.used']    = [0, 0.25, 0.5, 0.75] 
+    space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
     space_dic['dir.span']     = range(1,33) 
     space_dic['file.size']    = [ x*1024 for x in range(12, 524, 4) ]
     space_dic['fullness']     = [x/10.0 for x in range(1, 31)]

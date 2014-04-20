@@ -26,7 +26,7 @@ AUTHKEY='11'
 
 def get_joblist():
     jobiter = pyWorkload.exp_design.\
-                fourbyfour_iter('./designs/blhd-11-factors-4by4.txt')
+                fourbyfour_iter('./designs/blhd-11-factors-4by7.txt')
                 #fourbyfour_iter('./designs/design_blhd-4by4.tmp.txt')
                 #fourbyfour_iter('./design_blhd-4by4.txt')
     joblist = list(jobiter) 
@@ -56,16 +56,21 @@ def groupby_signature( joblist ):
                 treatment['disksize'],
                 treatment['disk_used']
                 )
+        #signature = ( 
+                #str(treatment)
+                #)
         if not jobbuckets.has_key(signature):
             jobbuckets[signature] = [ treatment ]
         else:
             jobbuckets[signature].append( treatment )
     jobgroups = []
-    for id, joblist in enumerate(jobbuckets.values()):
+    for id, (sig, joblist) in enumerate(jobbuckets.items()):
         d = {
-                'groupid':id,
-                'joblist':joblist
+                'groupid'  :id,
+                'signature':sig,
+                'joblist'  :joblist
             }
+        #print sig
         jobgroups.append(d)
     #pprint.pprint( jobgroups ) 
     #print jobbuckets
