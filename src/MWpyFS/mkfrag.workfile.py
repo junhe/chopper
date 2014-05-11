@@ -43,6 +43,7 @@ def generate_lognormal_sizes_uniquebytes( mu, sigma,
         # count of extent of size 2^i blocks
         ext_size = 4096*2**i
         ext_cnt = available_bytes * pr / ext_size
+        ext_cnt = int(ext_cnt)
         ret_sizes.extend( [ext_size] * ext_cnt )
     
     return ret_sizes
@@ -103,7 +104,14 @@ def make_hole_file( holelistfile, targetfile ):
 
 def lognorm_cdf(x, mu, sigma):
     "check wikipedia"
-    return math.erfc(-(math.log(x)-mu)/(sigma*math.sqrt(2)))/2
+    #print 'x:', x
+    if x == 0:
+        return 0
+
+    top = -(math.log(x)-mu)
+    down = sigma*math.sqrt(2)
+    return math.erfc(top/down)/2
+    #return math.erfc(-(math.log(x)-mu)/(sigma*math.sqrt(2)))/2
 
 def lognorm_probability_range(a, b, mu, sigma):
     "it returns P(a<x<b) by cdf"
@@ -139,7 +147,7 @@ def create_frag_file( layout_estimate,
     return ret
 
 if __name__ == '__main__':
-    create_frag_file( 0.1, 4*1024*1024, 
+    create_frag_file( 0.2, 4*1024*1024, 
                         '/mnt/scratch/bigfile')
 
 def generateFragsV2(mu, sigma, sum_target, maxfragexp=15, tolerance=0.5, seed=1):
