@@ -30,7 +30,7 @@ void punch_file(char *filepath, char *confpath)
     ifstream conffile (confpath);
     if ( !conffile.is_open() ) {
         cout << "cannot open " << confpath << endl;
-        exit(1);
+        exit(2);
     }
 
     id = 0;

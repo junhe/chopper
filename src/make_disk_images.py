@@ -137,7 +137,7 @@ def release_image():
     else:
         print devname, "is not in use"
 
-def use_one_image(fstype, disksize, used_ratio):
+def use_one_image(fstype, disksize, used_ratio, layoutnumber):
     fsused = get_fsusedGB(disksize, used_ratio)
     imgpath = get_image_path(fstype, disksize, used_ratio, fsused)
 
@@ -145,7 +145,7 @@ def use_one_image(fstype, disksize, used_ratio):
         # image is not there, need to make one
         # then use the one just made
         print 'need to make a new image'
-        make_one_image(fstype, disksize, used_ratio)
+        make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber)
         print '-------- before mkLoopDevOnFile'
         MWpyFS.FormatFS.mkLoopDevOnFile('/dev/loop0', '/mnt/mytmpfs/disk.img')
     else:
@@ -162,6 +162,12 @@ def use_one_image(fstype, disksize, used_ratio):
                 )
     MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch')
 
+def make_hole_file(filepath, filesize, layoutnumber):
+    # this function fragments the free space on disk by 
+    # allocating free space to a large file and punch holes
+    # in the large file.
+    MWpyFS.filepuncher.create_frag_file(layoutnumber, filesize, filepath)
+
 def get_image_path(fstype, disksize, used_ratio, fsused):
     newimagename = ['fstype', fstype, 
                     'disksize', disksize, 
@@ -176,6 +182,10 @@ def get_image_path(fstype, disksize, used_ratio, fsused):
 def get_fsusedGB(disksize, used_ratio):
     fsused = int((disksize/(2**20))*used_ratio)
     return fsused
+
+def get_disk_free_bytes(diskpath):
+    stats = os.statvfs(diskpath)
+    return stats.f_bfree * stats.f_bsize
 
 def make_one_image(fstype, disksize, used_ratio):
     # make a brand new loop device, starting from 
@@ -203,20 +213,61 @@ def make_one_image(fstype, disksize, used_ratio):
     print cmd
     subprocess.call(cmd)
 
+def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
+    # make a brand new loop device, starting from 
+    # making a tmpfs
+    make_file_system(fstype=fstype, 
+                     disksize=disksize)
+
+    # use impressions to fill the file system
+    fsused = get_fsusedGB(disksize, used_ratio)
+    holefilesize = get_disk_free_bytes('/mnt/scratch') * 1.2
+    # adjust the size of the file we want to create,
+    # in case we actually cannot create such large a file
+    # this is potentially dangerous since you may still 
+    # not able to create the file
+    #holefilesize = holefilesize * 0.8
+
+    if fsused == 0:
+        pass
+    else:
+        config_dict = {
+                        'Parent_Path:': ['/mnt/scratch/', 1],
+                        'FSused:': [ fsused, 'MB'] 
+                      }
+        pprint.pprint( config_dict )
+        run_impressions(config_dict)
+
+    # be careful, this function does not check errors..
+    make_hole_file("/mnt/scratch/punchfile",
+                   holefilesize,
+                   layoutnumber)
+
+    # copy and save the image file
+    release_image()
+    newimagepath = get_image_path(fstype, disksize, used_ratio, fsused)
+    cmd = ['cp', '/mnt/mytmpfs/disk.img', newimagepath]
+    print cmd
+    subprocess.call(cmd)
+
+
 def make_images():
     para_dict = {
             #'fstype': ['ext4', 'xfs', 'btrfs'],
             'fstype': ['ext4'],
             'disksize': [ x*(2**30) for x in [8]],
-            'used_ratio': [ x/10.0 for x in range(0,1) ]
+            'used_ratio': [ 0.1 ],
+            'layoutnumber': [ 0.6 ]
             }
     paras = ParameterCominations(para_dict) 
     for para in paras:
+        print para
         print 'finished one.............'
         time.sleep(2) 
         use_one_image(fstype=para['fstype'],
                        disksize=para['disksize'],
-                       used_ratio=para['used_ratio'])
+                       used_ratio=para['used_ratio'],
+                       layoutnumber=para['layoutnumber'])
         time.sleep(2) 
         exit(0)
 
