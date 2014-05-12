@@ -35,7 +35,7 @@ void punch_file(char *filepath, char *confpath)
 
     id = 0;
     conffile >> off >> len;
-    cout << id << ":" << off << " " << len << endl;
+    //cout << id << ":" << off << " " << len << endl;
     while ( off != -1 && len != -1 ) {
         if ( id == 0 ) {
             // first pair is used to 
@@ -51,7 +51,7 @@ void punch_file(char *filepath, char *confpath)
         }
         id++;
         conffile >> off >> len;
-        cout << id << ":" << off << " " << len << endl;
+        //cout << id << ":" << off << " " << len << endl;
     }
    
     conffile.close();

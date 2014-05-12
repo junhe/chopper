@@ -1,4 +1,5 @@
 import random
+import os
 import math
 import subprocess
 import pprint
@@ -20,7 +21,6 @@ def plothist(x):
 
 def generate_lognormal_sizes_uniquebytes( mu, sigma, 
                                         hard_maxbytes):
-
     MAXI = 30
     # probability list of extent size 2^x *4096
     # pr_list[0]= Pr(0<x<1), 
@@ -32,17 +32,23 @@ def generate_lognormal_sizes_uniquebytes( mu, sigma,
         pr_ab = lognorm_probability_range(a, b, mu, sigma)
         pr_list.append(pr_ab)
     
+    #print 'pr_list', pr_list
     overhead_pr = 0
     for i, pr in enumerate(pr_list):
         overhead_pr += pr / float(2**i)
+    
+    print 'overhead_pr', overhead_pr
 
     ret_sizes = []
     available_bytes = hard_maxbytes*1/float(1+overhead_pr)
+
+    print 'available_bytes', available_bytes
     
     for i, pr in enumerate(pr_list):
         # count of extent of size 2^i blocks
         ext_size = 4096*2**i
         ext_cnt = available_bytes * pr / ext_size
+        #print i, pr, ext_cnt
         ext_cnt = int(ext_cnt)
         ret_sizes.extend( [ext_size] * ext_cnt )
     
@@ -72,7 +78,7 @@ def generate_lognormal_sizes( mu, sigma,
         xlist.append( x )
         szlist.append( sz )
     
-    print xlist
+    #print xlist
     return szlist
 
 def make_holes ( szlist ):
@@ -86,7 +92,7 @@ def make_holes ( szlist ):
     holelist.append((-1,-1))
 
     totalsize = off + 4096
-    holelist.insert(0, (0, totalsize)) # seal the end
+    holelist.insert(0, (0, totalsize))
 
     return holelist
 
@@ -99,7 +105,10 @@ def save_holelist_to_file(holelist, filepath):
     print 'file saved'
 
 def make_hole_file( holelistfile, targetfile ):
-    cmd = ['../puncher', targetfile, holelistfile]
+    curdir = os.path.dirname( os.path.abspath( __file__ ) )
+    puncherpath = os.path.join( curdir, '../../build/src/puncher' )
+
+    cmd = [puncherpath, targetfile, holelistfile]
     return subprocess.call(cmd)
 
 def lognorm_cdf(x, mu, sigma):
@@ -139,7 +148,8 @@ def create_frag_file( layout_estimate,
                     #mu, sigma, hard_maxbytes, 1 )
     szlist = generate_lognormal_sizes_uniquebytes\
                         (mu, sigma, hard_maxbytes)
-    print(szlist)
+    random.shuffle( szlist )
+    #print(szlist)
     holelist = make_holes(szlist) 
     save_holelist_to_file( holelist, 
                             '/tmp/_holelist' )
@@ -147,7 +157,7 @@ def create_frag_file( layout_estimate,
     return ret
 
 if __name__ == '__main__':
-    create_frag_file( 0.2, 4*1024*1024, 
+    create_frag_file( 0.1, 1*1024*1024*1024, 
                         '/mnt/scratch/bigfile')
 
 def generateFragsV2(mu, sigma, sum_target, maxfragexp=15, tolerance=0.5, seed=1):
