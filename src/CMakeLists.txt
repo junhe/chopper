@@ -7,5 +7,6 @@ add_library (WorkloadPlayer WorkloadPlayer.cpp)
 
 
 add_executable(player player.cpp)
+add_executable(puncher puncher.cpp)
 target_link_libraries(player  WorkloadFetcher Util WorkloadPlayer)
 
