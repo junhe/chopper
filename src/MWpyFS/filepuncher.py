@@ -156,6 +156,7 @@ def create_frag_file( layoutnumber,
                     #mu, sigma, hard_maxbytes, 1 )
     szlist = generate_lognormal_sizes_uniquebytes\
                         (mu, sigma, hard_maxbytes)
+    random.seed(1)
     random.shuffle( szlist )
     #print(szlist)
     holelist = make_holes(szlist) 
