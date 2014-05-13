@@ -518,7 +518,6 @@ class FSMonitor:
                 df.table.extend( self.dump_extents_of_a_file(f).table )
         return df
 
-
     def getPerFileBlockCounts(self, rootdir="."):
         if self.filesystem != 'ext4':
             return 
@@ -793,7 +792,7 @@ class FSMonitor:
 ############################################
 SECTORSIZE=512
 def get_num_sectors(length):
-    return (length+SECTORSIZE-1)/SECTORSIZE
+    return int((length+SECTORSIZE-1)/SECTORSIZE)
 
 def get_distant_sum(extentlist):
     """
@@ -819,6 +818,7 @@ def extent_distant_sum(extent):
     """
     # doing a trick to get ceiling without floats
     n = get_num_sectors(extent['len'])
+    #print "n:", n
     ret = n*(n-1)*(n+1)/6 
     #print extent, ret
     return ret

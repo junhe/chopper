@@ -481,6 +481,8 @@ class Executor:
 
         
         df.addColumn(key = 'dspan', value=ret['d_span'])
+        assert ret['distance_sum'] >= ideal_sum, \
+                "{} {} {}".format(ret['distance_sum'], ideal_sum, treatment['unique.bytes'])
         df.addColumn(key = 'layout_index', 
                      value = ret['distance_sum']/float(ideal_sum))
         df.addColumn(key = 'treatment_id', 
