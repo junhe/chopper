@@ -125,10 +125,14 @@ class Walkman:
         #used_ratio=float(disk_used*2**30)/disksize
         used_ratio = disk_used 
         #print disk_used, disksize, used_ratio
+        layoutnumber = self.confparser.getint('system',
+                                              'layoutnumber')
        
         make_disk_images.use_one_image(fstype=fs,
-                                       disksize=disksize,
-                               used_ratio=used_ratio)
+                               disksize=disksize,
+                               used_ratio=used_ratio,
+                               layoutnumber=layoutnumber
+                               )
 
         return
 
@@ -507,7 +511,8 @@ class Executor:
                   'dspan', 'fullness',
                   'jobid', 'filesystem',
                   'dir.span', 'num.files',
-                  'layout_index'
+                  'layout_index',
+                  'layoutnumber'
                   ]
         headers = copy.deepcopy(df.header)
         for colname in headers:
@@ -553,5 +558,5 @@ except:
 exp_exe = Executor(confparser)
 
 if __name__ == '__main__':
-    exp_exe.run_experiment('./designs/blhd-11-factors-4by4.txt')
+    exp_exe.run_experiment('./designs/blhd-11-factors-4by4.tmp.txt')
 

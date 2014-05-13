@@ -168,7 +168,8 @@ def make_hole_file(filepath, filesize, layoutnumber):
     # allocating free space to a large file and punch holes
     # in the large file.
     ret = \
-     MWpyFS.filepuncher.create_frag_file(layoutnumber, filesize, filepath)
+     MWpyFS.filepuncher.create_frag_file(
+             layoutnumber, filesize, filepath, punchmode)
     return ret
 
 def get_image_path(fstype, disksize, used_ratio, fsused, layoutnumber):
@@ -243,9 +244,19 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
         pprint.pprint( config_dict )
         run_impressions(config_dict)
 
+    if fstype in ['ext4', 'xfs', 'btrfs']:
+        punchmode = 0
+    elif fstype in ['ext3', 'ext2']:
+        punchmode = 1
+    else:
+        print 'file system is not supported with any punchmode'
+        exit(1)
+
     ret = make_hole_file("/mnt/scratch/punchfile",
                    holefilesize,
-                   layoutnumber)
+                   layoutnumber,
+                   punchmode
+                   )
     if ret != 0:
         msg = 'it is unable to make a hole file'
         print msg

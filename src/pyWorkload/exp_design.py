@@ -435,6 +435,7 @@ def get_factor_spaces(nchunks):
     space_dic['sync']         = close_sp
     space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
     space_dic['num.files']    = range(1,3)
+    space_dic['layoutnumber']    = range(1,6)
 
     return space_dic
 
@@ -446,13 +447,15 @@ def row_to_recipe(design_row):
 
     space_dic = get_factor_spaces(nchunks)
 
+    # TODO: WARNING: debugging
+    design_row['fullness'] = '0.3'
+
     # pick one
     for k,space in space_dic.items():
         recipe[k] = pick_by_level( design_row[k], space )
     recipe['num.chunks'] = nchunks
 
     return recipe
-
 
 def recipe_to_treatment(recipe):
     """
@@ -599,7 +602,8 @@ def recipe_to_treatment(recipe):
                   # is the number of total chunks of all files
                   'filechunk_order': filechunk_order,
                   #'filechunk_order': [0,0,0,0]
-                  'unique.bytes'   : unique_bytes 
+                  'unique.bytes'   : unique_bytes,
+                  'layoutnumber'   : r['layoutnumber']
                 }
     # shold not correct now, because I will write the 
     # same file many times

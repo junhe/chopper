@@ -133,7 +133,7 @@ void pad_file(char *filepath, char *confpath)
         buf[i] = 'z'; 
     }
     
-    prev_hole_end = 0;
+    cout << "before loop.." << endl;
     while ( off != -1 && len != -1 ) {
         if ( id == 0 ) {
             // first pair is used to 
@@ -141,18 +141,22 @@ void pad_file(char *filepath, char *confpath)
             // safely ignore it since we don't need
             // to allocate the whole file at the beginning
             filesize = len;
-            continue;
-        } 
-        cur_hole_start = off;
-        cur_hole_end = off + len;
 
-        // no need to check error code of this one
-        // it survives or die hard
-        size_t wlen;
-        off_t  woff;
-        woff = prev_hole_end;
-        wlen = cur_hole_start - prev_hole_end;
-        pwrite_loop(fd, buf, wlen, woff);
+            cur_hole_start = 0;
+            cur_hole_end   = 0;
+        } else {
+            cur_hole_start = off;
+            cur_hole_end = off + len;
+
+            // no need to check error code of this one
+            // it survives or die hard
+            size_t wlen;
+            off_t  woff;
+            woff = prev_hole_end;
+            wlen = cur_hole_start - prev_hole_end;
+            //cout << woff << ":" << wlen << endl;
+            pwrite_loop(fd, buf, wlen, woff);
+        }
 
         // prepare for the next iteration
         prev_hole_end = cur_hole_end;
@@ -162,6 +166,7 @@ void pad_file(char *filepath, char *confpath)
     }
 
     // now need to seal the file end
+    //cout << prev_hole_end << ":" << filesize - prev_hole_end << endl;
     pwrite_loop(fd, buf, filesize - prev_hole_end, prev_hole_end);
 
     conffile.close();
@@ -181,8 +186,13 @@ int main(int argc, char **argv)
     }
     char *filepath = argv[1];
     char *confpath = argv[2];
+    int punchmode = atoi(argv[3]);
 
-    punch_file(filepath, confpath);
+    if ( punchmode == 0 ) {
+        punch_file(filepath, confpath);
+    } else {
+        pad_file(filepath, confpath);
+    }
 
     delete logger;
     return 0;

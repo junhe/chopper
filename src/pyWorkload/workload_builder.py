@@ -442,6 +442,8 @@ def build_conf ( treatment, confparser ):
     confparser.set('system', 'disk_used',
                                    str(treatment['disk_used']))
     confparser.set('system', 'makeloopdevice', 'yes')
+    confparser.set('system', 'layoutnumber', 
+                    str(treatment['layoutnumber']))
 
     chkseq = pat_data_struct.get_empty_ChunkSeq()
 

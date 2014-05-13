@@ -104,11 +104,12 @@ def save_holelist_to_file(holelist, filepath):
             f.write(line + '\n')
     print 'file saved'
 
-def make_hole_file( holelistfile, targetfile ):
+def make_hole_file( holelistfile, targetfile, punchmode):
     curdir = os.path.dirname( os.path.abspath( __file__ ) )
     puncherpath = os.path.join( curdir, '../../build/src/puncher' )
 
-    cmd = [puncherpath, targetfile, holelistfile]
+    cmd = [puncherpath, targetfile, holelistfile, punchmode]
+    cmd = [str(x) for x in cmd]
     return subprocess.call(cmd)
 
 def lognorm_cdf(x, mu, sigma):
@@ -129,7 +130,9 @@ def lognorm_probability_range(a, b, mu, sigma):
     return abs(cumu_b-cumu_a)
 
 def create_frag_file( layoutnumber, 
-                    hard_maxbytes, targetfile):
+                    hard_maxbytes, 
+                    targetfile, 
+                    punchmode):
     #dict = {
             ##   mu           sigma 
             #1: (0.0000000,   1.0),
@@ -162,7 +165,7 @@ def create_frag_file( layoutnumber,
     holelist = make_holes(szlist) 
     save_holelist_to_file( holelist, 
                             '/tmp/_holelist' )
-    ret = make_hole_file( '/tmp/_holelist', targetfile )
+    ret = make_hole_file( '/tmp/_holelist', targetfile, punchmode )
     return ret
 
 if __name__ == '__main__':
