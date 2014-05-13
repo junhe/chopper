@@ -133,7 +133,7 @@ void pad_file(char *filepath, char *confpath)
         buf[i] = 'z'; 
     }
     
-    cout << "before loop.." << endl;
+    //cout << "before loop.." << endl;
     while ( off != -1 && len != -1 ) {
         if ( id == 0 ) {
             // first pair is used to 

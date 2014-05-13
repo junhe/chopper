@@ -163,7 +163,8 @@ def use_one_image(fstype, disksize, used_ratio, layoutnumber):
                 )
     MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch')
 
-def make_hole_file(filepath, filesize, layoutnumber):
+def make_hole_file(filepath, filesize, 
+                   layoutnumber, punchmode):
     # this function fragments the free space on disk by 
     # allocating free space to a large file and punch holes
     # in the large file.
