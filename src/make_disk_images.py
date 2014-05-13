@@ -139,7 +139,8 @@ def release_image():
 
 def use_one_image(fstype, disksize, used_ratio, layoutnumber):
     fsused = get_fsusedGB(disksize, used_ratio)
-    imgpath = get_image_path(fstype, disksize, used_ratio, fsused)
+    imgpath = get_image_path(fstype, disksize, 
+                             used_ratio, fsused, layoutnumber)
 
     if not os.path.exists(imgpath):
         # image is not there, need to make one
@@ -166,13 +167,17 @@ def make_hole_file(filepath, filesize, layoutnumber):
     # this function fragments the free space on disk by 
     # allocating free space to a large file and punch holes
     # in the large file.
-    MWpyFS.filepuncher.create_frag_file(layoutnumber, filesize, filepath)
+    ret = \
+     MWpyFS.filepuncher.create_frag_file(layoutnumber, filesize, filepath)
+    return ret
 
-def get_image_path(fstype, disksize, used_ratio, fsused):
+def get_image_path(fstype, disksize, used_ratio, fsused, layoutnumber):
     newimagename = ['fstype', fstype, 
                     'disksize', disksize, 
                     'used_ratio', used_ratio,
-                    'fsusedGB', fsused, 'img'] 
+                    'fsusedMB', fsused, 
+                    'layoutnumber', layoutnumber,
+                    'img'] 
     newimagename = [ str(x) for x in newimagename ]
     newimagename = '.'.join( newimagename )
     #'/proj/plfs/data/jhe/syaas-disk-images/'+newimagename] 
@@ -221,12 +226,12 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
 
     # use impressions to fill the file system
     fsused = get_fsusedGB(disksize, used_ratio)
-    holefilesize = get_disk_free_bytes('/mnt/scratch') * 1.2
+    holefilesize = get_disk_free_bytes('/mnt/scratch')
     # adjust the size of the file we want to create,
     # in case we actually cannot create such large a file
     # this is potentially dangerous since you may still 
     # not able to create the file
-    #holefilesize = holefilesize * 0.8
+    holefilesize = int(holefilesize * 0.99)
 
     if fsused == 0:
         pass
@@ -238,14 +243,21 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
         pprint.pprint( config_dict )
         run_impressions(config_dict)
 
-    # be careful, this function does not check errors..
-    make_hole_file("/mnt/scratch/punchfile",
+    ret = make_hole_file("/mnt/scratch/punchfile",
                    holefilesize,
                    layoutnumber)
+    if ret != 0:
+        msg = 'it is unable to make a hole file'
+        print msg
+        with open('/tmp/make_disk_image.log', 'a') as f:
+            f.write(msg + '\n')
+            f.flush()
+        exit(1)
 
     # copy and save the image file
     release_image()
-    newimagepath = get_image_path(fstype, disksize, used_ratio, fsused)
+    newimagepath = get_image_path(fstype, disksize, 
+                                  used_ratio, fsused, layoutnumber)
     cmd = ['cp', '/mnt/mytmpfs/disk.img', newimagepath]
     print cmd
     subprocess.call(cmd)
@@ -256,8 +268,8 @@ def make_images():
             #'fstype': ['ext4', 'xfs', 'btrfs'],
             'fstype': ['ext4'],
             'disksize': [ x*(2**30) for x in [8]],
-            'used_ratio': [ 0.1 ],
-            'layoutnumber': [ 0.6 ]
+            'used_ratio': [ 0.4 ],
+            'layoutnumber': [ 5 ]
             }
     paras = ParameterCominations(para_dict) 
     for para in paras:

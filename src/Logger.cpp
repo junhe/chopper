@@ -14,7 +14,7 @@
 #include <locale>
 
 
-#include "logger.h"
+#include "Logger.h"
 using namespace std;
 
 Logger::Logger(const char *logpath)
@@ -51,15 +51,15 @@ Logger::write(const char *msg)
 }
 
 
-int main()
-{
-    Logger *logger = new Logger("/tmp/logger.log");
+//int main()
+//{
+    //Logger *logger = new Logger("/tmp/logger.log");
 
-    logger->write("hello log");
-    logger->write("hello log2");
+    //logger->write("hello log");
+    //logger->write("hello log2");
 
-    delete logger;
-}
+    //delete logger;
+//}
 
 
 

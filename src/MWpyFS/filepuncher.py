@@ -128,22 +128,30 @@ def lognorm_probability_range(a, b, mu, sigma):
     cumu_b = lognorm_cdf(b, mu, sigma)
     return abs(cumu_b-cumu_a)
 
-def create_frag_file( layout_estimate, 
+def create_frag_file( layoutnumber, 
                     hard_maxbytes, targetfile):
+    #dict = {
+            ##   mu           sigma 
+            #1: (0.0000000,   1.0),
+            #2: ( 0.9382696,   0.9),
+            #3: ( 1.4136933,   0.8),
+            #4: ( 1.7346011,   0.7),
+            #5: ( 1.9771627,   0.6),
+            #6: ( 2.1722233,   0.5),
+            #7: ( 2.3353749,   0.4),
+            #8: ( 2.4756043,   0.3),
+            #9: ( 2.5985660,   0.2),
+            #10: ( 2.7080502,   0.1)
+            #}
+    #d = data.frame(meanlog=log(seq(2,21,length=5)), sdlog=seq(1,0.1,length=5))
     dict = {
-            #   mu           sigma 
-            1: (0.0000000,   1.0),
-            2: ( 0.9382696,   0.9),
-            3: ( 1.4136933,   0.8),
-            4: ( 1.7346011,   0.7),
-            5: ( 1.9771627,   0.6),
-            6: ( 2.1722233,   0.5),
-            7: ( 2.3353749,   0.4),
-            8: ( 2.4756043,   0.3),
-            9: ( 2.5985660,   0.2),
-            10: ( 2.7080502,   0.1)
-            }
-    mu,sigma = dict[layout_estimate*10]
+        1 : ( 0.6931472 , 1 ),
+        2 : ( 1.9095425 , 0.775 ),
+        3 : ( 2.442347 , 0.55 ),
+        4 : ( 2.7880929 , 0.325 ),
+        5 : ( 3.0445224 , 0.1 )
+        }
+    mu,sigma = dict[layoutnumber]
     #szlist = generate_lognormal_sizes(
                     #mu, sigma, hard_maxbytes, 1 )
     szlist = generate_lognormal_sizes_uniquebytes\
