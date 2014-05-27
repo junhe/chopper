@@ -229,12 +229,6 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
 
     # use impressions to fill the file system
     fsused = get_fsusedGB(disksize, used_ratio)
-    holefilesize = get_disk_free_bytes('/mnt/scratch')
-    # adjust the size of the file we want to create,
-    # in case we actually cannot create such large a file
-    # this is potentially dangerous since you may still 
-    # not able to create the file
-    holefilesize = int(holefilesize * 0.9)
 
     if fsused == 0:
         pass
@@ -246,6 +240,14 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
         pprint.pprint( config_dict )
         run_impressions(config_dict)
 
+    subprocess.call(['sync'])
+    holefilesize = get_disk_free_bytes('/mnt/scratch')
+    # adjust the size of the file we want to create,
+    # in case we actually cannot create such large a file
+    # this is potentially dangerous since you may still 
+    # not able to create the file
+    #holefilesize = int(holefilesize * 0.99)
+
     if fstype in ['ext4', 'xfs', 'btrfs']:
         punchmode = 0
     elif fstype in ['ext3', 'ext2']:
@@ -254,7 +256,9 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
         print 'file system is not supported with any punchmode'
         exit(1)
 
-    subprocess.call(['sync'])
+    #print "for debug, exit before make hole file.."
+    #print "holefilesize:", holefilesize
+    #exit(1)
     ret = make_hole_file("/mnt/scratch/punchfile",
                    holefilesize,
                    layoutnumber,
@@ -282,9 +286,9 @@ def make_images():
     para_dict = {
             #'fstype': ['ext4', 'xfs', 'btrfs'],
             'fstype': ['ext4'],
-            'disksize': [ x*(2**30) for x in [8]],
+            'disksize': [ x*(2**30) for x in [1]],
             'used_ratio': [ 0.4 ],
-            'layoutnumber': [ 5 ]
+            'layoutnumber': [ 1 ]
             }
     paras = ParameterCominations(para_dict) 
     for para in paras:
@@ -300,6 +304,7 @@ def make_images():
 
 def main():
     make_images()
+    #print get_disk_free_bytes("/mnt/scratch")
 
 if __name__ == '__main__':
     main()
