@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string.h>
 #include <errno.h>
+#include <sstream>
 
 #include "Logger.h"
 using namespace std;
@@ -56,7 +57,9 @@ void punch_file(char *filepath, char *confpath)
         ret = fallocate(fd, flag, off, len);
         if ( ret == -1 ) {
             //perror("failed to fallocate:");
-            logger->write( strerror(errno) );
+            ostringstream oss;
+            oss << "id:" << id << "msg:" << strerror(errno) << endl;
+            logger->write( oss.str().c_str() );
             delete logger;
             exit(1);
         }
@@ -86,7 +89,11 @@ ssize_t pwrite_loop(int fd, const void *buf, size_t count, off_t offset)
         }
         ret = pwrite(fd, buf, wsize, cur_off);
         if ( ret == -1 ) {
-            logger->write( strerror(errno) );
+            ostringstream oss;
+            oss << "len:" << count 
+                << " offset:" << offset 
+                << "msg:" << strerror(errno) << endl;
+            logger->write( oss.str().c_str() );
             delete logger;
             exit(1);
         }

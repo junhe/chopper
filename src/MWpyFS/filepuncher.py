@@ -170,6 +170,6 @@ def create_frag_file( layoutnumber,
 
 if __name__ == '__main__':
     create_frag_file( 0.1, 1*1024*1024*1024, 
-                        '/mnt/scratch/bigfile')
+                        '/mnt/scratch/bigfile', 1)
 
     

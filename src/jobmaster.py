@@ -55,7 +55,8 @@ def groupby_signature( joblist ):
         signature = ( 
                 treatment['filesystem'],
                 treatment['disksize'],
-                treatment['disk_used']
+                treatment['disk_used'],
+                treatment['layoutnumber']
                 )
         #signature = ( 
                 #str(treatment)

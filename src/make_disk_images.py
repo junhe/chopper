@@ -192,7 +192,8 @@ def get_fsusedGB(disksize, used_ratio):
 
 def get_disk_free_bytes(diskpath):
     stats = os.statvfs(diskpath)
-    return stats.f_bfree * stats.f_bsize
+    #return stats.f_bfree * stats.f_bsize
+    return stats.f_bavail * stats.f_bsize
 
 def make_one_image(fstype, disksize, used_ratio):
     # make a brand new loop device, starting from 
@@ -233,7 +234,7 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
     # in case we actually cannot create such large a file
     # this is potentially dangerous since you may still 
     # not able to create the file
-    holefilesize = int(holefilesize * 0.99)
+    holefilesize = int(holefilesize * 0.9)
 
     if fsused == 0:
         pass
@@ -253,13 +254,15 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
         print 'file system is not supported with any punchmode'
         exit(1)
 
+    subprocess.call(['sync'])
     ret = make_hole_file("/mnt/scratch/punchfile",
                    holefilesize,
                    layoutnumber,
                    punchmode
                    )
     if ret != 0:
-        msg = 'it is unable to make a hole file'
+        msg = 'it is unable to make a hole file. {} {} {} {}'.format(
+                            fstype, disksize, used_ratio, layoutnumber)
         print msg
         with open('/tmp/make_disk_image.log', 'a') as f:
             f.write(msg + '\n')
