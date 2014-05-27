@@ -73,7 +73,11 @@ WorkloadPlayer::play( const WorkloadEntry &wl_entry )
         //string ret = Util::exec(cmd.c_str());
         int ret = mkdir(wl_entry._path.c_str(), 0777);
         if ( ret == -1 ) {
-            logwrite( wl_entry._entry_str + " File to mkdir.");
+            //logwrite( wl_entry._entry_str + " Failed to mkdir.");
+            ostringstream oss;
+            oss << wl_entry._entry_str << " Failed to mkdir.";
+            oss << " error msg:" << strerror(errno);
+            logwrite(oss.str());
             exit(1);
         }
     } else if ( wl_entry._operation == "open" ) {
