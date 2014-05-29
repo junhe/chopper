@@ -14,6 +14,22 @@
 #include "Logger.h"
 using namespace std;
 
+/*
+ This program takes configuration in the following
+ format:
+ 
+ 0 filesize
+ hole-offset hole-length
+ hole-offset hole-length
+ ...
+ -1 -1 //mark the end
+
+ if filesize == -2, hole punching component will
+ skip the step of falloate file. 
+ */
+
+
+
 #define MYBLOCKSIZE 4096
 Logger *logger;
 
@@ -54,14 +70,20 @@ void punch_file(char *filepath, char *confpath)
         } else {
             flag = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
         }
-        ret = fallocate(fd, flag, off, len);
-        if ( ret == -1 ) {
-            //perror("failed to fallocate:");
-            ostringstream oss;
-            oss << "id:" << id << "msg:" << strerror(errno) << endl;
-            logger->write( oss.str().c_str() );
-            delete logger;
-            exit(1);
+
+        // actually do the fallocate() if needed
+        // if id == 0 and len == -2, the fallocate()
+        // is skipped.
+        if ( !(id == 0 && len == -2) ) {
+            ret = fallocate(fd, flag, off, len);
+            if ( ret == -1 ) {
+                //perror("failed to fallocate:");
+                ostringstream oss;
+                oss << "id:" << id << "msg:" << strerror(errno) << endl;
+                logger->write( oss.str().c_str() );
+                delete logger;
+                exit(1);
+            }
         }
         id++;
         conffile >> off >> len;
@@ -70,6 +92,7 @@ void punch_file(char *filepath, char *confpath)
    
     conffile.close();
     close(fd);
+    cout << "file punched successfully!" << endl;
 }
 
 ssize_t pwrite_loop(int fd, const void *buf, size_t count, off_t offset)
@@ -147,6 +170,7 @@ void pad_file(char *filepath, char *confpath)
             // allocate the whole file size
             // safely ignore it since we don't need
             // to allocate the whole file at the beginning
+            // when padding
             filesize = len;
 
             cur_hole_start = 0;
