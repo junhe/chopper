@@ -12,6 +12,32 @@ except ImportError:
 import Monitor
 import FormatFS
 
+# Making image
+# 1. calculate the size of hole file and spaceholder file
+#    the sum of them should be very close to the disk size.
+# 2. create hole file
+# 3. create spaceholder file
+# 4. a. punch hole file
+#    b. or delete hole file and fragment by seeking and
+#       writing.
+# 
+# Note that, since we want the hole file and place holder
+# files to be as contiguous as possible, but ext3 is really
+# bad at it if you write it block by block. So you'd better
+# write bigger chunks at a time in ext3 (and ext2). 
+#
+# TODO: 
+# 1. implement solid file creator for btrfs, ext4, ...
+#   "As  of the Linux Kernel v2.6.31, the fallocate system call is supported
+#   by the btrfs, ext4, ocfs2, and xfs filesystems."
+#   So we can use fallocate system call to create solid
+#   file for ext4, btrfs, xfs.
+# 2. implement solid file creator for ext3/2...
+# 3. implement file puncher for btrfs, ...
+# 4. implement file puncher for ext3, ...
+# 5. implement hole file -> place holder -> punching file
+
+
 def plothist(x):
     try:
         plt.hist(x, 1000, facecolor='g', alpha=0.75)

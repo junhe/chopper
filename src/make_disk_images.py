@@ -30,6 +30,22 @@ def ParameterCominations(parameter_dict):
     d = parameter_dict
     return [dict(zip(d, v)) for v in itertools.product(*d.values())]
 
+def fallocate_solid_file(filepath, size):
+    cmd = ['fallocate',
+           '-o', 0,
+           '-l', size,
+           filepath]
+    cmd = [str(x) for x in cmd]
+    ret = subprocess.call(cmd)
+    if ret != 0:
+        with open('/tmp/make_disk_image.log', 'a') as f:
+            msg = "Failed to allocate {0} of size {1}\n".\
+                    format(filepath, size)
+            f.write(msg)
+            f.flush()
+    return ret
+
+
 def produce_new_inputfile(orig_path, 
                           new_path,
                           config_dict):
@@ -246,7 +262,7 @@ def make_one_imageCOW(fstype, disksize, used_ratio, layoutnumber):
     # in case we actually cannot create such large a file
     # this is potentially dangerous since you may still 
     # not able to create the file
-    #holefilesize = int(holefilesize * 0.99)
+    holefilesize = int(holefilesize * 0.99)
 
     if fstype in ['ext4', 'xfs', 'btrfs']:
         punchmode = 0
@@ -303,8 +319,9 @@ def make_images():
         exit(0)
 
 def main():
-    make_images()
+    #make_images()
     #print get_disk_free_bytes("/mnt/scratch")
+    print fallocate_solid_file("/mnt/scratch/hello", 2000)
 
 if __name__ == '__main__':
     main()
