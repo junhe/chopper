@@ -9,6 +9,8 @@ add_library (WorkloadPlayer WorkloadPlayer.cpp)
 
 add_executable(player player.cpp)
 add_executable(puncher puncher.cpp)
+add_executable(filefiller filefiller.cpp)
 target_link_libraries(player  WorkloadFetcher Util WorkloadPlayer)
 target_link_libraries(puncher Logger)
+target_link_libraries(filefiller Logger)
 

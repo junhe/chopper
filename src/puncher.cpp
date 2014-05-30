@@ -10,9 +10,11 @@
 #include <string.h>
 #include <errno.h>
 #include <sstream>
+#include <assert.h>
 
 #include "Logger.h"
 using namespace std;
+
 
 /*
  This program takes configuration in the following
@@ -31,6 +33,7 @@ using namespace std;
 
 
 #define MYBLOCKSIZE 4096
+#define MAX_CHUNK_SIZE 8388608  //8MB
 Logger *logger;
 
 void punch_file(char *filepath, char *confpath)
@@ -95,7 +98,8 @@ void punch_file(char *filepath, char *confpath)
     cout << "file punched successfully!" << endl;
 }
 
-ssize_t pwrite_loop(int fd, const void *buf, size_t count, off_t offset)
+ssize_t pwrite_loop(int fd, const void *buf, 
+                    size_t count, off_t offset)
 {
     size_t nleft, wsize;
     int ret;
@@ -124,6 +128,83 @@ ssize_t pwrite_loop(int fd, const void *buf, size_t count, off_t offset)
         cur_off += ret;
     }
     return count;
+}
+
+// buf has to be at least the size of max_chunk_size
+ssize_t pwrite_loop_maxchunk(int fd, const void *buf, 
+                    size_t count, off_t offset,
+                    size_t max_chunk_size)
+{
+    size_t nleft, wsize;
+    int ret;
+    off_t cur_off;
+
+    nleft = count;
+    cur_off = offset;
+    while (nleft > 0) {
+        // write at most a page at a time
+        if ( nleft > max_chunk_size ) {
+            wsize = max_chunk_size;
+        } else {
+            wsize = nleft;
+        }
+        ret = pwrite(fd, buf, wsize, cur_off);
+        if ( ret == -1 ) {
+            ostringstream oss;
+            oss << "len:" << count 
+                << " offset:" << offset 
+                << "msg:" << strerror(errno) << endl;
+            logger->write( oss.str().c_str() );
+            delete logger;
+            exit(1);
+        }
+        nleft -= ret;
+        cur_off += ret;
+    }
+    return count;
+}
+
+
+
+void fill_file(const char *filepath, off_t filesize)
+{
+    char *buf;
+    int fd;
+    
+    fd = open(filepath, O_RDWR|O_CREAT, 0666);
+    if ( fd == -1 ) {
+        //perror("open file");
+        logger->write( strerror(errno) );
+        delete logger;
+        exit(1);
+    } else {
+        //printf("file opened!\n");
+    }
+    
+    // initialize the buffer
+    buf = (char *)malloc(MAX_CHUNK_SIZE);
+    if ( buf == NULL ) {
+        logger->write( "failed to malloc()" );
+        logger->write( strerror(errno) );
+        delete logger;
+        exit(1);
+    }
+    memset(buf, 'z', MAX_CHUNK_SIZE);
+    
+    pwrite_loop_maxchunk(
+            fd, buf, filesize, 0, MAX_CHUNK_SIZE);
+
+    free(buf);
+    fsync(fd);
+    close(fd);
+}
+
+int file_exists(const char *filepath) 
+{
+    struct stat buffer;
+    int         ret;
+    ret = stat(filepath, &buffer);
+    return !ret; //0 indicates existence
 }
 
 void pad_file(char *filepath, char *confpath)
@@ -187,6 +268,22 @@ void pad_file(char *filepath, char *confpath)
             wlen = cur_hole_start - prev_hole_end;
             //cout << woff << ":" << wlen << endl;
             pwrite_loop(fd, buf, wlen, woff);
+            fsync(fd);
+            
+            //if ( id % 2 == 0 ) {
+                //if ( file_exists("/mnt/scratch/holeholder1") ) {
+                    //unlink("/mnt/scratch/holeholder1");
+                //}
+                //fill_file("/mnt/scratch/holeholder0", len);
+            //} else {
+                //if ( file_exists("/mnt/scratch/holeholder0") ) {
+                    //unlink("/mnt/scratch/holeholder0");
+                //}
+                //fill_file("/mnt/scratch/holeholder1", len);
+            //}
+            char filename[128];
+            sprintf(filename, "/mnt/scratch/holeholder%d", id);
+            fill_file(filename, len);
         }
 
         // prepare for the next iteration
@@ -206,7 +303,6 @@ void pad_file(char *filepath, char *confpath)
 
 int main(int argc, char **argv)
 {
-    logger = new Logger("/tmp/puncher.log");
     if (argc != 4) {
         printf("Usage: %s filepath confpath mode\n"
                "mode: 0: hole punching; 1: pad_file\n",
@@ -215,6 +311,7 @@ int main(int argc, char **argv)
         delete logger;
         exit(1);
     }
+    logger = new Logger("/tmp/puncher.log");
     char *filepath = argv[1];
     char *confpath = argv[2];
     int punchmode = atoi(argv[3]);

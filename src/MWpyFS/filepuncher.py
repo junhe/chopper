@@ -45,9 +45,8 @@ def plothist(x):
     except:
         print "Trivial operation skipped"
 
-def generate_lognormal_sizes_uniquebytes( mu, sigma, 
-                                        hard_maxbytes):
-    MAXI = 30
+
+def get_extent_distribution( mu, sigma ):
     # probability list of extent size 2^x *4096
     # pr_list[0]= Pr(0<x<1), 
     # pr_list[1]= Pr(1<x<2), 
@@ -58,12 +57,24 @@ def generate_lognormal_sizes_uniquebytes( mu, sigma,
         pr_ab = lognorm_probability_range(a, b, mu, sigma)
         pr_list.append(pr_ab)
     
-    #print 'pr_list', pr_list
     overhead_pr = 0
     for i, pr in enumerate(pr_list):
         overhead_pr += pr / float(2**i)
-    
-    print 'overhead_pr', overhead_pr
+
+    ret_dic = {
+                'ratios': pr_list,
+                'overhead': overhead_pr
+              }
+    return ret_dic
+
+def generate_lognormal_sizes_uniquebytes( mu, sigma, 
+                                        hard_maxbytes):
+    # Search my Evernot for title "overhead calculation of puncher"
+    # for the explanation of overhead calculation
+
+    dist = get_extent_distribution(mu, sigma)
+    pr_list = dist['ratios']
+    overhead_pr = dist['overhead']
 
     ret_sizes = []
     available_bytes = hard_maxbytes*1/float(1+overhead_pr)
@@ -107,7 +118,7 @@ def generate_lognormal_sizes( mu, sigma,
     #print xlist
     return szlist
 
-def make_holes ( szlist ):
+def make_holes ( szlist, specfilesize ):
     off = 0
     holelist = []
     for sz in szlist:
@@ -118,6 +129,9 @@ def make_holes ( szlist ):
     holelist.append((-1,-1))
 
     totalsize = off + 4096
+
+    if specfilesize == False:
+        totalsize = -2
     holelist.insert(0, (0, totalsize))
 
     return holelist
@@ -155,23 +169,7 @@ def lognorm_probability_range(a, b, mu, sigma):
     cumu_b = lognorm_cdf(b, mu, sigma)
     return abs(cumu_b-cumu_a)
 
-def create_frag_file( layoutnumber, 
-                    hard_maxbytes, 
-                    targetfile, 
-                    punchmode):
-    #dict = {
-            ##   mu           sigma 
-            #1: (0.0000000,   1.0),
-            #2: ( 0.9382696,   0.9),
-            #3: ( 1.4136933,   0.8),
-            #4: ( 1.7346011,   0.7),
-            #5: ( 1.9771627,   0.6),
-            #6: ( 2.1722233,   0.5),
-            #7: ( 2.3353749,   0.4),
-            #8: ( 2.4756043,   0.3),
-            #9: ( 2.5985660,   0.2),
-            #10: ( 2.7080502,   0.1)
-            #}
+def layoutnumber2mu_sigma(layoutnumber):
     #d = data.frame(meanlog=log(seq(2,21,length=5)), sdlog=seq(1,0.1,length=5))
     dict = {
         1 : ( 0.6931472 , 1 ),
@@ -181,14 +179,22 @@ def create_frag_file( layoutnumber,
         5 : ( 3.0445224 , 0.1 )
         }
     mu,sigma = dict[layoutnumber]
-    #szlist = generate_lognormal_sizes(
-                    #mu, sigma, hard_maxbytes, 1 )
+
+    return (mu,sigma)
+
+def create_frag_file( layoutnumber, 
+                    hard_maxbytes, 
+                    targetfile, 
+                    punchmode, specfilesize):
+
+    mu,sigma = layoutnumber2mu_sigma(layoutnumber)
+
     szlist = generate_lognormal_sizes_uniquebytes\
                         (mu, sigma, hard_maxbytes)
     random.seed(1)
     random.shuffle( szlist )
     #print(szlist)
-    holelist = make_holes(szlist) 
+    holelist = make_holes(szlist, specfilesize) 
     save_holelist_to_file( holelist, 
                             '/tmp/_holelist' )
     ret = make_hole_file( '/tmp/_holelist', targetfile, punchmode )
