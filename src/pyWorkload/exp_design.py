@@ -617,7 +617,7 @@ def fourbyfour_iter(design_path):
     cnt = 0
     #design_table = [ design_table[i] 
              #for i in sorted(range(len(design_table)), reverse=True)]
-    fses = ['ext3', 'xfs', 'btrfs', 'ext4']
+    fses = ['ext4', 'xfs', 'btrfs']
     #fses = ['ext3']
     for fs in fses:
         for design_row in design_table:

@@ -367,10 +367,10 @@ def make_one_image_solidfile(fstype, disksize,
 def make_images():
     para_dict = {
             #'fstype': ['ext4', 'xfs', 'btrfs'],
-            'fstype': ['ext4'],
+            'fstype': ['btrfs'],
             'disksize': [ x*(2**30) for x in [1]],
             'used_ratio': [ 0.4 ],
-            'layoutnumber': [ 1 ]
+            'layoutnumber': [ 3 ]
             }
     paras = ParameterCominations(para_dict) 
     for para in paras:
