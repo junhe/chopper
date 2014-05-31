@@ -49,6 +49,7 @@ def fallocate_solid_file(filepath, size):
            '-l', size,
            filepath]
     cmd = [str(x) for x in cmd]
+    print cmd
     ret = subprocess.call(cmd)
     if ret != 0:
         with open('/tmp/make_disk_image.log', 'a') as f:
@@ -56,6 +57,7 @@ def fallocate_solid_file(filepath, size):
                     format(filepath, size)
             f.write(msg)
             f.flush()
+        exit(1)
     return ret
 
 
@@ -309,11 +311,13 @@ def make_one_image_solidfile(fstype, disksize,
         pass
     else:
         if fstype in ['ext4','xfs','btrfs']:
-            # create hole file (no hole yet)
+            print "creating hole file (no hole yet)..."
             fallocate_solid_file('/mnt/scratch/punchfile',
                                  bytes_holefile)
+            subprocess.call(['sync'])
             bytes_left = get_disk_free_bytes('/mnt/scratch/')
-            # create place holder file
+            bytes_left = int(bytes_left * 0.999)
+            print "creating place holder file..."
             fallocate_solid_file('/mnt/scratch/placeholder',
                                  bytes_left)
             ret = make_hole_file("/mnt/scratch/punchfile",
@@ -363,7 +367,7 @@ def make_one_image_solidfile(fstype, disksize,
 def make_images():
     para_dict = {
             #'fstype': ['ext4', 'xfs', 'btrfs'],
-            'fstype': ['ext3'],
+            'fstype': ['ext4'],
             'disksize': [ x*(2**30) for x in [1]],
             'used_ratio': [ 0.4 ],
             'layoutnumber': [ 1 ]
