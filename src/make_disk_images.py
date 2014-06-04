@@ -325,6 +325,22 @@ def make_one_image_solidfile(fstype, disksize,
                layoutnumber,
                0, False
                )
+
+            # another order
+            #bytes_left = disksize - bytes_holefile
+            #print "creating place holder file... size:", bytes_left
+            #fallocate_solid_file('/mnt/scratch/placeholder',
+                                 #bytes_left)
+            #bytes_left = get_disk_free_bytes('/mnt/scratch/')
+            #bytes_holefile = int(bytes_left * 0.99)
+            #print "creating hole file... size:", bytes_holefile, \
+                    #" layoutnumber:", layoutnumber
+            #ret = make_hole_file("/mnt/scratch/punchfile",
+               #bytes_holefile,
+               #layoutnumber,
+               #0, True
+               #)
+
         elif fstype in ['ext2', 'ext3']:
             print "creating hole file (no hole yet)...", bytes_holefile
             fill_solid_file('/mnt/scratch/punchfile',

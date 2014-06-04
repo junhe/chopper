@@ -560,5 +560,5 @@ except:
 exp_exe = Executor(confparser)
 
 if __name__ == '__main__':
-    exp_exe.run_experiment('./designs/blhd-11-factors-4by4.tmp.txt')
+    exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
 

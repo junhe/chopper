@@ -447,8 +447,8 @@ def row_to_recipe(design_row):
 
     space_dic = get_factor_spaces(nchunks)
 
-    # TODO: WARNING: debugging
-    design_row['fullness'] = '0.3'
+    #TODO: WARNING: debugging
+    #design_row['fullness'] = '0.3'
 
     # pick one
     for k,space in space_dic.items():
@@ -617,7 +617,7 @@ def fourbyfour_iter(design_path):
     cnt = 0
     #design_table = [ design_table[i] 
              #for i in sorted(range(len(design_table)), reverse=True)]
-    fses = ['ext4', 'xfs', 'btrfs']
+    fses = ['xfs', 'ext4']
     #fses = ['ext3']
     for fs in fses:
         for design_row in design_table:
@@ -636,6 +636,7 @@ def fourbyfour_iter(design_path):
                 #print 'bypassing cnt 1!!!!!!!!!!!!!!!!!!'
                 #continue
             yield treatment
+            #exit(1)
             #break
             #if cnt == 3:
                 #continue
@@ -643,7 +644,7 @@ def fourbyfour_iter(design_path):
     
 if __name__ == '__main__':
     #read_design_file_blhd('../design_blhd-4by4.txt')
-    fourbyfour_iter('../designs/blhd-11-factors-4by7.txt')
+    fourbyfour_iter('../designs/blhd-12-factors-4by4.txt')
     exit(0)
 
     recipe = {

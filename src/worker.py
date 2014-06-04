@@ -63,13 +63,13 @@ def batch_worker(shared_job_q, shared_result_q):
             #results.append(1)
             #continue
 
-            #print nodeinfo, myhostname, treatment
             df = experiment_worker( treatment )
             result_pack = {
                             'treatment':treatment,
                             'response.data.frame'       :df.toDic()
                           }
             results.append( result_pack )
+            print nodeinfo, "just finished", treatment
         
         for result in results:
             shared_result_q.put( result )
