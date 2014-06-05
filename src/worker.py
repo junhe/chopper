@@ -69,7 +69,7 @@ def batch_worker(shared_job_q, shared_result_q):
                             'response.data.frame'       :df.toDic()
                           }
             results.append( result_pack )
-            print nodeinfo, "just finished", treatment
+            #print nodeinfo, "just finished", treatment
         
         for result in results:
             shared_result_q.put( result )
