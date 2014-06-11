@@ -25,6 +25,7 @@ import itertools
 import random
 import copy
 import datetime
+import platform
 #import cluster
 from ast import literal_eval
 from time import strftime, localtime, sleep
@@ -489,6 +490,8 @@ class Executor:
                      value = datetime.datetime.now().strftime("%m-%d-%H-%M-%S.%f"))
         df.addColumn(key = 'node_id',
                 value = '.'.join(socket.gethostname().split('.')[0:2]))
+        df.addColumn(key = 'kernel.release',
+                value = platform.release())
 
         #print df.toStr()
         ##############################3
@@ -514,7 +517,8 @@ class Executor:
                   'jobid', 'filesystem',
                   'dir.span', 'num.files',
                   'layout_index',
-                  'layoutnumber'
+                  'layoutnumber',
+                  'kernel.release'
                   ]
         headers = copy.deepcopy(df.header)
         for colname in headers:
