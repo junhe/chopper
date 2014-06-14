@@ -27,6 +27,7 @@ AUTHKEY='11'
 
 def get_joblist():
     jobiter = pyWorkload.exp_design.\
+                #fourbyfour_iter('./designs/blhd-12-factors-4by4.txt')
                 fourbyfour_iter('./designs/blhd-12-factors-4by7.txt')
                 #fourbyfour_iter('./designs/blhd-11-factors-4by7.txt')
                 #fourbyfour_iter('./designs/design_blhd-4by4.tmp.txt')
@@ -80,7 +81,7 @@ def groupby_signature( joblist ):
     #print jobgroups
     return jobgroups
 
-def runserver_locality(resultpath):
+def runserver_locality(resultpath, arg_usefinished):
     # Start a shared manager server and access its queues
     manager = make_server_manager(PORTNUM, AUTHKEY)
     shared_job_q = manager.get_job_q()
@@ -91,8 +92,16 @@ def runserver_locality(resultpath):
     finished_joblist = []
     finishedpath = resultpath+'.finished'
     if os.path.isfile(finishedpath):
-        choice = \
-                raw_input(finishedpath+" exist, use it? [y|n]")
+        #choice = \
+                #raw_input(finishedpath+" exist, use it? [y|n]")
+        print 'OPTION arg_usefinished:', arg_usefinished
+        if arg_usefinished == 'usefinished':
+            choice = 'y'
+        elif arg_usefinished == 'notusefinished':
+            choice = 'n'
+        else:
+            print 'wrong arg for arg_usefinished'
+            exit(1)
 
         f_finished_job = open(finishedpath, 'r+')
         if choice == 'y':
@@ -113,6 +122,9 @@ def runserver_locality(resultpath):
             hasheader = False
         time.sleep(1)
     else:
+        fresult = open(resultpath, 'w')
+        fresult.truncate()
+        hasheader = False
         f_finished_job = open(finishedpath, 'w+')
         exclude_finished_jobs = False
 
@@ -200,10 +212,11 @@ def make_server_manager(port, authkey):
     return manager
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print "Usage:", sys.argv[0], "resultpath"
+    if len(sys.argv) != 3:
+        print "Usage:", sys.argv[0], "resultpath usefinished|notusefinished"
         exit(1)
     resultpath = sys.argv[1]
-    runserver_locality(resultpath)
+    arg_usefinished = sys.argv[2]
+    runserver_locality(resultpath, arg_usefinished)
 
 
