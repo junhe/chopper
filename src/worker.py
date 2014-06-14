@@ -28,7 +28,7 @@ def batch_worker(shared_job_q, shared_result_q):
     the job and and work on them one by one. 
     Then the result to shared_result_q together
     """
-    myhostname = socket.gethostname().split('.')[0:2]
+    myhostname = '.'.join(socket.gethostname().split('.')[0:2])
     nodeinfo = 'WORKERINFO ['+str(myhostname)+']:'
     print nodeinfo, 'start'
     sys.stdout.flush()
