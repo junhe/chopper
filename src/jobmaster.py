@@ -181,7 +181,8 @@ def runserver_locality(resultpath, arg_usefinished):
             print 'Wow, just got', len(local_results), 'results from workers'
         else:
             print '*** total groups:', len(jobgroups), \
-                    'job_total', job_total, 'resultcnt', resultcnt, '***',
+                    'job_total', job_total, 'resultcnt', resultcnt, \
+                    'at', resultpath, '***',
             print 'polled, no result this time. sleep for a while ...'
             time.sleep(2)
 
