@@ -193,11 +193,14 @@ def remountFS(devname, mountpoint):
     umountFS(mountpoint)
     mountFS(devname, mountpoint)
 
-def mountFS(devname, mountpoint):
+def mountFS(devname, mountpoint, opts=""):
     if not os.path.exists(mountpoint):
         os.makedirs(mountpoint)
 
-    cmd = ["mount", devname, mountpoint]
+    if opts != "":
+        cmd = ["mount", '-o', opts, devname, mountpoint]
+    else:
+        cmd = ["mount", devname, mountpoint]
     p = subprocess.Popen(cmd)
     p.wait()
     print "mountFS", p.returncode
