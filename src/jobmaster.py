@@ -27,7 +27,7 @@ AUTHKEY='11'
 
 def get_joblist():
     jobiter = pyWorkload.exp_design.\
-                fourbyfour_iter('./designs/blhd-12-factors-4by7.txt')
+                fourbyfour_iter('./designs/blhd-12-factors-4by4.txt')
                 #fourbyfour_iter('./designs/blhd-12-factors-4by4.txt')
                 #fourbyfour_iter('./designs/blhd-11-factors-4by7.txt')
                 #fourbyfour_iter('./designs/design_blhd-4by4.tmp.txt')
@@ -81,11 +81,13 @@ def groupby_signature( joblist ):
     #print jobgroups
     return jobgroups
 
-def runserver_locality(resultpath, arg_usefinished):
+def runserver_locality(resultpath, jobtag, arg_usefinished):
     # Start a shared manager server and access its queues
     manager = make_server_manager(PORTNUM, AUTHKEY)
     shared_job_q = manager.get_job_q()
     shared_result_q = manager.get_result_q()
+
+    resultpath = resultpath + '-' + jobtag
 
     # whether we should continue the previous
     # unfinished jobs?
@@ -168,6 +170,7 @@ def runserver_locality(resultpath, arg_usefinished):
             result_jobid = treatment['jobid']
             df = MWpyFS.dataframe.DataFrame() 
             df.fromDic(dfdic)
+            df.addColumn(key="jobtag", value=jobtag)
             if hasheader:
                 fresult.write( df.toStr(header=False, table=True) )
             else:
@@ -213,11 +216,12 @@ def make_server_manager(port, authkey):
     return manager
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print "Usage:", sys.argv[0], "resultpath usefinished|notusefinished"
+    if len(sys.argv) != 4:
+        print "Usage:", sys.argv[0], "resultpath jobtag usefinished|notusefinished"
         exit(1)
     resultpath = sys.argv[1]
-    arg_usefinished = sys.argv[2]
-    runserver_locality(resultpath, arg_usefinished)
+    jobtag = sys.argv[2]
+    arg_usefinished = sys.argv[3]
+    runserver_locality(resultpath, jobtag, arg_usefinished)
 
 
