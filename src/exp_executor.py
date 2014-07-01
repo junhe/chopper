@@ -414,14 +414,18 @@ class Executor:
         ret = self._walkman_walk(conf)
         return ret
 
-    def run_experiment(self, designfile):
-        #for treatment in pyWorkload.exp_design.dir_distance_iter():
-        #for treatment in pyWorkload.exp_design.onefile_iter():
-        for treatment in pyWorkload.\
-               exp_design.fourbyfour_iter(designfile):
-               #exp_design.fourbyfour_iter('./4by4design.txt'):
-            #pprint.pprint(treatment)
-            self.run_and_get_df( treatment, savedf=True)
+    def run_experiment(self, designfile, mode):
+        if mode == 'design':
+            for treatment in pyWorkload.\
+                   exp_design.fourbyfour_iter(designfile):
+                pprint.pprint( treatment )
+                self.run_and_get_df( treatment, savedf=True)
+        elif mode == 'reproduce':
+            for treatment in pyWorkload.\
+                   exp_design.reproducer_iter(designfile):
+                pprint.pprint( treatment )
+                self.run_and_get_df( treatment, savedf=True)
+
 
     def sampleworkload(self):
         file_treatment = {
@@ -564,5 +568,6 @@ except:
 exp_exe = Executor(confparser)
 
 if __name__ == '__main__':
-    exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
+    #exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
+    exp_exe.run_experiment('./pyWorkload/tmp.txt', mode='reproduce')
 
