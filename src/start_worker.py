@@ -33,8 +33,8 @@ cmd = ['mpirun',
        'sudo',
        'bash',
        '-c',
-       'python worker.py '+jobmaster+' 2>&1 |grep WORKERINFO']
-       #'python worker.py '+jobmaster+' ']
+       #'python worker.py '+jobmaster+' 2>&1 |grep WORKERINFO']
+       'python worker.py '+jobmaster+' ']
 #cmd = ['mpirun', 
        #'-np', np,
        #'-H', ','.join(hostlist),

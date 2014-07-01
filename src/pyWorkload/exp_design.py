@@ -86,6 +86,51 @@ qualitative:
     #pprint.pprint( table )
     return table
 
+def read_rawtable(filepath):
+    f = open(filepath)
+    lines = f.readlines()
+    f.close()
+
+    if len(lines) <= 1:
+        print 'no data in file', filepath
+        exit(1)
+    
+    colnames = lines[0].split()
+    treatments = []
+    for line in lines[1:]:
+        d = {}
+        values = line.split()
+        for k,v in zip(colnames, values):
+            d[k] = v
+        treatments.append(d)
+    #pprint.pprint(treatments)
+    return treatments
+
+def string_to_bool( s ):
+    b = [bool(int(x)) for x in s]
+    return b
+
+def rawtable_to_recipe(raw_tb):
+    for row in raw_tb:
+        for k,v in row.items():
+            #print k
+            if k in ['fsync','sync']:
+                row[k] = [bool(int(x)) for x in v]
+            elif k in ['chunk.order']:
+                row[k] = [int(x) for x in v]
+            elif k in ['disk.size', 'dir.span',
+                       'file.size', 'num.cores',
+                       'num.files', 'layoutnumber',
+                       'num.chunks']:
+                row[k] = int(v)
+            elif k in ['disk.used', 'fullness']:
+                row[k] = float(v)
+            #else:
+                #print 'skipped key', k
+
+    return raw_tb
+
+
 def read_design_file_blhd(filepath):
     f = open(filepath, 'r')
     id = 0
@@ -611,6 +656,15 @@ def recipe_to_treatment(recipe):
     #pprint.pprint( treatment )
     return treatment
 
+def reproducer_iter(rawtable_path):
+    rtb = read_rawtable(rawtable_path)
+    recipes = rawtable_to_recipe(rtb)
+    for recipe in recipes:
+        treatment = recipe_to_treatment(recipe)
+        treatment['filesystem'] = recipe['file.system']
+        yield treatment
+        #pprint.pprint(treatment)
+
 def fourbyfour_iter(design_path):
     #design_table = read_design_file(design_path)
     design_table = read_design_file_blhd(design_path)
@@ -643,6 +697,11 @@ def fourbyfour_iter(design_path):
                 #break
     
 if __name__ == '__main__':
+    reproducer_iter('./tmp.txt')
+    exit(0)
+    rtb = read_rawtable('./tmp.txt')
+    pprint.pprint( rawtable_to_recipe(rtb) )
+    exit(0)
     #read_design_file_blhd('../design_blhd-4by4.txt')
     fourbyfour_iter('../designs/blhd-12-factors-4by4.txt')
     exit(0)
