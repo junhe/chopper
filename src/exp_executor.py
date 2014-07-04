@@ -34,6 +34,7 @@ import make_disk_images
 
 walkmanlog = None
 feedback_dic = {}
+g_mountopfs = "uninitialized"
 
 def ParameterCominations(parameter_dict):
     """
@@ -129,12 +130,15 @@ class Walkman:
         layoutnumber = self.confparser.getint('system',
                                               'layoutnumber')
        
+        print g_mountopfs
         make_disk_images.use_one_image(fstype=fs,
                                disksize=disksize,
                                used_ratio=used_ratio,
-                               layoutnumber=layoutnumber
+                               layoutnumber=layoutnumber,
+                               mountopts=g_mountopfs
                                )
 
+        exit(1)
         return
 
         if fs == 'ext4':
@@ -301,11 +305,15 @@ class Walkman:
                 and self.confparser.get('system', 'formatfs') != 'yes':
             exit(1)
 
+        subprocess.call(['sync'])
+        subprocess.call("echo 3 > /proc/sys/vm/drop_caches", shell=True)
+
         # Format file system
         if self.confparser.get('system', 'formatfs').lower() == "yes":
             self._remake_fs()
         else:
             print "skipped formating fs"
+
 
         # Making fragments
         if self.confparser.get('fragment', 'createfragment').lower() == 'yes':
@@ -317,6 +325,10 @@ class Walkman:
             print "copying some boot files to the mount point"
             pyWorkload.misc.copy_boot(
                     self.confparser.get('system', 'mountpoint') )
+
+        subprocess.call(['sync'])
+        subprocess.call("echo 3 > /proc/sys/vm/drop_caches", shell=True)
+        time.sleep(5)
 
 
     def walk(self):
@@ -569,5 +581,9 @@ exp_exe = Executor(confparser)
 
 if __name__ == '__main__':
     #exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
+    if len(sys.argv) != 2:
+        print 'usage:', sys.argv[0], 'mountops'
+        exit(1)
+    g_mountopfs = sys.argv[1]
     exp_exe.run_experiment('./pyWorkload/tmp.txt', mode='reproduce')
 

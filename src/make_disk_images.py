@@ -168,7 +168,8 @@ def release_image():
     else:
         print devname, "is not in use"
 
-def use_one_image(fstype, disksize, used_ratio, layoutnumber):
+def use_one_image(fstype, disksize, used_ratio, layoutnumber,
+                    mountopts):
     #fsused = get_fsusedGB(disksize, used_ratio)
     imgpath = get_image_path(fstype, disksize, 
                              used_ratio, layoutnumber)
@@ -195,7 +196,9 @@ def use_one_image(fstype, disksize, used_ratio, layoutnumber):
                 sizeMB=disksize/(1024*1024),
                 img_file = imgpath
                 )
-    MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch')
+    MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch',
+            opts=mountopts
+            )
 
 def make_hole_file(filepath, filesize, 
                    layoutnumber, punchmode, specfilesize=True):
@@ -395,7 +398,8 @@ def make_images():
         use_one_image(fstype=para['fstype'],
                        disksize=para['disksize'],
                        used_ratio=para['used_ratio'],
-                       layoutnumber=para['layoutnumber'])
+                       layoutnumber=para['layoutnumber'],
+                       )
         time.sleep(2) 
         exit(0)
 
