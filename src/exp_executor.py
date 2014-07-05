@@ -35,6 +35,7 @@ import make_disk_images
 walkmanlog = None
 feedback_dic = {}
 g_mountopfs = "uninitialized"
+g_resultpath = 'resultpath-uninit'
 
 def ParameterCominations(parameter_dict):
     """
@@ -138,7 +139,6 @@ class Walkman:
                                mountopts=g_mountopfs
                                )
 
-        exit(1)
         return
 
         if fs == 'ext4':
@@ -325,10 +325,6 @@ class Walkman:
             print "copying some boot files to the mount point"
             pyWorkload.misc.copy_boot(
                     self.confparser.get('system', 'mountpoint') )
-
-        subprocess.call(['sync'])
-        subprocess.call("echo 3 > /proc/sys/vm/drop_caches", shell=True)
-        time.sleep(5)
 
 
     def walk(self):
@@ -561,7 +557,7 @@ class Executor:
 
         if savedf:
             if self.fileout == None:
-                self.fileout = open('result-table.txt', 'w')
+                self.fileout = open(g_resultpath, 'w')
                 self.fileout.write(df.toStr(header=True, table=True)) 
             else:
                 self.fileout.write(df.toStr(header=False, table=True)) 
@@ -581,9 +577,10 @@ exp_exe = Executor(confparser)
 
 if __name__ == '__main__':
     #exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
-    if len(sys.argv) != 2:
-        print 'usage:', sys.argv[0], 'mountops'
+    if len(sys.argv) != 3:
+        print 'usage:', sys.argv[0], 'mountops resultpath'
         exit(1)
     g_mountopfs = sys.argv[1]
+    g_resultpath = sys.argv[2]
     exp_exe.run_experiment('./pyWorkload/tmp.txt', mode='reproduce')
 
