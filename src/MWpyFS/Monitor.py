@@ -44,6 +44,7 @@ import itertools
 import btrfs_db_parser
 import xfs_db_parser
 import dataframe
+import collectOrder
 
 class cd:
     """Context manager for changing the current working directory"""
@@ -740,9 +741,16 @@ class FSMonitor:
                 = get_physical_layout_hash(df_ext, 
                                            'file', 
                                            merge_contiguous=True)
-
-
-
+        
+        #get block allocation order
+        baorder = 'NA'
+        if self.filesystem == 'ext4':
+            # only ext4 is supported
+            baorder = collectOrder.collect_order()
+            if baorder == '':
+                baorder = "ERROR-should-have-something"
+            collectOrder.mark_end()
+        ret_dict['baorder'] = baorder
 
         return ret_dict
 

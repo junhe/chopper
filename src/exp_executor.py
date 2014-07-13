@@ -504,6 +504,8 @@ class Executor:
                 value = '.'.join(socket.gethostname().split('.')[0:2]))
         df.addColumn(key = 'kernel.release',
                 value = platform.release())
+        df.addColumn(key = 'baorder',
+                value = ret['baorder']
 
         #print df.toStr()
         ##############################3
@@ -530,7 +532,8 @@ class Executor:
                   'dir.span', 'num.files',
                   'layout_index',
                   'layoutnumber',
-                  'kernel.release'
+                  'kernel.release',
+                  'baorder'
                   ]
         headers = copy.deepcopy(df.header)
         for colname in headers:
@@ -582,5 +585,6 @@ if __name__ == '__main__':
         exit(1)
     g_mountopfs = sys.argv[1]
     g_resultpath = sys.argv[2]
-    exp_exe.run_experiment('./pyWorkload/tmp.txt', mode='reproduce')
+    #exp_exe.run_experiment('./pyWorkload/tmp.txt', mode='reproduce')
+    exp_exe.run_experiment('./pyWorkload/g4e-bigger-than-gd0.table.txt', mode='reproduce')
 
