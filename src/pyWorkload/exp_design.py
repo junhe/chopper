@@ -615,32 +615,18 @@ def fourbyfour_iter(design_path):
     #design_table = read_design_file(design_path)
     design_table = read_design_file_blhd(design_path)
     cnt = 0
-    #design_table = [ design_table[i] 
-             #for i in sorted(range(len(design_table)), reverse=True)]
     fses = ['ext4']
+    mountopts = ''
+    #mountopts = 'nodelalloc'
     #fses = ['ext3']
     for fs in fses:
         for design_row in design_table:
-            #pprint.pprint( row_to_treatment(design_row) )
-            #row_to_treatment(design_row) 
-            #if design_row['chunk.number'] != 4:
-                #continue
             recipe = row_to_recipe( design_row )
-            #pprint.pprint( recipe )
             treatment = recipe_to_treatment(recipe) 
             treatment['filesystem'] = fs
-            #pprint.pprint( treatment )
-            #exit(0)
+            treatment['mountopts'] = mountopts
             cnt += 1
-            #if cnt == 1:
-                #print 'bypassing cnt 1!!!!!!!!!!!!!!!!!!'
-                #continue
             yield treatment
-            #exit(1)
-            #break
-            #if cnt == 3:
-                #continue
-                #break
     
 if __name__ == '__main__':
     #read_design_file_blhd('../design_blhd-4by4.txt')

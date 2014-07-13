@@ -444,6 +444,7 @@ def build_conf ( treatment, confparser ):
     confparser.set('system', 'makeloopdevice', 'yes')
     confparser.set('system', 'layoutnumber', 
                     str(treatment['layoutnumber']))
+    confparser.set('system', 'mountopts', treatment['mountopts'])
 
     chkseq = pat_data_struct.get_empty_ChunkSeq()
 

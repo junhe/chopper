@@ -128,13 +128,14 @@ class Walkman:
         #print disk_used, disksize, used_ratio
         layoutnumber = self.confparser.getint('system',
                                               'layoutnumber')
-       
+        mopts = self.confparser.get('system', 'mountopts')
+
         make_disk_images.use_one_image(fstype=fs,
                                disksize=disksize,
                                used_ratio=used_ratio,
-                               layoutnumber=layoutnumber
+                               layoutnumber=layoutnumber,
+                               mountopts=mopts
                                )
-
         return
 
         if fs == 'ext4':
