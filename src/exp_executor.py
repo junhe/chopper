@@ -505,7 +505,7 @@ class Executor:
         df.addColumn(key = 'kernel.release',
                 value = platform.release())
         df.addColumn(key = 'baorder',
-                value = ret['baorder']
+                value = ret['baorder'])
 
         #print df.toStr()
         ##############################3
