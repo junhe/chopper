@@ -27,8 +27,8 @@ AUTHKEY='11'
 
 def get_joblist():
     jobiter = pyWorkload.exp_design.\
-                #fourbyfour_iter('./designs/sanity.test.design.txt')
                 fourbyfour_iter('./designs/blhd_12factors_2to14runs.txt')
+                #fourbyfour_iter('./designs/sanity.test.design.txt')
                 #fourbyfour_iter('./designs/blhd-12-factors-4by4.txt')
                 #fourbyfour_iter('./designs/blhd-11-factors-4by7.txt')
                 #fourbyfour_iter('./designs/design_blhd-4by4.tmp.txt')
