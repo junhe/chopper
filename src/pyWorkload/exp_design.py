@@ -462,6 +462,7 @@ def get_factor_spaces(nchunks):
     space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
     space_dic['num.files']    = range(1,3)
     space_dic['layoutnumber']    = range(1,6)
+    space_dic['num.chunks']   = [nchunks]
 
     return space_dic
 
@@ -469,17 +470,13 @@ def row_to_recipe(design_row):
     #print design_row
     recipe = {}
     
-    nchunks = design_row['num.chunks']
-
+    #nchunks = design_row['num.chunks']
+    nchunks = 4
     space_dic = get_factor_spaces(nchunks)
-
-    #TODO: WARNING: debugging
-    #design_row['fullness'] = '0.3'
 
     # pick one
     for k,space in space_dic.items():
         recipe[k] = pick_by_level( design_row[k], space )
-    recipe['num.chunks'] = nchunks
 
     return recipe
 
@@ -638,8 +635,7 @@ def recipe_to_treatment(recipe):
     return treatment
 
 def fourbyfour_iter(design_path):
-    #design_table = read_design_file(design_path)
-    design_table = read_design_file_blhd(design_path)
+    design_table = read_design_file_blhd_fixednchunks(design_path)
     cnt = 0
     fses = ['ext4']
     mountopts = ''
@@ -648,18 +644,16 @@ def fourbyfour_iter(design_path):
     for fs in fses:
         for design_row in design_table:
             recipe = row_to_recipe( design_row )
+            pprint.pprint(recipe)
             treatment = recipe_to_treatment(recipe) 
             treatment['filesystem'] = fs
             treatment['mountopts'] = mountopts
             cnt += 1
-            yield treatment
+            #yield treatment
     
 if __name__ == '__main__':
-    a = read_design_file_blhd_fixednchunks('../designs/sanity.test.design.txt')
-    #pprint.pprint(a)
-    print a
-    exit(1)
-    fourbyfour_iter('../designs/blhd-12-factors-4by4.txt')
+    #a = read_design_file_blhd_fixednchunks('../designs/sanity.test.design.txt')
+    fourbyfour_iter('../designs/sanity.test.design.txt')
     exit(0)
 
     recipe = {
