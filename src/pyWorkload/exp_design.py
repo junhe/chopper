@@ -86,6 +86,32 @@ qualitative:
     #pprint.pprint( table )
     return table
 
+
+def read_design_file_blhd_fixednchunks(filepath):
+    f = open(filepath, 'r')
+    id = 0
+    header = None
+    table = []
+    for line in f:
+        items = line.split()
+        if len(items) == 0:
+            continue
+        if id == 0:
+            header = items
+            id += 1
+            continue
+        d = {}
+        for i, name in enumerate(header):
+            try:
+                d[name] = items[i]
+            except:
+                print line
+                print header
+        table.append(d)
+    f.close()
+
+    return table
+
 def read_design_file_blhd(filepath):
     f = open(filepath, 'r')
     id = 0
@@ -629,7 +655,10 @@ def fourbyfour_iter(design_path):
             yield treatment
     
 if __name__ == '__main__':
-    #read_design_file_blhd('../design_blhd-4by4.txt')
+    a = read_design_file_blhd_fixednchunks('../designs/sanity.test.design.txt')
+    #pprint.pprint(a)
+    print a
+    exit(1)
     fourbyfour_iter('../designs/blhd-12-factors-4by4.txt')
     exit(0)
 
