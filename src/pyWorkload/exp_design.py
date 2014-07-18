@@ -442,30 +442,6 @@ def get_factor_spaces_SAMPLE(nchunks):
 
     return space_dic
 
-def get_factor_spaces(nchunks):
-    binspace = itertools.product( [False, True], repeat=nchunks)
-    binspace = [list(x) for x in binspace] 
-
-    close_sp = itertools.product( [False, True], repeat=nchunks-1 )
-    close_sp = [ list(x)+[True] for x in close_sp ] # always close
-
-
-    space_dic = {}
-    space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
-    space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
-    space_dic['dir.span']     = range(1,33) 
-    space_dic['file.size']    = [ x*1024 for x in range(12, 524, 4) ]
-    space_dic['fullness']     = [x/10.0 for x in range(1, 31)]
-    space_dic['num.cores']    = [1,2]
-    space_dic['fsync']        = binspace
-    space_dic['sync']         = close_sp
-    space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
-    space_dic['num.files']    = range(1,3)
-    space_dic['layoutnumber']    = range(1,6)
-    space_dic['num.chunks']   = [nchunks]
-
-    return space_dic
-
 def row_to_recipe(design_row):
     #print design_row
     recipe = {}
@@ -634,6 +610,35 @@ def recipe_to_treatment(recipe):
     #pprint.pprint( treatment )
     return treatment
 
+
+def get_factor_spaces(nchunks):
+    binspace = itertools.product( [False, True], repeat=nchunks)
+    binspace = [list(x) for x in binspace] 
+
+    close_sp = itertools.product( [False, True], repeat=nchunks-1 )
+    close_sp = [ list(x)+[True] for x in close_sp ] # always close
+
+
+    space_dic = {}
+    space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
+    space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
+    space_dic['dir.span']     = range(1,33) 
+    space_dic['file.size']    = [ x*1024 for x in range(8, 64+1) ]
+    space_dic['fullness']     = [x/10.0 for x in range(1, 31)]
+    space_dic['num.cores']    = [1,2]
+    space_dic['fsync']        = binspace
+    space_dic['sync']         = close_sp
+    space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
+    space_dic['num.files']    = range(1,2)
+    space_dic['layoutnumber']    = range(1,6)
+    space_dic['num.chunks']   = [nchunks]
+
+    # the number of combination above is 1.35*10^13
+
+    return space_dic
+
+
+
 def fourbyfour_iter(design_path):
     design_table = read_design_file_blhd_fixednchunks(design_path)
     cnt = 0
@@ -644,12 +649,11 @@ def fourbyfour_iter(design_path):
     for fs in fses:
         for design_row in design_table:
             recipe = row_to_recipe( design_row )
-            pprint.pprint(recipe)
             treatment = recipe_to_treatment(recipe) 
             treatment['filesystem'] = fs
             treatment['mountopts'] = mountopts
             cnt += 1
-            #yield treatment
+            yield treatment
     
 if __name__ == '__main__':
     #a = read_design_file_blhd_fixednchunks('../designs/sanity.test.design.txt')
