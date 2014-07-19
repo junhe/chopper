@@ -307,29 +307,31 @@ def make_one_image_solidfile(fstype, disksize,
     print 'bytes_holefile', bytes_holefile
     time.sleep(1)
 
-    if used_ratio == 0:
-        pass
-    else:
-        if fstype in ['ext4','xfs','btrfs']:
-            #print "creating hole file (no hole yet)..."
-            #fallocate_solid_file('/mnt/scratch/punchfile',
-                                 #bytes_holefile)
-            #subprocess.call(['sync'])
-            #bytes_left = get_disk_free_bytes('/mnt/scratch/')
-            #bytes_left = int(bytes_left * 0.999)
-            #print "creating place holder file..."
-            #fallocate_solid_file('/mnt/scratch/placeholder',
-                                 #bytes_left)
-            #ret = make_hole_file("/mnt/scratch/punchfile",
-               #bytes_holefile,
-               #layoutnumber,
-               #0, False
-               #)
+    if fstype in ['ext4','xfs','btrfs']:
+        #print "creating hole file (no hole yet)..."
+        #fallocate_solid_file('/mnt/scratch/punchfile',
+                             #bytes_holefile)
+        #subprocess.call(['sync'])
+        #bytes_left = get_disk_free_bytes('/mnt/scratch/')
+        #bytes_left = int(bytes_left * 0.999)
+        #print "creating place holder file..."
+        #fallocate_solid_file('/mnt/scratch/placeholder',
+                             #bytes_left)
+        #ret = make_hole_file("/mnt/scratch/punchfile",
+           #bytes_holefile,
+           #layoutnumber,
+           #0, False
+           #)
 
+        if used_ratio > 0:
+            # only do placeholder when the used_ratio > 0
             bytes_left = disksize - bytes_holefile
             print "creating place holder file... size:", bytes_left
             fallocate_solid_file('/mnt/scratch/placeholder',
                                  bytes_left)
+        if layoutnumber != 6:
+            # when layoutnumber==6, we do not
+            # frag the file system
             bytes_left = get_disk_free_bytes('/mnt/scratch/')
             bytes_holefile = int(bytes_left * 0.99)
             print "creating hole file... size:", bytes_holefile, \
@@ -340,7 +342,8 @@ def make_one_image_solidfile(fstype, disksize,
                0, True
                )
 
-        elif fstype in ['ext2', 'ext3']:
+    elif fstype in ['ext2', 'ext3']:
+        if used_ratio > 0:
             print "creating hole file (no hole yet)...", bytes_holefile
             fill_solid_file('/mnt/scratch/punchfile',
                                  bytes_holefile)
@@ -348,27 +351,29 @@ def make_one_image_solidfile(fstype, disksize,
             print "creating place holder file....", bytes_left
             fill_solid_file('/mnt/scratch/placeholder',
                                  bytes_left)           
-            print "Deleting punchfile..."
-            os.remove('/mnt/scratch/punchfile')
+        if layoutnumber != 6:
+            if os.path.exists('/mnt/scratch/punchfile'):
+                print "Deleting punchfile..."
+                os.remove('/mnt/scratch/punchfile')
             print "create punch file again...", bytes_holefile
             ret = make_hole_file("/mnt/scratch/punchfile",
                bytes_holefile,
                layoutnumber,
                1, True 
                )
-        else:
-            print 'file system is not supported with any punchmode'
-            exit(1)
+    else:
+        print 'file system is not supported with any punchmode'
+        exit(1)
 
-        if ret != 0:
-            msg = 'it is unable to make a hole file. {} disksize: {} {} {}'.format(
-                                fstype, disksize, used_ratio, layoutnumber)
-            print msg
-            with open('/tmp/make_disk_image.log', 'a') as f:
-                f.write(msg + '\n')
-                f.flush()
-            exit(1)
-            
+    if ret != 0:
+        msg = 'it is unable to make a hole file. {} disksize: {} {} {}'.format(
+                            fstype, disksize, used_ratio, layoutnumber)
+        print msg
+        with open('/tmp/make_disk_image.log', 'a') as f:
+            f.write(msg + '\n')
+            f.flush()
+        exit(1)
+        
     subprocess.call(['sync'])
 
     # copy and save the image file
