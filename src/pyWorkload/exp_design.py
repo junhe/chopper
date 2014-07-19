@@ -25,7 +25,7 @@ def get_x_th_percentile(objlist, x):
 def get_dirlist(nfiles, dirspan):
     # find out the percentile of each file
     if nfiles == 1:
-        xths = [0]
+        xths = [100]
     else:
         step = 100.0/(nfiles-1)
         xths = [ step*i for i in range(nfiles) ]
@@ -623,14 +623,14 @@ def get_factor_spaces(nchunks):
     space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
     space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
     space_dic['dir.span']     = range(1,33) 
-    space_dic['file.size']    = [ x*1024 for x in range(8, 64+1) ]
+    space_dic['file.size']    = [ x*1024 for x in range(8, 128+1) ]
     space_dic['fullness']     = [x/10.0 for x in range(1, 31)]
     space_dic['num.cores']    = [1,2]
     space_dic['fsync']        = binspace
     space_dic['sync']         = close_sp
     space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
     space_dic['num.files']    = range(1,2)
-    space_dic['layoutnumber']    = range(1,6)
+    space_dic['layoutnumber']    = range(1,7)
     space_dic['num.chunks']   = [nchunks]
 
     # the number of combination above is 1.35*10^13

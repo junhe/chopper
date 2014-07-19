@@ -342,6 +342,15 @@ def make_one_image_solidfile(fstype, disksize,
                0, True
                )
 
+            if ret != 0:
+                msg = 'it is unable to make a hole file. {} disksize: {} {} {}'.format(
+                                    fstype, disksize, used_ratio, layoutnumber)
+                print msg
+                with open('/tmp/make_disk_image.log', 'a') as f:
+                    f.write(msg + '\n')
+                    f.flush()
+                exit(1)
+
     elif fstype in ['ext2', 'ext3']:
         if used_ratio > 0:
             print "creating hole file (no hole yet)...", bytes_holefile
@@ -361,18 +370,20 @@ def make_one_image_solidfile(fstype, disksize,
                layoutnumber,
                1, True 
                )
+
+            if ret != 0:
+                msg = 'it is unable to make a hole file. {} disksize: {} {} {}'.format(
+                                    fstype, disksize, used_ratio, layoutnumber)
+                print msg
+                with open('/tmp/make_disk_image.log', 'a') as f:
+                    f.write(msg + '\n')
+                    f.flush()
+                exit(1)
     else:
         print 'file system is not supported with any punchmode'
         exit(1)
 
-    if ret != 0:
-        msg = 'it is unable to make a hole file. {} disksize: {} {} {}'.format(
-                            fstype, disksize, used_ratio, layoutnumber)
-        print msg
-        with open('/tmp/make_disk_image.log', 'a') as f:
-            f.write(msg + '\n')
-            f.flush()
-        exit(1)
+
         
     subprocess.call(['sync'])
 
