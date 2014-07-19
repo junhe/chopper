@@ -567,5 +567,5 @@ exp_exe = Executor(confparser)
 if __name__ == '__main__':
     #exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
     #exp_exe.run_experiment('./designs/sanity.test.design.txt')
-    exp_exe.run_experiment('./designs/blhd_12factors_1024runs.txt')
+    exp_exe.run_experiment('./designs/blhd_12factors_2to14runs.2.txt')
 
