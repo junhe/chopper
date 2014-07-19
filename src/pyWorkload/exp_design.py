@@ -623,13 +623,13 @@ def get_factor_spaces(nchunks):
     space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
     space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
     space_dic['dir.span']     = range(1,33) 
-    space_dic['file.size']    = [ x*1024 for x in range(8, 128+1) ]
+    space_dic['file.size']    = [ x*1024 for x in range(4, 256+1) ]
     space_dic['fullness']     = [x/10.0 for x in range(1, 31)]
     space_dic['num.cores']    = [1,2]
     space_dic['fsync']        = binspace
     space_dic['sync']         = close_sp
     space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
-    space_dic['num.files']    = range(1,2)
+    space_dic['num.files']    = range(1,3)
     space_dic['layoutnumber']    = range(1,7)
     space_dic['num.chunks']   = [nchunks]
 
