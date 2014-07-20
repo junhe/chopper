@@ -415,14 +415,20 @@ class Executor:
         ret = self._walkman_walk(conf)
         return ret
 
-    def run_experiment(self, designfile):
+    def run_experiment(self, designfile, mode='batch'):
         #for treatment in pyWorkload.exp_design.dir_distance_iter():
         #for treatment in pyWorkload.exp_design.onefile_iter():
-        for treatment in pyWorkload.\
-               exp_design.fourbyfour_iter(designfile):
-               #exp_design.fourbyfour_iter('./4by4design.txt'):
-            #pprint.pprint(treatment)
-            self.run_and_get_df( treatment, savedf=True)
+        if mode == 'batch':
+            for treatment in pyWorkload.\
+                   exp_design.fourbyfour_iter(designfile):
+                self.run_and_get_df( treatment, savedf=True)
+        elif mode == 'reproduce':
+            for treatment in pyWorkload.\
+                   exp_design.reproducer_iter(designfile):
+                self.run_and_get_df( treatment, savedf=True)
+        else:
+            print 'experiment mode is not supported'
+            exit(1)
 
     def sampleworkload(self):
         file_treatment = {
@@ -567,5 +573,20 @@ exp_exe = Executor(confparser)
 if __name__ == '__main__':
     #exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
     #exp_exe.run_experiment('./designs/sanity.test.design.txt')
-    exp_exe.run_experiment('./designs/blhd_12factors_2to14runs.2.txt')
+    #exp_exe.run_experiment('./designs/blhd_12factors_2to14runs.2.txt')
+    
+    argv = sys.argv
+    if len(argv) != 3:
+        print "Usage:", argv[0], "batch|reproduce design-file-path"
+        print "Example: python exp_executor.py reproduce designs/reprod.txt"
+        print "Example: python exp_executor.py batch designs/blhd_12factors_2to14runs.txt"
+        exit(1)
+    
+    mode = argv[1]
+    designpath = argv[2]
+    exp_exe.run_experiment(designpath, mode=mode)
+
+
+
+
 

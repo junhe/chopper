@@ -637,6 +637,54 @@ def get_factor_spaces(nchunks):
 
     return space_dic
 
+def rawtable_to_recipe(raw_tb):
+    for row in raw_tb:
+        for k,v in row.items():
+            #print k
+            if k in ['fsync','sync']:
+                row[k] = [bool(int(x)) for x in v]
+            elif k in ['chunk.order']:
+                row[k] = [int(x) for x in v]
+            elif k in ['disk.size', 'dir.span',
+                       'file.size', 'num.cores',
+                       'num.files', 'layoutnumber',
+                       'num.chunks']:
+                row[k] = int(v)
+            elif k in ['disk.used', 'fullness']:
+                row[k] = float(v)
+            #else:
+                #print 'skipped key', k
+
+    return raw_tb
+
+def read_rawtable(filepath):
+    f = open(filepath)
+    lines = f.readlines()
+    f.close()
+
+    if len(lines) <= 1:
+        print 'no data in file', filepath
+        exit(1)
+    
+    colnames = lines[0].split()
+    treatments = []
+    for line in lines[1:]:
+        d = {}
+        values = line.split()
+        for k,v in zip(colnames, values):
+            d[k] = v
+        treatments.append(d)
+    return treatments
+
+def reproducer_iter(rawtable_path):
+    rtb = read_rawtable(rawtable_path)
+    recipes = rawtable_to_recipe(rtb)
+    for recipe in recipes:
+        treatment = recipe_to_treatment(recipe)
+        treatment['filesystem'] = recipe['file.system']
+        treatment['mountopts'] = ''
+        yield treatment
+        #pprint.pprint(treatment)
 
 
 def fourbyfour_iter(design_path):
@@ -656,6 +704,8 @@ def fourbyfour_iter(design_path):
             yield treatment
     
 if __name__ == '__main__':
+    reproducer_iter('./tmp.txt')
+    exit(0)
     #a = read_design_file_blhd_fixednchunks('../designs/sanity.test.design.txt')
     fourbyfour_iter('../designs/sanity.test.design.txt')
     exit(0)
