@@ -818,6 +818,11 @@ def extent_distant_sum(extent):
     """
     # doing a trick to get ceiling without floats
     n = get_num_sectors(extent['len'])
+
+    # hmm.. define the distance of 1 sector
+    # to be 1.
+    if n == 1:
+        return 1
     #print "n:", n
     ret = n*(n-1)*(n+1)/6 
     #print extent, ret
