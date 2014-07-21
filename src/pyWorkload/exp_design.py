@@ -669,6 +669,9 @@ def read_rawtable(filepath):
     colnames = lines[0].split()
     treatments = []
     for line in lines[1:]:
+        line  = line.strip()
+        if len(line) == 0:
+            continue
         d = {}
         values = line.split()
         for k,v in zip(colnames, values):
