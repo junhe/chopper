@@ -306,6 +306,11 @@ def make_one_image_solidfile(fstype, disksize,
 
     print 'bytes_holefile', bytes_holefile
     time.sleep(1)
+    
+    # this is the dir that will hold the placeholder
+    # and hole file
+    if not os.path.exists('/mnt/scratch/metadir/'):
+        os.mkdir('/mnt/scratch/metadir')
 
     if fstype in ['ext4','xfs','btrfs']:
         #print "creating hole file (no hole yet)..."
@@ -327,7 +332,7 @@ def make_one_image_solidfile(fstype, disksize,
             # only do placeholder when the used_ratio > 0
             bytes_left = disksize - bytes_holefile
             print "creating place holder file... size:", bytes_left
-            fallocate_solid_file('/mnt/scratch/placeholder',
+            fallocate_solid_file('/mnt/scratch/metadir/placeholder',
                                  bytes_left)
         if layoutnumber != 6:
             # when layoutnumber==6, we do not
@@ -336,7 +341,7 @@ def make_one_image_solidfile(fstype, disksize,
             bytes_holefile = int(bytes_left * 0.99)
             print "creating hole file... size:", bytes_holefile, \
                     " layoutnumber:", layoutnumber
-            ret = make_hole_file("/mnt/scratch/punchfile",
+            ret = make_hole_file("/mnt/scratch/metadir/punchfile",
                bytes_holefile,
                layoutnumber,
                0, True
@@ -354,18 +359,18 @@ def make_one_image_solidfile(fstype, disksize,
     elif fstype in ['ext2', 'ext3']:
         if used_ratio > 0:
             print "creating hole file (no hole yet)...", bytes_holefile
-            fill_solid_file('/mnt/scratch/punchfile',
+            fill_solid_file('/mnt/scratch/metadir/punchfile',
                                  bytes_holefile)
             bytes_left = get_disk_free_bytes('/mnt/scratch/')
             print "creating place holder file....", bytes_left
-            fill_solid_file('/mnt/scratch/placeholder',
+            fill_solid_file('/mnt/scratch/metadir/placeholder',
                                  bytes_left)           
         if layoutnumber != 6:
-            if os.path.exists('/mnt/scratch/punchfile'):
+            if os.path.exists('/mnt/scratch/metadir/punchfile'):
                 print "Deleting punchfile..."
-                os.remove('/mnt/scratch/punchfile')
+                os.remove('/mnt/scratch/metadir/punchfile')
             print "create punch file again...", bytes_holefile
-            ret = make_hole_file("/mnt/scratch/punchfile",
+            ret = make_hole_file("/mnt/scratch/metadir/punchfile",
                bytes_holefile,
                layoutnumber,
                1, True 
