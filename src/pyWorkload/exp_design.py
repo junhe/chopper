@@ -30,7 +30,7 @@ def get_dirlist(nfiles, dirspan):
         step = 100.0/(nfiles-1)
         xths = [ step*i for i in range(nfiles) ]
 
-    dirlist = range(dirspan)
+    dirlist = range(1, dirspan+1)
     #print 'dirspan', dirspan
 
     dirs = [ get_x_th_percentile(dirlist, x) for x in xths ]
@@ -486,7 +486,7 @@ def recipe_to_treatment(recipe):
 
     # hard tunables 
     nrealcores = 2
-    dir_depth = 32
+    dir_depth = 33
 
     # get a nicer looking
     nchunks    = r['num.chunks']

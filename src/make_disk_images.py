@@ -269,7 +269,7 @@ def make_one_imageCOW(fstype, disksize,
     #print "for debug, exit before make hole file.."
     #print "holefilesize:", holefilesize
     #exit(1)
-    ret = make_hole_file("/mnt/scratch/punchfile",
+    ret = make_hole_file("/mnt/scratch/metadir/punchfile",
                    holefilesize,
                    layoutnumber,
                    punchmode
