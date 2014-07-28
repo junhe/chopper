@@ -305,9 +305,10 @@ def single_workload(filesize,
                     #sync_bitmap=[True]*3,
                     #write_order=[0,1,2]) )
 
-def build_dir_tree_chkeq( depth ):
-    #dirpaths = build_dir_tree_path( depth )
-    dirpaths = build_dir_ladder_path( depth )
+def build_dir_tree_chkeq( depth, startlevel ):
+    dirpaths = build_dir_tree_path( depth, startlevel)
+    #dirpaths = build_dir_ladder_path( depth )
+
     chkseq = pat_data_struct.get_empty_ChunkSeq() 
 
     for dirpath in dirpaths:
@@ -322,7 +323,20 @@ def build_dir_tree_chkeq( depth ):
         chkseq['seq'].append(cbox)
     return chkseq
         
-def get_dir_path (dirid):
+def dir_level (dirid):
+    # given a dirid, it tells you which level the 
+    # dir is at
+    #      0 ----- level 0
+    #    1   2  --- level 1
+    #  3  4 5  6  -- level 2
+    for level in range(32):
+        if 2**level - 1 <= dirid and \
+                dirid < 2**(level+1) -1 :
+            return level
+    return None
+
+
+def get_dir_path (dirid, startlevel):
     """
     dirid is the in index in the breadth-first
     traversal
@@ -337,10 +351,12 @@ def get_dir_path (dirid):
     while parent > 0 :
         path.insert(0, parent)
         parent = (parent - 1)/2
-    path = "/".join( [str(x) for x in path] )
+    
+    path = [ x for x in path if dir_level(x) >= startlevel ]
+    path = "/".join( ['dir.'+str(x) for x in path] )
     return path
 
-def build_dir_tree_path( depth ):
+def build_dir_tree_path( depth, startlevel ):
     """
     depth: The depth of a node is the number of edges 
            from the root to the node.
@@ -367,8 +383,9 @@ def build_dir_tree_path( depth ):
     dirpaths = []
     n = 2**(depth+1) - 1 
     for dirid in range(1, n):
-        path = get_dir_path(dirid)
-        dirpaths.append( path )
+        path = get_dir_path(dirid, startlevel)
+        if path != "":
+            dirpaths.append( path )
 
     return dirpaths
 
@@ -449,7 +466,8 @@ def build_conf ( treatment, confparser ):
     chkseq = pat_data_struct.get_empty_ChunkSeq()
 
     # creat directory tree
-    dirs_chkseq = build_dir_tree_chkeq( treatment['dir_depth'] )
+    dirs_chkseq = build_dir_tree_chkeq( treatment['dir_depth'], 
+                                        treatment['startlevel'] )
     chkseq['seq'].extend( dirs_chkseq['seq'] )
     #pprint.pprint(chkseq)
    
@@ -457,6 +475,7 @@ def build_conf ( treatment, confparser ):
     nfiles = len( treatment['files'] )
     files_chkseq_list = []
     for file_treatment in treatment['files']:
+        file_treatment['startlevel'] = treatment['startlevel']
         files_chkseq_list.append( 
                     build_file_chunkseq( file_treatment ) )
 
@@ -512,7 +531,10 @@ def build_file_chunkseq ( file_treatment ):
         cbox['chunk']['fileid'] = file_treatment['fileid']
         cbox['chunk']['parent_dirid'] = file_treatment['parent_dirid']
         cbox['chunk']['filepath'] = os.path.join(
-                get_ladder_dir_path(file_treatment['parent_dirid']),
+                #get_ladder_dir_path(file_treatment['parent_dirid']),
+                get_dir_path(file_treatment['parent_dirid'],
+                             file_treatment['startlevel']
+                    ),
                 str( file_treatment['fileid'] ) + ".file" )
         cbox['chunk']['writer_pid'] = file_treatment['writer_pid']
         chunkseq['seq'].append( cbox )
@@ -550,7 +572,9 @@ def build_file_chunkseq ( file_treatment ):
     return chunkseq
 
 
-
+if __name__ == '__main__':
+    for i in range(20):
+        print i, dir_level(i)
 
 #confparser = ConfigParser.SafeConfigParser()
 

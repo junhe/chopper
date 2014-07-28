@@ -22,16 +22,21 @@ def get_x_th_percentile(objlist, x):
     return objlist[segindex]
 
 
-def get_dirlist(nfiles, dirspan):
+def get_dirlist(nfiles, dirspan, startlevel):
     # find out the percentile of each file
+    startdir = 2**startlevel -1
+
     if nfiles == 1:
         xths = [100]
     else:
         step = 100.0/(nfiles-1)
         xths = [ step*i for i in range(nfiles) ]
 
-    dirlist = range(1, dirspan+1)
+    dirlist = range(startdir, startdir+dirspan)
+    #if len(dirlist) > 0 and dirlist[0] != 0:
+        #dirlist = [0] + dirlist
     #print 'dirspan', dirspan
+    #print 'dirlist', dirlist
 
     dirs = [ get_x_th_percentile(dirlist, x) for x in xths ]
     return dirs
@@ -486,7 +491,8 @@ def recipe_to_treatment(recipe):
 
     # hard tunables 
     nrealcores = 2
-    dir_depth = 33
+    dir_depth  = 4 # we'll have level 0,1,2,3,4
+    startlevel = 2
 
     # get a nicer looking
     nchunks    = r['num.chunks']
@@ -564,7 +570,9 @@ def recipe_to_treatment(recipe):
                                         for k in range(nfiles) ]
     
     dirlist = get_dirlist(nfiles  = nfiles,
-                          dirspan = r['dir.span'])
+                          dirspan = r['dir.span'],
+                          startlevel = startlevel
+                          )
     #print dirlist
     nfiletreatment_list = []
     filepos = 0
@@ -602,7 +610,8 @@ def recipe_to_treatment(recipe):
                   'filechunk_order': filechunk_order,
                   #'filechunk_order': [0,0,0,0]
                   'unique.bytes'   : unique_bytes,
-                  'layoutnumber'   : r['layoutnumber']
+                  'layoutnumber'   : r['layoutnumber'],
+                  'startlevel'     : startlevel
                 }
     # shold not correct now, because I will write the 
     # same file many times
@@ -622,7 +631,7 @@ def get_factor_spaces(nchunks):
     space_dic = {}
     space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
     space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
-    space_dic['dir.span']     = range(1,33) 
+    space_dic['dir.span']     = range(1,12) 
     space_dic['file.size']    = [ x*1024 for x in range(4, 256+1) ]
     space_dic['fullness']     = [x/10.0 for x in range(1, 31)]
     space_dic['num.cores']    = [1,2]
@@ -686,6 +695,7 @@ def reproducer_iter(rawtable_path):
         treatment = recipe_to_treatment(recipe)
         treatment['filesystem'] = recipe['file.system']
         treatment['mountopts'] = ''
+        treatment['startlevel'] = 2
         yield treatment
         #pprint.pprint(treatment)
 
