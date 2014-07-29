@@ -725,8 +725,8 @@ class FSMonitor:
             print 'distance_sum should be >=0'
 
         myfiles = [
-                    #'./pid00000.dir00000/pid.00000.file.00000'
-                    #'./pid00000.dir00000/pid.00000.file.00001'
+                    '0.file',
+                    '1.file'
                   ]
         ret_dict['datafiles'] = '|'.join( myfiles )
 
@@ -735,13 +735,17 @@ class FSMonitor:
             dspans.append( get_d_span_from_extent_list(df_ext, f) )
         dspans = [str(x) for x in dspans]
         ret_dict['datafiles_dspan'] = '|'.join( dspans )
+        
+        num_extents = []
+        for f in myfiles:
+            num_extents.append( get_num_ext_from_extent_list(df_ext, f) )
+        num_extents = [str(x) for x in num_extents]
+        ret_dict['num_extents'] = '|'.join( num_extents )
 
         ret_dict['physical_layout_hash'] \
                 = get_physical_layout_hash(df_ext, 
                                            'file', 
                                            merge_contiguous=True)
-
-
 
 
         return ret_dict
@@ -1075,6 +1079,19 @@ def extlist_block_to_byte(df_ext):
                 x = int(x) * BLOCKSIZE
             row[hdr.index(col)] = x
     return df_ext
+
+def get_num_ext_from_extent_list(df_ext, filepath):
+    "Get number of extents"
+    hdr = df_ext.header
+
+    cnt = 0
+    for row in df_ext.table:
+        if filepath in row[hdr.index('filepath')] and \
+                row[hdr.index('Level_index')] != '-1':
+            cnt += 1
+
+    return cnt
+
 
 def get_d_span_from_extent_list(df_ext, filepath):
     hdr = df_ext.header

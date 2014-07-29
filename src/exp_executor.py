@@ -499,6 +499,12 @@ class Executor:
                 value = '.'.join(socket.gethostname().split('.')[0:2]))
         df.addColumn(key = 'kernel.release',
                 value = platform.release())
+        df.addColumn(key = 'datafiles',
+                value = ret['datafiles'])
+        df.addColumn(key = 'datafiles_dspan',
+                value = ret['datafiles_dspan'])
+        df.addColumn(key = 'num_extents',
+                value = ret['num_extents'])
 
         #print df.toStr()
         ##############################3
@@ -525,7 +531,10 @@ class Executor:
                   'dir.span', 'num.files',
                   'layout_index',
                   'layoutnumber',
-                  'kernel.release'
+                  'kernel.release',
+                  'datafiles',
+                  'datafiles_dspan',
+                  'num_extents'
                   ]
         headers = copy.deepcopy(df.header)
         for colname in headers:
