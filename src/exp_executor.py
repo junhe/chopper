@@ -26,6 +26,7 @@ import random
 import copy
 import datetime
 import platform
+import multiprocessing
 #import cluster
 from ast import literal_eval
 from time import strftime, localtime, sleep
@@ -297,11 +298,20 @@ class Walkman:
         return ret
 
     def _SetupEnv(self):
+        # set cpu count
+        if MWpyFS.Monitor.get_possible_cpu() != '0-1':
+            print 'we do not support other cases right now'
+            exit(1)
+        if self.confparser.getint('system', 'core.count') == 1:
+            MWpyFS.Monitor.switch_cpu(cpuid=1, mode='OFF')
+        else:
+            MWpyFS.Monitor.switch_cpu(cpuid=1, mode='ON')
+    
         # Make loop device
         if self.confparser.get('system', 'makeloopdevice') == 'yes'\
                 and self.confparser.get('system', 'formatfs') != 'yes':
             exit(1)
-
+        
         # Format file system
         if self.confparser.get('system', 'formatfs').lower() == "yes":
             self._remake_fs()

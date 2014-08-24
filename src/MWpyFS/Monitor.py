@@ -1225,6 +1225,28 @@ def filefrag(filepath):
     proc.wait()
     return df_ext
 
+def get_possible_cpu():
+    f = open("/sys/devices/system/cpu/possible", 'r')
+    line = f.readline()
+    f.close()
+    
+    return line.strip()
+
+def switch_cpu(cpuid, mode):
+    path = "/sys/devices/system/cpu/cpu{cpuid}/online"
+    path = path.format(cpuid=cpuid)
+
+    modedict = {'ON':'1', 'OFF':'0'}
+
+    f = open(path, 'w')
+    f.write(modedict[mode])
+    f.flush()
+    f.close()
+
+    return
+
+
+
 if __name__ == '__main__':
     #filefrag('/mnt/scratch-sda4/initrd.img-3.12.5-031205-generic')
     df = ext34_getExtentList_of_myfiles('/mnt/scratch/')

@@ -462,6 +462,7 @@ def build_conf ( treatment, confparser ):
     confparser.set('system', 'layoutnumber', 
                     str(treatment['layoutnumber']))
     confparser.set('system', 'mountopts', treatment['mountopts'])
+    confparser.set('system', 'core.count', str(treatment['core.count']))
 
     chkseq = pat_data_struct.get_empty_ChunkSeq()
 

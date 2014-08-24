@@ -615,7 +615,8 @@ def recipe_to_treatment(recipe, optsdict=None):
                   #'filechunk_order': [0,0,0,0]
                   'unique.bytes'   : unique_bytes,
                   'layoutnumber'   : r['layoutnumber'],
-                  'startlevel'     : startlevel
+                  'startlevel'     : startlevel,
+                  'core.count'     : n_virtual_cores
                 }
     # shold not correct now, because I will write the 
     # same file many times
