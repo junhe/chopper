@@ -55,15 +55,15 @@ def groupby_signature( joblist ):
     """
     jobbuckets = {} 
     for treatment in joblist:
-        signature = ( 
-                treatment['filesystem'],
-                treatment['disksize'],
-                treatment['disk_used'],
-                treatment['layoutnumber']
-                )
         #signature = ( 
-                #str(treatment)
+                #treatment['filesystem'],
+                #treatment['disksize'],
+                #treatment['disk_used'],
+                #treatment['layoutnumber']
                 #)
+        signature = ( 
+                str(treatment)
+                )
         if not jobbuckets.has_key(signature):
             jobbuckets[signature] = [ treatment ]
         else:
