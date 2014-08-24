@@ -461,7 +461,7 @@ def row_to_recipe(design_row):
 
     return recipe
 
-def recipe_to_treatment(recipe):
+def recipe_to_treatment(recipe, optsdict=None):
     """
     recipe is a configuration that will be implmented
     by the underlying treatment mechanism. 
@@ -508,7 +508,11 @@ def recipe_to_treatment(recipe):
     writer_cpu_map = [ y for x in writer_cpu_map for y in x ]
     writer_cpu_map = writer_cpu_map[0:nchunks]
     writer_cpu_map = [ x % nrealcores for x in writer_cpu_map ]
+    
+    if optsdict != None and optsdict['enable_setaffinity'] == False:
+        writer_cpu_map = [ -1 for x in writer_cpu_map ]
 
+    
 
     file_treatment = {
            'parent_dirid' : None, # will be assigned later in the function
@@ -692,7 +696,8 @@ def reproducer_iter(rawtable_path):
     rtb = read_rawtable(rawtable_path)
     recipes = rawtable_to_recipe(rtb)
     for recipe in recipes:
-        treatment = recipe_to_treatment(recipe)
+        opts = {'enable_setaffinity':False}
+        treatment = recipe_to_treatment(recipe, optsdict=opts)
         treatment['filesystem'] = recipe['file.system']
         treatment['mountopts'] = ''
         treatment['startlevel'] = 2
@@ -710,7 +715,8 @@ def fourbyfour_iter(design_path):
     for fs in fses:
         for design_row in design_table:
             recipe = row_to_recipe( design_row )
-            treatment = recipe_to_treatment(recipe) 
+            opts = {'enable_setaffinity':False}
+            treatment = recipe_to_treatment(recipe, optsdict=opts) 
             treatment['filesystem'] = fs
             treatment['mountopts'] = mountopts
             cnt += 1
