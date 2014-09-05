@@ -699,7 +699,8 @@ def reproducer_iter(rawtable_path):
     for recipe in recipes:
         opts = {'enable_setaffinity':False}
         treatment = recipe_to_treatment(recipe, optsdict=opts)
-        treatment['filesystem'] = recipe['file.system']
+        #treatment['filesystem'] = recipe['file.system']
+        treatment['filesystem'] = 'xfs'
         treatment['mountopts'] = ''
         treatment['startlevel'] = 2
         yield treatment
@@ -709,7 +710,7 @@ def reproducer_iter(rawtable_path):
 def fourbyfour_iter(design_path):
     design_table = read_design_file_blhd_fixednchunks(design_path)
     cnt = 0
-    fses = ['ext4']
+    fses = ['xfs']
     mountopts = ''
     #mountopts = 'nodelalloc'
     #fses = ['ext3']
