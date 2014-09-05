@@ -303,7 +303,7 @@ class Walkman:
             print 'we do not support other cases right now'
             exit(1)
         
-        self.confparser.set('system', 'core.count', str(1))
+        #self.confparser.set('system', 'core.count', str(1))
         if self.confparser.getint('system', 'core.count') == 1:
             MWpyFS.Monitor.switch_cpu(cpuid=1, mode='OFF')
         else:
