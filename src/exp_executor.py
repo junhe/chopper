@@ -14,6 +14,7 @@ import subprocess
 import MWpyFS
 import pyWorkload
 import time
+import optparse
 import shutil
 import os
 import socket
@@ -304,8 +305,8 @@ class Walkman:
             #exit(1)
         
         #self.confparser.set('system', 'core.count', str(1))
-        #if self.confparser.getint('system', 'core.count') == 1:
-            #MWpyFS.Monitor.switch_cpu(cpuid=1, mode='OFF')
+        #if self.confparser.getint('system', 'core.count') == 2:
+            #MWpyFS.Monitor.switch_cpu(cpuid=2, mode='OFF')
         #else:
             #MWpyFS.Monitor.switch_cpu(cpuid=1, mode='ON')
     
@@ -587,7 +588,7 @@ try:
     confparser.readfp(open(confpath, 'r'))
 except:
     print "unable to read config file:", confpath
-    exit(1)
+    exit(2)
    
 exp_exe = Executor(confparser)
 
@@ -595,6 +596,20 @@ if __name__ == '__main__':
     #exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
     #exp_exe.run_experiment('./designs/sanity.test.design.txt')
     #exp_exe.run_experiment('./designs/blhd_12factors_2to14runs.2.txt')
+
+
+
+    parser = optparse.OptionParser()
+    parser.add_option('--mode', action='store', dest='mode',
+            help="[batch|reproduce]')
+    parser.add_option('--design', action='store', dest='do', default='ceph',
+                    help='ceph or cephfs')
+    parser.add_option('--actions', action='store', dest='actions',
+                    default='yuminstall,new,cephconf,install,mon,prepare2,active2,admin,health,addmeta',
+                            help   ='sudoers,yuminstall,new,cephconf,install,mon,prepare2,active2,admin,health,addmeta')
+    opts = parser.parse_args(sys.argv[1:])
+    print opts
+    exit(1)
     
     argv = sys.argv
     if len(argv) != 3:
