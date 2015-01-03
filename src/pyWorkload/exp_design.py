@@ -1,4 +1,6 @@
 import itertools
+from ast import literal_eval
+from ConfigParser import SafeConfigParser
 import copy
 import sys
 import os
@@ -93,6 +95,7 @@ qualitative:
 
 
 def read_design_file_blhd_fixednchunks(filepath):
+    "put the design to a list"
     f = open(filepath, 'r')
     id = 0
     header = None
@@ -448,11 +451,10 @@ def get_factor_spaces_SAMPLE(nchunks):
     return space_dic
 
 def row_to_recipe(design_row):
-    #print design_row
     recipe = {}
     
     #nchunks = design_row['num.chunks']
-    nchunks = 4
+    nchunks = 4 # right now we fix nchunk at 4 for simplicity
     space_dic = get_factor_spaces(nchunks)
 
     # pick one
@@ -626,6 +628,14 @@ def recipe_to_treatment(recipe, optsdict=None):
 
 
 def get_factor_spaces(nchunks):
+    spacepath = '../conf/factor-space.conf'
+    parser = SafeConfigParser()
+    parser.readfp(open(spacepath, 'r'))
+    print parser.get('space', 'disk.size')
+    a = eval(parser.get('space', 'disk.size'))
+    print a
+    print 'what?'
+
     binspace = itertools.product( [False, True], repeat=nchunks)
     binspace = [list(x) for x in binspace] 
 
@@ -634,20 +644,27 @@ def get_factor_spaces(nchunks):
 
 
     space_dic = {}
-    space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
-    space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
-    space_dic['dir.span']     = range(1,13) 
-    space_dic['file.size']    = [ x*1024 for x in range(8, 256+1, 8) ]
-    space_dic['fullness']     = [x/10.0 for x in range(2, 21, 2)]
-    space_dic['num.cores']    = [1,2]
+    #space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
+    space_dic['disk.size']    = eval(parser.get('space', 'disk.size'))
+    #space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
+    space_dic['disk.used']    = eval(parser.get('space', 'disk.used'))
+    #space_dic['dir.span']     = range(1,13) 
+    space_dic['dir.span']     = eval(parser.get('space', 'dir.span'))
+    #space_dic['file.size']    = [ x*1024 for x in range(8, 256+1, 8) ]
+    space_dic['file.size']    = eval(parser.get('space', 'file.size'))
+    #space_dic['fullness']     = [x/10.0 for x in range(2, 21, 2)]
+    space_dic['fullness']     = eval(parser.get('space', 'fullness'))
+    #space_dic['num.cores']    = [1,2]
+    space_dic['num.cores']    = eval(parser.get('space', 'num.cores'))
     space_dic['fsync']        = binspace
     space_dic['sync']         = close_sp
     space_dic['chunk.order']  = list(itertools.permutations( range(nchunks) ))
-    space_dic['num.files']    = range(1,3)
-    space_dic['layoutnumber']    = range(1,7)
-    space_dic['num.chunks']   = [nchunks]
-
-    # the number of combination above is 1.35*10^13
+    #space_dic['num.files']    = range(1,3)
+    space_dic['num.files']    = eval(parser.get('space', 'num.files'))
+    #space_dic['layoutnumber']    = range(1,7)
+    space_dic['layoutnumber']    = eval(parser.get('space', 'layoutnumber'))
+    #space_dic['num.chunks']   = [nchunks]
+    space_dic['num.chunks']   = eval(parser.get('space', 'num.chunks'))
 
     return space_dic
 
