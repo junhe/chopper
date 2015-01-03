@@ -593,36 +593,23 @@ except:
 exp_exe = Executor(confparser)
 
 if __name__ == '__main__':
-    #exp_exe.run_experiment('./designs/blhd-12-factors-4by4.txt')
-    #exp_exe.run_experiment('./designs/sanity.test.design.txt')
-    #exp_exe.run_experiment('./designs/blhd_12factors_2to14runs.2.txt')
-
-
-
     parser = optparse.OptionParser()
-    parser.add_option('--mode', action='store', dest='mode',
-            help="[batch|reproduce]')
-    parser.add_option('--design', action='store', dest='do', default='ceph',
-                    help='ceph or cephfs')
-    parser.add_option('--actions', action='store', dest='actions',
-                    default='yuminstall,new,cephconf,install,mon,prepare2,active2,admin,health,addmeta',
-                            help   ='sudoers,yuminstall,new,cephconf,install,mon,prepare2,active2,admin,health,addmeta')
-    opts = parser.parse_args(sys.argv[1:])
-    print opts
-    exit(1)
+    parser.add_option('--mode', action='store', type='choice', dest='mode',
+                      choices=['batch', 'reproduce'])
+    parser.add_option('--designpath', action='store', dest='designpath', 
+        help='if mode=batch, this is the path to an experimental design file, '\
+             'e.g. ./designs/blhd_12factors_2to14runs.txt. '\
+             'if mode=reproduce, this is the path to a reproduce file, '\
+             'e.g. ./designs/reproducer.sample')
     
-    argv = sys.argv
-    if len(argv) != 3:
-        print "Usage:", argv[0], "batch|reproduce design-file-path"
-        print "Example: python exp_executor.py reproduce designs/reprod.txt"
-        print "Example: python exp_executor.py batch designs/blhd_12factors_2to14runs.txt"
+    options,args = parser.parse_args()
+    print options, args
+
+    if options.mode == None or options.designpath == None:
+        print 'Use -h option to show help message'
         exit(1)
     
-    mode = argv[1]
-    designpath = argv[2]
-    exp_exe.run_experiment(designpath, mode=mode)
-
-
-
+    exp_exe.run_experiment(options.designpath,
+                           mode = options.mode)
 
 
