@@ -300,7 +300,7 @@ class Walkman:
         return ret
 
 
-    def set_cpu(self):
+    def _set_cpu(self):
         # assuming the available cpus have consecutive ids
         navail  = len(MWpyFS.Monitor.get_available_cpu_dirs())
         avails = range(navail)
@@ -340,7 +340,7 @@ class Walkman:
             #print 'we do not support other cases right now'
             #exit(1)
 
-        self.set_cpu()
+        self._set_cpu()
 
 
         #if self.confparser.getint('system', 'core.count') == 2:
