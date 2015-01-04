@@ -422,9 +422,6 @@ class Executor:
                                     treatment = treatment,
                                     confparser = conf)
 
-        #pprint.pprint(conf.items('system'))
-        #pprint.pprint(conf.items('workload'))
-        #exit(0)
         ret = self._walkman_walk(conf)
         return ret
 
@@ -489,7 +486,7 @@ class Executor:
         This function will run the experiment for this treatment,
         and append the resulting dataframe to the result file
         """
-        #df = pyWorkload.pat_data_struct.treatment_to_df_foronefile(treatment)
+        # put treatment info to a dataframe which will be written to result file
         df = pyWorkload.pat_data_struct.treatment_to_df_morefactors(treatment)
 
         # put response to df

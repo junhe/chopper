@@ -418,7 +418,8 @@ def file_treatment_to_df_foronefile(ftreatment):
     ftreatment['nchunks'] = len(ftreatment['chunks'])
     for k,v in ftreatment.items():
         if k in ['chunks']:
-            valuestr = "|".join([ "("+str(c['offset'])+","+str(c['length'])+")"  for c in v ])
+            valuestr = "|".join([ "("+str(c['offset'])+","+str(c['length'])+")" 
+                                for c in v ])
         elif k.endswith('_bitmap'):
             valuestr = "".join( [ str(int(x)) for x in v ] )
         elif k in ['write_order', 'writer_cpu_map']:
@@ -426,16 +427,15 @@ def file_treatment_to_df_foronefile(ftreatment):
         else:
             valuestr = str(v).replace(' ','')
 
-        #pprint.pprint(d)
         df.addColumn(key = k,
                      value = valuestr)
-    #print df.toStr()
     return df
 
 
 ####################################################
 ####################################################
 def treatment_to_df_morefactors(treatment):
+    "Put treatment info to a datafarme, which will be written to output"
     df = None
     for ftreatment in treatment['files']:
         tmpdf = file_treatment_to_df_foronefile( ftreatment )
@@ -456,21 +456,6 @@ def treatment_to_df_morefactors(treatment):
             vstr = treatment[k]
         df.addColumn(key=k, value=vstr)
     df.colwidth = 20
-    #print ['00']*100
-    #writer_cpu_map  open_bitmap     close_bitmap    writer_pid      write_order     filesize        sync_bitmap     parent_dirid    chunks          fsync_bitmap    fileid
-    #tokeep = [
-              #'open_bitmap', 'close_bitmap',
-              #'write_order',  'filesize',
-              #'sync_bitmap',  'fsync_bitmap',
-              #'nchunks',  'fileid',
-              #]
-    #headers = copy.deepcopy(df.header)
-    #for colname in headers:
-        #if not colname in tokeep:
-            #df.delColumn(colname)
     return df
-
-
-
 
 

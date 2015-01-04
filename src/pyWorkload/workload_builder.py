@@ -445,9 +445,9 @@ def build_conf ( treatment, confparser ):
                   filechunk_order: [0, 2, 1, fileid,..]
                 }
                   
-
+    Here I utilize the convenient structure of confparser to store treatment
+    info.
     """
-    #pprint.pprint( treatment )
     
     if not confparser.has_section('system'):
         confparser.add_section('system')
@@ -470,7 +470,6 @@ def build_conf ( treatment, confparser ):
     dirs_chkseq = build_dir_tree_chkeq( treatment['dir_depth'], 
                                         treatment['startlevel'] )
     chkseq['seq'].extend( dirs_chkseq['seq'] )
-    #pprint.pprint(chkseq)
    
     # Get chunkseq for each file
     nfiles = len( treatment['files'] )

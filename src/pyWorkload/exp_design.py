@@ -629,7 +629,7 @@ def recipe_to_treatment(recipe, optsdict=None):
 
 
 def get_factor_spaces(nchunks):
-    spacepath = '../conf/factor-space.conf'
+    spacepath = '../conf/h0.conf'
     parser = SafeConfigParser()
     parser.readfp(open(spacepath, 'r'))
 
@@ -723,22 +723,26 @@ def reproducer_iter(rawtable_path):
 def fourbyfour_iter(design_path):
     design_table = read_design_file_blhd_fixednchunks(design_path)
     cnt = 0
-    fses = ['ext4']
-    mountopts = ''
-    #mountopts = 'nodelalloc'
-    #fses = ['ext3']
-    for fs in fses:
-        for design_row in design_table:
-            # recipe is a treatment with exact experiment config
-            recipe = row_to_recipe( design_row )
-            opts = {'enable_setaffinity':False}
-            treatment = recipe_to_treatment(recipe, optsdict=opts) 
-            treatment['filesystem'] = fs
-            treatment['mountopts'] = mountopts
-            cnt += 1
-            yield treatment
+
+    spacepath = '../conf/h0.conf'
+    parser = SafeConfigParser()
+    parser.readfp(open(spacepath, 'r'))
+
+    fs = parser.get('setup', 'filesystem')
+    mountopts = parser.get('setup', 'mountopts')
+
+    for design_row in design_table:
+        # recipe is a treatment with exact experiment config
+        recipe = row_to_recipe( design_row )
+        opts = {'enable_setaffinity':False}
+        treatment = recipe_to_treatment(recipe, optsdict=opts) 
+        treatment['filesystem'] = fs
+        treatment['mountopts'] = mountopts
+        cnt += 1
+        yield treatment
     
 if __name__ == '__main__':
+    # This part is only for testing.
     reproducer_iter('./tmp.txt')
     exit(0)
     #a = read_design_file_blhd_fixednchunks('../designs/sanity.test.design.txt')
