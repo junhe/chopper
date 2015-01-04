@@ -40,6 +40,7 @@ import pprint
 import shutil
 import fnmatch
 import itertools
+import glob
 
 import btrfs_db_parser
 import xfs_db_parser
@@ -1231,6 +1232,31 @@ def get_possible_cpu():
     f.close()
     
     return line.strip()
+
+def get_available_cpu_dirs():
+    "Counting dirs is more accurate than */cpu/possible, at least on emulab"
+    cpudirs = [name for name in glob.glob("/sys/devices/system/cpu/cpu[0-9]*") \
+                        if os.path.isdir(name)]
+    return cpudirs
+
+def get_online_cpuids():
+    with open('/sys/devices/system/cpu/online', 'r') as f:
+        line = f.readline().strip()        
+
+    # assuming format of 0-2,4,6-63
+    items = line.split(',')
+    cpus = []
+    for item in items:
+        if '-' in item:
+            a,b = item.split('-')
+            a = int(a)
+            b = int(b)
+            cpus.extend(range(a, b+1))
+        else:
+            cpus.append(int(item))
+
+    return cpus
+
 
 def switch_cpu(cpuid, mode):
     path = "/sys/devices/system/cpu/cpu{cpuid}/online"

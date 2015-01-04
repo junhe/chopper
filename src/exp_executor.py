@@ -299,13 +299,50 @@ class Walkman:
                     )
         return ret
 
+
+    def set_cpu(self):
+        # assuming the available cpus have consecutive ids
+        navail  = len(MWpyFS.Monitor.get_available_cpu_dirs())
+        avails = range(navail)
+
+        onlinecpus = MWpyFS.Monitor.get_online_cpuids() 
+        offcpus = [id for id in avails if not id in onlinecpus]
+        ncurrent = len( onlinecpus )
+        
+        ngoal = self.confparser.getint('system', 'core.count')
+
+        if ngoal > navail:
+            print 'You want {goal} cpus, but you only have {navail}.'.\
+                    format(goal=ngoal, navail=navail)
+            exit(1)
+
+        while ncurrent > ngoal:
+            # disable the last online cpu
+            lastcpu = onlinecpus[-1]
+            MWpyFS.Monitor.switch_cpu(lastcpu, mode='OFF')
+        
+            onlinecpus = MWpyFS.Monitor.get_online_cpuids() 
+            offcpus = [id for id in avails if not id in onlinecpus]
+            ncurrent = len( onlinecpus )
+ 
+        while ncurrent < ngoal:
+            # enable the first offline cpu
+            firstcpu = offcpus[-1]
+            MWpyFS.Monitor.switch_cpu(firstcpu, mode='ON')
+        
+            onlinecpus = MWpyFS.Monitor.get_online_cpuids() 
+            offcpus = [id for id in avails if not id in onlinecpus]
+            ncurrent = len( onlinecpus )
+
     def _SetupEnv(self):
         # set cpu count
         #if MWpyFS.Monitor.get_possible_cpu() != '0-1':
             #print 'we do not support other cases right now'
             #exit(1)
-        
-        #self.confparser.set('system', 'core.count', str(1))
+
+        self.set_cpu()
+
+
         #if self.confparser.getint('system', 'core.count') == 2:
             #MWpyFS.Monitor.switch_cpu(cpuid=2, mode='OFF')
         #else:
