@@ -1,24 +1,30 @@
 import sys
+import argparse
 import subprocess
 
-#hostsuf = 'ubt8n.plfs'
-#np = 8
-#jobmaster = 'h0.ubt32n.plfs'
+parser = argparse.ArgumentParser(
+            description='This script starts workers by mpirun.'
+            ' All options have to be specified.')
+parser.add_argument('--jobmaster', action='store',
+            help='hostname of jobmaster')
+parser.add_argument('--prefix', action='store',
+            help='prefix of worker hostnames')
+parser.add_argument('--suffix', action='store',
+            help='suffix of worker hostnames')
+parser.add_argument('--np', action='store', type=int,
+            help='number of workers (processes)')
 
-if len(sys.argv) != 5:
-    print "usage:", sys.argv[0], 'jobmaster hostpre hostsuf np'
-    print "example:", sys.argv[0], 'h0.noloop1n.plfs h noloop1n.plfs 4'
+args = parser.parse_args()
+
+# all options have to be specified
+if None in list(vars(args).values()):
+    parser.print_help()
     exit(1)
 
-jobmaster = sys.argv[1]
-hostpre =   sys.argv[2]
-hostsuf =   sys.argv[3]
-np      = int(sys.argv[4])
-
-
-#jobmaster = 'h0.noloop1n.plfs'
-#hostsuf = 'noloop1n.plfs'
-#np = 1
+jobmaster = args.jobmaster
+hostpre   = args.prefix
+hostsuf   = args.suffix 
+np        = args.np 
 
 hostlist = []
 for i in range(np):
