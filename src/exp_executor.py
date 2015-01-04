@@ -12,6 +12,7 @@
 #   2. append previous files
 import subprocess
 import MWpyFS
+import argparse
 import pyWorkload
 import time
 import optparse
@@ -590,23 +591,26 @@ except:
 exp_exe = Executor(confparser)
 
 if __name__ == '__main__':
-    parser = optparse.OptionParser()
-    parser.add_option('--mode', action='store', type='choice', dest='mode',
-                      choices=['batch', 'reproduce'])
-    parser.add_option('--designpath', action='store', dest='designpath', 
-        help='if mode=batch, this is the path to an experimental design file, '\
-             'e.g. ./designs/blhd_12factors_2to14runs.txt. '\
-             'if mode=reproduce, this is the path to a reproduce file, '\
-             'e.g. ./designs/reproducer.sample')
-    
-    options,args = parser.parse_args()
-    print options, args
+    parser = argparse.ArgumentParser(
+            description="This script runs experiments sequentially. " \
+            'Example: python exp_executor.py --mode=batch' 
+            )
+    parser.add_argument('--mode', choices=('batch', 'reproduce'),
+            help='if mode=batch, design.path in h0.conf will be used as the '
+            'design file to run the experiments. if mode=reproduce, '
+            'reproducer.path in h0.conf will be used to run the experiments.')
+    args = parser.parse_args()
 
-    if options.mode == None or options.designpath == None:
-        print 'Use -h option to show help message'
+    if None in list(vars(args).values()):
+        parser.print_help()
         exit(1)
+
+    if args.mode == 'batch':
+        path = confparser.get('setup', 'design.path')
+    elif args.mode == 'reproduce':
+        path = confparser.get('setup', 'reproducer.path')
     
-    exp_exe.run_experiment(options.designpath,
-                           mode = options.mode)
+    exp_exe.run_experiment(designfile = path,
+                           mode = args.mode)
 
 
