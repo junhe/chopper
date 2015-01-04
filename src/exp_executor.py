@@ -484,7 +484,7 @@ class Executor:
         self.run_and_get_df( treatment, savedf=True)
         self.run_and_get_df( treatment, savedf=True)
 
-    def run_and_get_df(self, treatment, savedf=False ):
+    def run_and_get_df(self, treatment, savedf=False):
         """
         This function will run the experiment for this treatment,
         and append the resulting dataframe to the result file

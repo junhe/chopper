@@ -6,7 +6,8 @@ import pprint
 try:
     import matplotlib.pyplot as plt
 except ImportError:
-    print "This machine does not have matplotlib, skipped importing."
+    #print "This machine does not have matplotlib, skipped importing."
+    pass
 
 
 import Monitor

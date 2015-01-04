@@ -424,6 +424,7 @@ def pick_by_level(levelstr, factor_range):
     assert count > 0
     i = int(eval(str(count)+'*'+levelstr))
     if i == count:
+        # if the index goes beyond range, pull it back 
         i -= 1
     ret = factor_range[i]
     return ret
@@ -631,10 +632,6 @@ def get_factor_spaces(nchunks):
     spacepath = '../conf/factor-space.conf'
     parser = SafeConfigParser()
     parser.readfp(open(spacepath, 'r'))
-    print parser.get('space', 'disk.size')
-    a = eval(parser.get('space', 'disk.size'))
-    print a
-    print 'what?'
 
     binspace = itertools.product( [False, True], repeat=nchunks)
     binspace = [list(x) for x in binspace] 
@@ -732,6 +729,7 @@ def fourbyfour_iter(design_path):
     #fses = ['ext3']
     for fs in fses:
         for design_row in design_table:
+            # recipe is a treatment with exact experiment config
             recipe = row_to_recipe( design_row )
             opts = {'enable_setaffinity':False}
             treatment = recipe_to_treatment(recipe, optsdict=opts) 

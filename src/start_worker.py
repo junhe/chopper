@@ -5,14 +5,15 @@ import subprocess
 #np = 8
 #jobmaster = 'h0.ubt32n.plfs'
 
-if len(sys.argv) != 4:
-    print "usage:", sys.argv[0], 'jobmaster hostsuf np'
-    print "example:", sys.argv[0], 'h0.noloop1n.plfs noloop1n.plfs 4'
+if len(sys.argv) != 5:
+    print "usage:", sys.argv[0], 'jobmaster hostpre hostsuf np'
+    print "example:", sys.argv[0], 'h0.noloop1n.plfs h noloop1n.plfs 4'
     exit(1)
 
 jobmaster = sys.argv[1]
-hostsuf =   sys.argv[2]
-np = int(sys.argv[3])
+hostpre =   sys.argv[2]
+hostsuf =   sys.argv[3]
+np      = int(sys.argv[4])
 
 
 #jobmaster = 'h0.noloop1n.plfs'
@@ -21,7 +22,7 @@ np = int(sys.argv[3])
 
 hostlist = []
 for i in range(np):
-    prefix = 'h'+str(i)
+    prefix = hostpre+str(i)
     hname = '.'.join( [prefix, hostsuf] )
     hostlist.append(hname)
 
