@@ -1,4 +1,5 @@
 import multiprocessing
+import argparse
 import Queue
 import time
 from multiprocessing.managers import SyncManager
@@ -217,12 +218,16 @@ def make_server_manager(port, authkey):
     return manager
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print "Usage:", sys.argv[0], "resultpath jobtag usefinished|notusefinished"
-        exit(1)
-    resultpath = sys.argv[1]
-    jobtag = sys.argv[2]
-    arg_usefinished = sys.argv[3]
-    runserver_locality(resultpath, jobtag, arg_usefinished)
+    parser = argparse.ArgumentParser(description='Little script to start jobmaster')
+    parser.add_argument('--resultpath', action='store')
+    parser.add_argument('--jobtag', action='store')
+    parser.add_argument('--mode', choices=('usefinished','notusefinished'))
 
+    args = parser.parse_args()
+
+    if None in list(vars(args).values()):
+        parser.print_help()
+        exit(1)
+
+    runserver_locality(args.resultpath, args.jobtag, args.mode)
 

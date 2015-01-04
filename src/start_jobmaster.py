@@ -2,11 +2,6 @@ import subprocess
 import sys
 import argparse
 
-#if len(sys.argv) != 4:
-    #print "Usage:", sys.argv[0], "resultpath jobtag usefinished|notusefinished"
-    #exit(1)
-
-
 parser = argparse.ArgumentParser(description='Little script to start jobmaster')
 parser.add_argument('--resultpath', action='store')
 parser.add_argument('--jobtag', action='store')
@@ -19,8 +14,8 @@ if None in list(vars(args).values()):
     exit(1)
 
 cmd = ['python', './jobmaster.py',
-        args.resultpath, 
-        args.jobtag, 
-        args.mode]
+       '--resultpath', args.resultpath, 
+       '--jobtag', args.jobtag, 
+       '--mode', args.mode]
 subprocess.call(cmd)
 
