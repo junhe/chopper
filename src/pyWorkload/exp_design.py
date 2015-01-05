@@ -8,8 +8,6 @@ import pprint
 import workload_builder
 import random
 import math
-##sys.path.append( os.path.abspath("..") )
-#import pyWorkload
 
 def get_x_th_percentile(objlist, x):
     """
@@ -502,6 +500,7 @@ def recipe_to_treatment(recipe, optsdict=None):
     n_virtual_cores = r['num.cores']
     nfiles     = r['num.files']
 
+    # The code is no longer used.
     # figure out the cpu map by n_virtual_cores
     writer_cpu_map  = list(
             itertools.repeat( range(n_virtual_cores), 
@@ -510,11 +509,11 @@ def recipe_to_treatment(recipe, optsdict=None):
     writer_cpu_map = writer_cpu_map[0:nchunks]
     writer_cpu_map = [ x % nrealcores for x in writer_cpu_map ]
     
+    # we do not specifically put writing process to a core any more. 
     if optsdict != None and optsdict['enable_setaffinity'] == False:
         writer_cpu_map = [ -1 for x in writer_cpu_map ]
 
-    
-
+    # This defines what to do with a single file
     file_treatment = {
            'parent_dirid' : None, # will be assigned later in the function
            'fileid'       : 0,
@@ -529,17 +528,16 @@ def recipe_to_treatment(recipe, optsdict=None):
            'sync_bitmap'  : r['sync'],
            'writer_cpu_map': writer_cpu_map, # set affinity to which cpu
            # just for the purpose of record, not real effect.
-           # the reall effect is in writer_cpu_map
+           # the real effect is in writer_cpu_map
            'n_virtual_cores': n_virtual_cores, 
            'fullness'       : fullness,
            'filesize'       : file_size
            }
 
-    chunksize = file_size/nchunks
+    chunksize = file_size/nchunks #be careful about rounding
 
     filetreatment_list = []
     fullnessLeft = fullness
-    #fullnessLeft = 2.5
     while fullnessLeft > 0:
         if fullnessLeft > 1:
             curfullness = 1
@@ -688,6 +686,7 @@ def rawtable_to_recipe(raw_tb):
     return raw_tb
 
 def read_rawtable(filepath):
+    "Read reproduce file and store them in a list of dictionaries"
     f = open(filepath)
     lines = f.readlines()
     f.close()
@@ -696,6 +695,7 @@ def read_rawtable(filepath):
         print 'no data in file', filepath
         exit(1)
     
+    # first line is the table head  
     colnames = lines[0].split()
     treatments = []
     for line in lines[1:]:
@@ -713,11 +713,11 @@ def reproducer_iter(rawtable_path):
     rtb = read_rawtable(rawtable_path)
     recipes = rawtable_to_recipe(rtb)
     for recipe in recipes:
-        opts = {'enable_setaffinity':False}
+        opts = {'enable_setaffinity':False} # alway set this to disable 
+                                            # an depreted function
         treatment = recipe_to_treatment(recipe, optsdict=opts)
         treatment['filesystem'] = recipe['file.system']
         treatment['mountopts'] = ''
-        treatment['startlevel'] = 2
         yield treatment
         #pprint.pprint(treatment)
 
@@ -736,7 +736,8 @@ def fourbyfour_iter(design_path):
     for design_row in design_table:
         # recipe is a treatment with exact experiment config
         recipe = row_to_recipe( design_row )
-        opts = {'enable_setaffinity':False}
+        opts = {'enable_setaffinity':False} # alway set this to disable 
+                                            # an depreted function
         treatment = recipe_to_treatment(recipe, optsdict=opts) 
         treatment['filesystem'] = fs
         treatment['mountopts'] = mountopts
