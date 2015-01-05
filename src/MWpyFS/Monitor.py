@@ -613,23 +613,8 @@ class FSMonitor:
 
         elif self.filesystem == 'ext4':
             ######################
-            # get per file block count
-            #df_bcounts = self.getPerFileBlockCounts()
-            #if savedata and df_bcounts != None:
-                #extstats_header = "----------- per file block counts  -------------\n"
-                #f.write(extstats_header + df_bcounts.toStr())
-
-            # FS block count
-            #df_fscounts = self.getFSBlockCount(df_bcounts)
-            #if savedata and df_fscounts != None:
-                #h = "------------- FS block counts ---------------\n"
-                #f.write(h+df_fscounts.toStr())
-            
-            ######################
             # get extents of all files
             extlist = self.getExtentList_of_a_dir(target=self.mountpoint)
-            #extlist = self.getExtentList_of_a_dir(target='./dir.1/')
-            #extlist.table.extend( extlist0.table )
             
             df_ext = extlist_translate_new_format(extlist)
 
@@ -725,10 +710,10 @@ class FSMonitor:
         if ret_dict['distance_sum'] < 0:
             print 'distance_sum should be >=0'
 
-        myfiles = [
-                    '0.file',
-                    '1.file'
-                  ]
+        allpaths = get_all_paths(self.mountpoint, './')
+        myfiles = [os.path.basename(path) for path in allpaths \
+                                            if '.file' in path]
+        print myfiles
         ret_dict['datafiles'] = '|'.join( myfiles )
 
         dspans = []
