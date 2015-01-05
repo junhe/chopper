@@ -454,10 +454,8 @@ def get_factor_spaces_SAMPLE(nchunks):
 def row_to_recipe(design_row):
     recipe = {}
     
-    #nchunks = design_row['num.chunks']
-    nchunks = 4 # right now we fix nchunk at 4 for simplicity
-    space_dic = get_factor_spaces(nchunks)
-
+    space_dic = get_factor_spaces()
+    
     # pick one
     for k,space in space_dic.items():
         recipe[k] = pick_by_level( design_row[k], space )
@@ -628,10 +626,17 @@ def recipe_to_treatment(recipe, optsdict=None):
     return treatment
 
 
-def get_factor_spaces(nchunks):
+def get_factor_spaces():
     spacepath = '../conf/h0.conf'
     parser = SafeConfigParser()
     parser.readfp(open(spacepath, 'r'))
+
+    space_dic = {}
+
+    space_dic['num.chunks']   = eval(parser.get('space', 'num.chunks'))
+    assert len(space_dic['num.chunks']) == 1, \
+            "We only support having one and only one chunk number"
+    nchunks = space_dic['num.chunks'][0]
 
     binspace = itertools.product( [False, True], repeat=nchunks)
     binspace = [list(x) for x in binspace] 
@@ -639,8 +644,6 @@ def get_factor_spaces(nchunks):
     close_sp = itertools.product( [False, True], repeat=nchunks-1 )
     close_sp = [ list(x)+[True] for x in close_sp ] # always close
 
-
-    space_dic = {}
     #space_dic['disk.size']    = [(2**x)*(2**30) for x in range(0, 7) ]
     space_dic['disk.size']    = eval(parser.get('space', 'disk.size'))
     #space_dic['disk.used']    = [0, 0.2, 0.4, 0.6] 
@@ -661,7 +664,6 @@ def get_factor_spaces(nchunks):
     #space_dic['layoutnumber']    = range(1,7)
     space_dic['layoutnumber']    = eval(parser.get('space', 'layoutnumber'))
     #space_dic['num.chunks']   = [nchunks]
-    space_dic['num.chunks']   = eval(parser.get('space', 'num.chunks'))
 
     return space_dic
 
