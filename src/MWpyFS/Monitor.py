@@ -710,10 +710,10 @@ class FSMonitor:
         if ret_dict['distance_sum'] < 0:
             print 'distance_sum should be >=0'
 
-        allpaths = get_all_paths(self.mountpoint, './')
+        allpaths = get_paths_in_df(df_ext) 
         myfiles = [os.path.basename(path) for path in allpaths \
                                             if '.file' in path]
-        print myfiles
+        myfiles.sort( key=lambda x:int(x.split('.')[0]) ) #sort by file id
         ret_dict['datafiles'] = '|'.join( myfiles )
 
         dspans = []
@@ -1078,7 +1078,15 @@ def get_num_ext_from_extent_list(df_ext, filepath):
 
     return cnt
 
+def get_paths_in_df(df_ext):
+    hdr = df_ext.header
 
+    paths = set() 
+    for row in df_ext.table:
+        paths.add( row[hdr.index('filepath')] )
+
+    return list(paths)
+    
 def get_d_span_from_extent_list(df_ext, filepath):
     hdr = df_ext.header
 
