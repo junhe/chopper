@@ -10,6 +10,8 @@ import chpConfig
 # where we mount the fs to be tested and run workload
 workmount = chpConfig.parser.get('system', 'mountpoint')
 tmpmount = chpConfig.parser.get('system', 'tmpfs_mountpoint')
+username = chpConfig.parser.get('system', 'username')
+usergroup = chpConfig.parser.get('system', 'groupname')
 
 def ParameterCominations(parameter_dict):
     """
@@ -119,24 +121,24 @@ def make_file_system(fstype, disksize):
     if fstype == 'xfs':
         MWpyFS.FormatFS.remakeXFS('/dev/loop0', 
                                   workmount,
-                                  'jhe', 'plfs',
+                                  username, usergroup,
                                   blocksize=4096)
     elif fstype == 'ext4':
         MWpyFS.FormatFS.remakeExt4("/dev/loop0", 
                                    workmount,
-                                   "jhe", "plfs", 
+                                   username, usergroup, 
                                    blockscount=disksize/4096, 
                                    blocksize=4096)
     elif fstype == 'ext3':
         MWpyFS.FormatFS.remakeExt3("/dev/loop0", 
                                    workmount,
-                                   "jhe", "plfs", 
+                                   username, usergroup, 
                                    blockscount=disksize/4096, 
                                    blocksize=4096)
     elif fstype == 'btrfs':
         MWpyFS.FormatFS.btrfs_remake("/dev/loop0", 
                                      workmount,
-                                     "jhe", "plfs", 
+                                     username, usergroup, 
                                      nbytes=disksize)
 
 def release_image():
@@ -209,7 +211,6 @@ def get_image_path(fstype, disksize, used_ratio,
                     'img'] 
     newimagename = [ str(x) for x in newimagename ]
     newimagename = '.'.join( newimagename )
-    #'/proj/plfs/data/jhe/syaas-disk-images/'+newimagename] 
     dir = chpConfig.parser.get('system', 'diskimagedir') 
     return os.path.join(dir, newimagename)
 
