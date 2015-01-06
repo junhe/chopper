@@ -26,24 +26,6 @@ import make_disk_images
 walkmanlog = None
 feedback_dic = {}
 
-def ParameterCominations(parameter_dict):
-    """
-    Get all the cominbation of the values from each key
-    http://tinyurl.com/nnglcs9
-
-    Input: parameter_dict={
-                    p0:[x, y, z, ..],
-                    p1:[a, b, c, ..],
-                    ...}
-    Output: [
-             {p0:x, p1:a, ..},
-             {..},
-             ...
-            ]
-    """
-    d = parameter_dict
-    return [dict(zip(d, v)) for v in itertools.product(*d.values())]
-
 class Walkman:
     """
     Ideally, Walkman class should be just a wrapper. It 
@@ -55,17 +37,8 @@ class Walkman:
         workload.Run()
         _RecordStatus()
 
-    One walkman should just have just one run.
-
-    NEW!
-    Now it should get feedback from the file system. It is
-    good that we already can record the status of the file
-    system. What we need to do is just calculate the metric
-    by Python instead of delaying it to R :(
-
-    Then we need to figure out how to use this metics to adjust
-    our parameters. 
-
+    It is called Walkman because it walks in the input space
+    and collect response.
     """
     def __init__(self, confparser, jobcomment=""):
         "confparser must be ready to use get()"
