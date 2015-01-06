@@ -1,3 +1,4 @@
+import chpConfig
 import subprocess
 import MWpyFS
 import argparse
@@ -23,7 +24,7 @@ from time import strftime, localtime, sleep
 import make_disk_images
 
 
-walkmanlog = None
+walkmanlog = open('/tmp/walkman.log', 'a')
 feedback_dic = {}
 
 class Walkman:
@@ -400,8 +401,10 @@ class Walkman:
         return proc.returncode
 
 class Executor:
-    def __init__(self, confparser):
-        self.confparser = confparser 
+    def __init__(self):
+        # get a new instance, otherwise the global one is messy
+        self.confparser = chpConfig.get_configparser() 
+
         self.fileout = None
 
     def _walkman_walk(self, cf):
@@ -576,17 +579,7 @@ class Executor:
                 self.fileout.write(df.toStr(header=False, table=True)) 
         return df
 
-walkmanlog = open('/tmp/walkman.log', 'a')
-    
-confpath = "../conf/h0.conf"
-confparser = SafeConfigParser()
-try:
-    confparser.readfp(open(confpath, 'r'))
-except:
-    print "unable to read config file:", confpath
-    exit(2)
-   
-exp_exe = Executor(confparser)
+exp_exe = Executor()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -604,9 +597,9 @@ if __name__ == '__main__':
         exit(1)
 
     if args.mode == 'batch':
-        path = confparser.get('setup', 'design.path')
+        path = chpConfig.parser.get('setup', 'design.path')
     elif args.mode == 'reproduce':
-        path = confparser.get('setup', 'reproducer.path')
+        path = chpConfig.parser.get('setup', 'reproducer.path')
     
     exp_exe.run_experiment(designfile = path,
                            mode = args.mode)

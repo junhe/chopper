@@ -1,3 +1,4 @@
+import chpConfig
 import itertools
 from ast import literal_eval
 from ConfigParser import SafeConfigParser
@@ -625,9 +626,7 @@ def recipe_to_treatment(recipe, optsdict=None):
 
 
 def get_factor_spaces():
-    spacepath = '../conf/h0.conf'
-    parser = SafeConfigParser()
-    parser.readfp(open(spacepath, 'r'))
+    parser = chpConfig.parser # for short
 
     space_dic = {}
 
@@ -726,9 +725,7 @@ def fourbyfour_iter(design_path):
     design_table = read_design_file_blhd_fixednchunks(design_path)
     cnt = 0
 
-    spacepath = '../conf/h0.conf'
-    parser = SafeConfigParser()
-    parser.readfp(open(spacepath, 'r'))
+    parser = chpConfig.parser
 
     fs = parser.get('setup', 'filesystem')
     mountopts = parser.get('setup', 'mountopts')

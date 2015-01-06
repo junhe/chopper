@@ -1,3 +1,4 @@
+import chpConfig
 import multiprocessing
 from ConfigParser import SafeConfigParser
 import argparse
@@ -28,19 +29,9 @@ AUTHKEY='11'
 
 
 def get_joblist():
-    path = '../conf/h0.conf'
-    parser = SafeConfigParser()
-    parser.readfp(open(path, 'r'))
-
-    designpath = parser.get('setup', 'design.path')
+    designpath = chpConfig.parser.get('setup', 'design.path')
 
     jobiter = pyWorkload.exp_design.fourbyfour_iter(designpath)
-                #fourbyfour_iter('./designs/blhd_12factors_2to14runs.txt')
-                #fourbyfour_iter('./designs/sanity.test.design.txt')
-                #fourbyfour_iter('./designs/blhd-12-factors-4by4.txt')
-                #fourbyfour_iter('./designs/blhd-11-factors-4by7.txt')
-                #fourbyfour_iter('./designs/design_blhd-4by4.tmp.txt')
-                #fourbyfour_iter('./design_blhd-4by4.txt')
     joblist = list(jobiter) 
     for id, treatment in enumerate(joblist):
         treatment['jobid'] = id
