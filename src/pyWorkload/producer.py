@@ -270,38 +270,3 @@ def debug_main():
                  writes_per_flush = 2)
 
 
-
-#SingleFileTraverse(filesize=100, num_of_chunks=4)
-#debug_main()
-#prd = Producer(rootdir='/l0')
-
-#prd.addUniOp('open', 0, 0, 0)
-#prd.addReadOrWrite('read', 0, 0, 0, 8, 3)
-#prd.addReadOrWrite('read', 0, 0, 0, 8, 3)
-#prd.addReadOrWrite('read', 0, 0, 0, 8, 3)
-#prd.addReadOrWrite('read', 0, 0, 0, 8, 3)
-#prd.addReadOrWrite('write', 0, 0, 0, 8, 3)
-#prd.addUniOp('fsync', 0, 0, 0)
-#prd.addUniOp('close', 0, 0, 0)
-#prd.display()
-##print prd.produce(np=1, startOff=0, 
-                ##nwrites_per_file = 64, 
-                ##nfile_per_dir=1, 
-                ##ndir_per_pid=1,
-                ##wsize=16, 
-                ##wstride=16, 
-                ##rootdir="/mnt/scratch/", 
-                ##tofile="tmp.workload",
-                ##fsync_per_write=True),
-
-#print prd.produce(np=1, startOff=0, 
-                #nwrites_per_file = 1024*1024, 
-                #nfile_per_dir=1, 
-                #ndir_per_pid=1,
-                #wsize=1, 
-                #wstride=1, 
-                #rootdir="/mnt/scratch/", 
-                #tofile="tmp.workload",
-                #fsync_per_write=True),
-
-

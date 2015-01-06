@@ -286,30 +286,3 @@ def printwithindex( l ):
         print i, x
 
 
-
-#FormatFS.makeLoopDevice('/dev/loop0', '/mnt/mytmpfs', 512)
-#FormatFS.remakeExt4('/dev/loop0', '/mnt/scratch/', 'junhe', 'junhe',
-                    #512*1024)
-#makeFragmentsOnFS(partition='/dev/loop0', mountpoint='/mnt/scratch/')
-
-
-#fragplan([100, 100], [3,44,2,4,3,3,2,3,9,2])
-
-#frags(100, 8, 1000, 100)
-#par = '/dev/ram0'
-#mp = '/mnt/scratch'
-#FormatFS.remakeExt4(partition=par,
-                    #mountpoint=mp,
-                    #username="junhe",
-                    #groupname="junhe",
-                    #blockscount=65536)
-#print 'remade fs'
-#probeAndAssign(partition=par, 
-               #mountpoint=mp)
-
-##a = stats.lognorm(scale=0.1)
-##a = np.random.beta(0.75, 0.25, 10000)
-#print a.rvs(2, size=10)
-#help(stats.lognorm.rvs)
-#help(a.rvs)
-#plothist(a)

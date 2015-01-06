@@ -1264,22 +1264,3 @@ def switch_cpu(cpuid, mode):
 
     return
 
-
-
-if __name__ == '__main__':
-    #filefrag('/mnt/scratch-sda4/initrd.img-3.12.5-031205-generic')
-    df = ext34_getExtentList_of_myfiles('/mnt/scratch/')
-    df = extlist_block_to_byte(df)
-    print df.toStr()
-
-
-# Testing
-#m = FSMonitor('/dev/loop0', '/mnt/loopmount/')
-#print m.xfs_db_commands(['convert ino 4194432 fsblock'])
-#m.xfs_convert_ino_to_fsb(131)
-#m.xfs_extents_of_a_file('/mnt/scratch/initrd.img-3.2.16emulab1')
-#m.stat_a_file("/mnt/scratch")
-#print m.xfs_getExtentList_of_a_dir("/mnt/scratch").toStr()
-#m.imap_of_a_file('./pid00000.dir00000/pid.00000.file.00000')
-#print m.dump_extents_of_a_file('./pid00000.dir00000/pid.00000.file.00000').toStr()
-

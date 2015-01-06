@@ -201,8 +201,4 @@ def create_frag_file( layoutnumber,
     ret = make_hole_file( '/tmp/_holelist', targetfile, punchmode )
     return ret
 
-if __name__ == '__main__':
-    create_frag_file( 1, 644245094, 
-                        '/mnt/scratch/bigfile', 0, True)
-
     

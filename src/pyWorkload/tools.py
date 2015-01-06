@@ -28,5 +28,4 @@ def median(l):
     assert size > 0
     m = size/2
     return sorted(l)[m]
-#run_ibench(1, "myrun", "/mnt/scratch/")
 

@@ -385,11 +385,3 @@ def btrfs_remake(partition, mountpoint, username, groupname,
     # all of the above has to success except this one
     chDirOwner(mountpoint, username, groupname)
 
-
-
-#buildNewExt4("/dev/sdb", "/mnt/scratch", "../../conf/sfdisk.conf")
-
-#makeXFS(devname='/dev/loop0', blockscount=16777216, blocksize=4096)
-
-#remakeXFS('/dev/loop0', '/mnt/scratch', 'jhe', 'plfs', 
-                #blocksize=4096)
