@@ -5,7 +5,10 @@ import os
 import sys
 import itertools
 import pprint
+import chpConfig
 
+# where we mount the fs to be tested and run workload
+workmount = chpConfig.parser.get('system', 'mountpoint')
 
 def ParameterCominations(parameter_dict):
     """
@@ -108,40 +111,32 @@ def make_file_system(fstype, disksize):
 
     print "Loop device has been made :)"
 
-    if not os.path.exists("/mnt/scratch"):
-        print "/mnt/scratch does not exist. Creating..."
-        os.mkdir("/mnt/scratch")
+    if not os.path.exists(workmount):
+        print workmount, "does not exist. Creating..."
+        os.mkdir(workmount)
 
     if fstype == 'xfs':
         MWpyFS.FormatFS.remakeXFS('/dev/loop0', 
-                                  '/mnt/scratch', 
+                                  workmount,
                                   'jhe', 'plfs',
                                   blocksize=4096)
     elif fstype == 'ext4':
         MWpyFS.FormatFS.remakeExt4("/dev/loop0", 
-                                   "/mnt/scratch/", 
+                                   workmount,
                                    "jhe", "plfs", 
                                    blockscount=disksize/4096, 
                                    blocksize=4096)
     elif fstype == 'ext3':
         MWpyFS.FormatFS.remakeExt3("/dev/loop0", 
-                                   "/mnt/scratch/", 
+                                   workmount,
                                    "jhe", "plfs", 
                                    blockscount=disksize/4096, 
                                    blocksize=4096)
     elif fstype == 'btrfs':
         MWpyFS.FormatFS.btrfs_remake("/dev/loop0", 
-                                     "/mnt/scratch/", 
+                                     workmount,
                                      "jhe", "plfs", 
                                      nbytes=disksize)
-
-#def copy_image(tofile):
-    #subprocess.call(['cp', 
-
-#MWpyFS.FormatFS.mkLoopDevOnFile('/dev/loop0', '/mnt/mytmpfs/disk.img')
-#MWpyFS.FormatFS.mountExt4('/dev/loop0', '/mnt/scratch')
-#print 'finished'
-#exit(0)
 
 def release_image():
     # umount the FS mounted on loop dev
@@ -190,7 +185,7 @@ def use_one_image(fstype, disksize, used_ratio, layoutnumber, mountopts):
                 sizeMB=disksize/(1024*1024),
                 img_file = imgpath
                 )
-    MWpyFS.FormatFS.mountFS('/dev/loop0', '/mnt/scratch', opts=mountopts)
+    MWpyFS.FormatFS.mountFS('/dev/loop0', workmount, opts=mountopts)
 
 def make_hole_file(filepath, filesize, 
                    layoutnumber, punchmode, specfilesize=True):
@@ -213,8 +208,8 @@ def get_image_path(fstype, disksize, used_ratio,
     newimagename = [ str(x) for x in newimagename ]
     newimagename = '.'.join( newimagename )
     #'/proj/plfs/data/jhe/syaas-disk-images/'+newimagename] 
-    dir = '/mnt/scratch-sda4/'
-    return dir + newimagename
+    dir = chpConfig.parser.get('system', 'diskimagedir') 
+    return os.path.join(dir, newimagename)
 
 def get_fsusedGB(disksize, used_ratio):
     fsused = int((disksize/(2**20))*used_ratio)
@@ -239,14 +234,14 @@ def make_one_imageCOW(fstype, disksize,
         pass
     else:
         config_dict = {
-                        'Parent_Path:': ['/mnt/scratch/', 1],
+                        'Parent_Path:': [workmount, 1],
                         'FSused:': [ fsused, 'MB'] 
                       }
         #pprint.pprint( config_dict )
         run_impressions(config_dict)
 
     subprocess.call(['sync'])
-    holefilesize = get_disk_free_bytes('/mnt/scratch')
+    holefilesize = get_disk_free_bytes(workmount)
     # adjust the size of the file we want to create,
     # in case we actually cannot create such large a file
     # this is potentially dangerous since you may still 
@@ -261,10 +256,7 @@ def make_one_imageCOW(fstype, disksize,
         print 'file system is not supported with any punchmode'
         exit(1)
 
-    #print "for debug, exit before make hole file.."
-    #print "holefilesize:", holefilesize
-    #exit(1)
-    ret = make_hole_file("/mnt/scratch/metadir/punchfile",
+    ret = make_hole_file(os.path.join(workmount," metadir/punchfile"),
                    holefilesize,
                    layoutnumber,
                    punchmode
@@ -302,43 +294,21 @@ def make_one_image_solidfile(fstype, disksize,
     print 'bytes_holefile', bytes_holefile
     time.sleep(1)
     
-    # this is the dir that will hold the placeholder
-    # and hole file
-    #if not os.path.exists('/mnt/scratch/metadir/'):
-        #os.mkdir('/mnt/scratch/metadir')
-
     if fstype in ['ext4','xfs','btrfs']:
-        #print "creating hole file (no hole yet)..."
-        #fallocate_solid_file('/mnt/scratch/punchfile',
-                             #bytes_holefile)
-        #subprocess.call(['sync'])
-        #bytes_left = get_disk_free_bytes('/mnt/scratch/')
-        #bytes_left = int(bytes_left * 0.999)
-        #print "creating place holder file..."
-        #fallocate_solid_file('/mnt/scratch/placeholder',
-                             #bytes_left)
-        #ret = make_hole_file("/mnt/scratch/punchfile",
-           #bytes_holefile,
-           #layoutnumber,
-           #0, False
-           #)
-
         if used_ratio > 0:
             # only do placeholder when the used_ratio > 0
             bytes_left = disksize - bytes_holefile
             print "creating place holder file... size:", bytes_left
-            #fallocate_solid_file('/mnt/scratch/metadir/placeholder',
-            fallocate_solid_file('/mnt/scratch/placeholder',
+            fallocate_solid_file(os.path.join(workmount, 'placeholder'),
                                  bytes_left)
         if layoutnumber != 6:
             # when layoutnumber==6, we do not
             # frag the file system
-            bytes_left = get_disk_free_bytes('/mnt/scratch/')
+            bytes_left = get_disk_free_bytes(workmount)
             bytes_holefile = int(bytes_left * 0.99)
             print "creating hole file... size:", bytes_holefile, \
                     " layoutnumber:", layoutnumber
-            #ret = make_hole_file("/mnt/scratch/metadir/punchfile",
-            ret = make_hole_file("/mnt/scratch/punchfile",
+            ret = make_hole_file(os.path.join(workmount, "punchfile"),
                bytes_holefile,
                layoutnumber,
                0, True
@@ -356,23 +326,18 @@ def make_one_image_solidfile(fstype, disksize,
     elif fstype in ['ext2', 'ext3']:
         if used_ratio > 0:
             print "creating hole file (no hole yet)...", bytes_holefile
-            #fill_solid_file('/mnt/scratch/metadir/punchfile',
-            fill_solid_file('/mnt/scratch/punchfile',
+            fill_solid_file(os.path.join(workmount, 'punchfile'),
                                  bytes_holefile)
-            bytes_left = get_disk_free_bytes('/mnt/scratch/')
+            bytes_left = get_disk_free_bytes(workmount)
             print "creating place holder file....", bytes_left
-            #fill_solid_file('/mnt/scratch/metadir/placeholder',
-            fill_solid_file('/mnt/scratch/placeholder',
+            fill_solid_file(os.path.join(workmount, 'placeholder'),
                                  bytes_left)           
         if layoutnumber != 6:
-            #if os.path.exists('/mnt/scratch/metadir/punchfile'):
-            if os.path.exists('/mnt/scratch/punchfile'):
+            if os.path.exists(os.path.join(workmount, 'punchfile')):
                 print "Deleting punchfile..."
-                #os.remove('/mnt/scratch/metadir/punchfile')
-                os.remove('/mnt/scratch/punchfile')
+                os.remove(os.path.join(workmount, 'punchfile'))
             print "create punch file again...", bytes_holefile
-            #ret = make_hole_file("/mnt/scratch/metadir/punchfile",
-            ret = make_hole_file("/mnt/scratch/punchfile",
+            ret = make_hole_file(os.path.join(workmount,"/punchfile"),
                bytes_holefile,
                layoutnumber,
                1, True 
@@ -421,12 +386,4 @@ def make_images():
                        layoutnumber=para['layoutnumber'])
         time.sleep(2) 
         exit(0)
-
-def main():
-    make_images()
-    #print get_disk_free_bytes("/mnt/scratch")
-    #print fallocate_solid_file("/mnt/scratch/hello", 2000)
-
-if __name__ == '__main__':
-    main()
 
