@@ -1,15 +1,3 @@
-# walkman is the driver/integrator of the MetaWalker.
-# the workflow is like:
-#   0. format the whole system
-#   1. genearate workloads by Producer
-#   2. For each workload:
-#       2. play workload by player
-#       3. monitor the FS status
-# 
-#
-# Possible ways to make more fragments:
-#   1. delete previous files
-#   2. append previous files
 import subprocess
 import MWpyFS
 import argparse
