@@ -9,6 +9,7 @@ import chpConfig
 
 # where we mount the fs to be tested and run workload
 workmount = chpConfig.parser.get('system', 'mountpoint')
+tmpmount = chpConfig.parser.get('system', 'tmpfs_mountpoint')
 
 def ParameterCominations(parameter_dict):
     """
@@ -101,12 +102,12 @@ def make_file_system(fstype, disksize):
     fstype: ext4, xfs, btrfs
     disksize: in Bytes
     """
-    if not os.path.exists("/mnt/mytmpfs"):
-        print "/mnt/mytmpfs does not exist. Creating..."
-        os.mkdir("/mnt/mytmpfs")
+    if not os.path.exists(tmpmount):
+        print tmpmount, "does not exist. Creating..."
+        os.mkdir(tmpmount)
     MWpyFS.FormatFS.makeLoopDevice(
             devname="/dev/loop0",
-            tmpfs_mountpoint="/mnt/mytmpfs",
+            tmpfs_mountpoint=tmpmount,
             sizeMB=disksize/(1024*1024))
 
     print "Loop device has been made :)"
@@ -172,16 +173,17 @@ def use_one_image(fstype, disksize, used_ratio, layoutnumber, mountopts):
         make_one_image_solidfile(fstype, disksize, 
                           used_ratio, layoutnumber)
         print '-------- before mkLoopDevOnFile'
-        MWpyFS.FormatFS.mkLoopDevOnFile('/dev/loop0', '/mnt/mytmpfs/disk.img')
+        MWpyFS.FormatFS.mkLoopDevOnFile('/dev/loop0', 
+                os.path.join(tmpmount, 'disk.img'))
     else:
         # there is a image, just use it
         print 'have the image already, just use it'
-        if not os.path.exists("/mnt/mytmpfs"):
-            print "/mnt/mytmpfs does not exist. Creating..."
-            os.mkdir("/mnt/mytmpfs")
+        if not os.path.exists(tmpmount):
+            print tmpmount, "does not exist. Creating..."
+            os.mkdir(tmpmount)
         MWpyFS.FormatFS.makeLoopDevice(
                 devname="/dev/loop0",
-                tmpfs_mountpoint="/mnt/mytmpfs",
+                tmpfs_mountpoint=tmpmount,
                 sizeMB=disksize/(1024*1024),
                 img_file = imgpath
                 )
@@ -274,7 +276,7 @@ def make_one_imageCOW(fstype, disksize,
     release_image()
     newimagepath = get_image_path(fstype, disksize, 
                                   used_ratio, layoutnumber)
-    cmd = ['cp', '/mnt/mytmpfs/disk.img', newimagepath]
+    cmd = ['cp', os.path.join(tmpmount, 'disk.img'), newimagepath]
     print cmd
     subprocess.call(cmd)
 
@@ -363,7 +365,7 @@ def make_one_image_solidfile(fstype, disksize,
     release_image()
     newimagepath = get_image_path(fstype, disksize, 
                                   used_ratio, layoutnumber)
-    cmd = ['cp', '/mnt/mytmpfs/disk.img', newimagepath]
+    cmd = ['cp', os.path.join(tmpmount, 'disk.img'), newimagepath]
     print cmd
     subprocess.call(cmd)
 
