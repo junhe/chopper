@@ -1,8 +1,3 @@
-# TODO:
-# 1. copy a sparse file faster
-# 2. make the image even smaller, by David?
-
-
 import subprocess
 import time
 import MWpyFS
