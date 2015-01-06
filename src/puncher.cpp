@@ -282,7 +282,7 @@ void pad_file(char *filepath, char *confpath)
                 //fill_file("/mnt/scratch/holeholder1", len);
             //}
             char filename[128];
-            sprintf(filename, "/mnt/scratch/holeholder%d", id);
+            sprintf(filename, "%s.placeholder%d", filepath, id);
             fill_file(filename, len);
         }
 
@@ -305,7 +305,10 @@ int main(int argc, char **argv)
 {
     if (argc != 4) {
         printf("Usage: %s filepath confpath mode\n"
-               "mode: 0: hole punching; 1: pad_file\n",
+               "mode: 0: hole punching; 1: pad_file\n"
+               "padding is an experimental way of creating fragmentations."
+               " It keeps creating new files while writing an original one,"
+               " hoping it will create fragment size as desired. It failed.\n",
                argv[0]);
         logger->write( "Wrong program arguments" );
         delete logger;
