@@ -170,8 +170,6 @@ def use_one_image(fstype, disksize, used_ratio, layoutnumber, mountopts):
         # image is not there, need to make one
         # then use the one just made
         print 'need to make a new image'
-        #make_one_imageCOW(fstype, disksize, 
-                          #used_ratio, layoutnumber)
         make_one_image_solidfile(fstype, disksize, 
                           used_ratio, layoutnumber)
         print '-------- before mkLoopDevOnFile'
@@ -212,7 +210,9 @@ def get_image_path(fstype, disksize, used_ratio,
     newimagename = [ str(x) for x in newimagename ]
     newimagename = '.'.join( newimagename )
     dir = chpConfig.parser.get('system', 'diskimagedir') 
-    return os.path.join(dir, newimagename)
+    path = os.path.join(dir, newimagename)
+    print path
+    return path
 
 def get_fsusedGB(disksize, used_ratio):
     fsused = int((disksize/(2**20))*used_ratio)
@@ -222,64 +222,6 @@ def get_disk_free_bytes(diskpath):
     stats = os.statvfs(diskpath)
     #return stats.f_bfree * stats.f_bsize
     return stats.f_bavail * stats.f_bsize
-
-def make_one_imageCOW(fstype, disksize, 
-                      used_ratio, layoutnumber):
-    # make a brand new loop device, starting from 
-    # making a tmpfs
-    make_file_system(fstype=fstype, 
-                     disksize=disksize)
-
-    # use impressions to fill the file system
-    fsused = get_fsusedGB(disksize, used_ratio)
-
-    if fsused == 0:
-        pass
-    else:
-        config_dict = {
-                        'Parent_Path:': [workmount, 1],
-                        'FSused:': [ fsused, 'MB'] 
-                      }
-        #pprint.pprint( config_dict )
-        run_impressions(config_dict)
-
-    subprocess.call(['sync'])
-    holefilesize = get_disk_free_bytes(workmount)
-    # adjust the size of the file we want to create,
-    # in case we actually cannot create such large a file
-    # this is potentially dangerous since you may still 
-    # not able to create the file
-    holefilesize = int(holefilesize * 0.99)
-
-    if fstype in ['ext4', 'xfs', 'btrfs']:
-        punchmode = 0
-    elif fstype in ['ext3', 'ext2']:
-        punchmode = 1
-    else:
-        print 'file system is not supported with any punchmode'
-        exit(1)
-
-    ret = make_hole_file(os.path.join(workmount," metadir/punchfile"),
-                   holefilesize,
-                   layoutnumber,
-                   punchmode
-                   )
-    if ret != 0:
-        msg = 'it is unable to make a hole file. {} {} {} {}'.format(
-                            fstype, disksize, used_ratio, layoutnumber)
-        print msg
-        with open('/tmp/make_disk_image.log', 'a') as f:
-            f.write(msg + '\n')
-            f.flush()
-        exit(1)
-
-    # copy and save the image file
-    release_image()
-    newimagepath = get_image_path(fstype, disksize, 
-                                  used_ratio, layoutnumber)
-    cmd = ['cp', os.path.join(tmpmount, 'disk.img'), newimagepath]
-    print cmd
-    subprocess.call(cmd)
 
 def make_one_image_solidfile(fstype, disksize, 
                       used_ratio, layoutnumber
@@ -366,9 +308,17 @@ def make_one_image_solidfile(fstype, disksize,
     release_image()
     newimagepath = get_image_path(fstype, disksize, 
                                   used_ratio, layoutnumber)
+
+    dirpath = os.path.dirname(newimagepath)
+    if not os.path.exists(dirpath): 
+        os.makedirs(dirpath)
+
     cmd = ['cp', os.path.join(tmpmount, 'disk.img'), newimagepath]
     print cmd
-    subprocess.call(cmd)
+    ret = subprocess.call(cmd)
+    if ret != 0:
+        print "failed to copy disk.img"
+        exit(1)
 
 def make_images():
     para_dict = {
