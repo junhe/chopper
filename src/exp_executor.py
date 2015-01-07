@@ -57,6 +57,7 @@ class Walkman:
             self.jobcomment, time.localtime()))
 
         # Set resultdir and make the dir
+        # This was for a legacy feature.
         resultdir_prefix = self.confparser.get('system', 'resultdir_prefix')
         resultdir = "results." + self.confparser.get('system','hostname') 
         self.confparser.set('system', 'resultdir', 
@@ -72,9 +73,6 @@ class Walkman:
                os.path.join(self.confparser.get('system', 'workloaddir'),
                  "_workload.buf." + self.confparser.get('system', 'hostname')))
 
-        ############################
-        # Setup Monitor
-
         # monitor
         self.monitor = MWpyFS.Monitor.FSMonitor(
                  self.confparser.get('system','partition'), 
@@ -88,9 +86,7 @@ class Walkman:
         disk_used = self.confparser.getfloat('system', 'disk_used')
         assert disk_used >= 0 and disk_used <= 1, "now it is a ratio"
         disksize = self.confparser.getint('system', 'disksize')
-        #used_ratio=float(disk_used*2**30)/disksize
         used_ratio = disk_used 
-        #print disk_used, disksize, used_ratio
         layoutnumber = self.confparser.getint('system',
                                               'layoutnumber')
         mopts = self.confparser.get('system', 'mountopts')
@@ -103,18 +99,8 @@ class Walkman:
                                )
         return
 
-    def _makeFragmentsOnFS(self):
-        assert self.confparser.get('system', 'filesystem') == 'ext4'
-        MWpyFS.mkfrag.makeFragmentsOnFS(
-                partition=self.confparser.get('system', 'partition'),
-                mountpoint=self.confparser.get('system', 'mountpoint'),
-                alpha=self.confparser.getfloat('fragment', 'alpha'),
-                beta=self.confparser.getfloat('fragment', 'beta'),
-                sumlimit=self.confparser.getint('fragment', 'sum_limit'),
-                seed=self.confparser.getint('fragment', 'seed'),
-                tolerance=self.confparser.getfloat('fragment', 'tolerance'))
-
     def _getYearSeasonStr(self, year, season):
+        "Legacy function"
         return "year"+str(year).zfill(5)+\
                     ".season"+str(season).zfill(5)
 
@@ -217,40 +203,10 @@ class Walkman:
 
     def _SetupEnv(self):
         # set cpu count
-        #if MWpyFS.Monitor.get_possible_cpu() != '0-1':
-            #print 'we do not support other cases right now'
-            #exit(1)
-
         self._set_cpu()
 
-
-        #if self.confparser.getint('system', 'core.count') == 2:
-            #MWpyFS.Monitor.switch_cpu(cpuid=2, mode='OFF')
-        #else:
-            #MWpyFS.Monitor.switch_cpu(cpuid=1, mode='ON')
-    
-        # Make loop device
-        if self.confparser.get('system', 'makeloopdevice') == 'yes'\
-                and self.confparser.get('system', 'formatfs') != 'yes':
-            exit(1)
-        
         # Format file system
-        if self.confparser.get('system', 'formatfs').lower() == "yes":
-            self._remake_fs()
-        else:
-            print "skipped formating fs"
-
-        # Making fragments
-        if self.confparser.get('fragment', 'createfragment').lower() == 'yes':
-            print "making fragments....."
-            self._makeFragmentsOnFS()
-
-        # At least put some files there
-        if self.confparser.get('system', 'copybootfiles').lower() == 'yes':
-            print "copying some boot files to the mount point"
-            pyWorkload.misc.copy_boot(
-                    self.confparser.get('system', 'mountpoint') )
-
+        self._remake_fs()
 
     def walk(self):
         return self._wrapper()
@@ -286,6 +242,8 @@ class Walkman:
         """
         decide which workload to play here. 
         They use different generators
+
+        Legacy code, not I removed all the other generators. 
         """
         return self._play_chunkseq()
 
@@ -396,7 +354,6 @@ class Executor:
         df.addColumn(key = 'num_extents',
                 value = ret['num_extents'])
 
-        #print df.toStr()
         ##############################3
         # do some clean up
         # writer_cpu_map       fullness             
