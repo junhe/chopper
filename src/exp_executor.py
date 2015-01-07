@@ -573,7 +573,8 @@ class Executor:
 
         if savedf:
             if self.fileout == None:
-                self.fileout = open('result-table.txt', 'w')
+                self.fileout = open(
+                        chpConfig.parser.get('system', 'resulttablepath'), 'w')
                 self.fileout.write(df.toStr(header=True, table=True)) 
             else:
                 self.fileout.write(df.toStr(header=False, table=True)) 
