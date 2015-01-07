@@ -80,7 +80,7 @@ class Walkman:
                  self.confparser.get('system','partition'), 
                  self.confparser.get('system','mountpoint'),
                  ld = self.confparser.get('system','resultdir'),
-                 filesystem = self.confparser.get('system', 'filesystem')) # logdir
+                 filesystem = self.confparser.get('setup', 'filesystem')) # logdir
 
     def _remake_fs(self):
         fs = self.confparser.get('system', 'filesystem')
@@ -360,47 +360,6 @@ class Executor:
         else:
             print 'experiment mode is not supported'
             exit(1)
-
-    def sampleworkload(self):
-        file_treatment = {
-               'parent_dirid' : 2,
-               'fileid'       : 8848,
-               'writer_pid'   : 1,
-               'chunks'       : [
-                               {'offset':0, 'length':1},
-                               {'offset':1, 'length':1},
-                               {'offset':2, 'length':1},
-                               {'offset':3, 'length':1}
-                              ],
-                              #chunk id is the index here
-               'write_order'  : [0,1,2,3],
-               # The bitmaps apply to ordered chunkseq
-               'open_bitmap'  : [True, True, True, True],
-               'fsync_bitmap' : [False, False, False, False],
-               'close_bitmap' : [True, True, True, True],
-               'sync_bitmap'  : [True, False, False, False ],
-               'writer_cpu_map': [0,1,0,1] # set affinity to which cpu
-               }
-
-        #pprint.pprint(build_file_chunkseq( file_treatment ))
-
-        treatment = {
-                      'filesystem': 'ext4',
-                      'disksize'  : 64*1024*1024,
-                      'free_space_layout_score': 1,
-                      'free_space_ratio': 0.7,
-                      'dir_depth'     : 3,
-                      # file id in file_treatment is the index here
-                      'files': [file_treatment, copy.deepcopy(file_treatment)],
-                      #'files': [file_treatment],
-                      # the number of item in the following list
-                      # is the number of total chunks of all files
-                      'filechunk_order': [0, 1, 0, 1, 0, 1, 0, 1]
-                      #'filechunk_order': [0,0,0,0]
-                    }
-        pyWorkload.workload_builder.correctize_fileid(treatment)
-        self.run_and_get_df( treatment, savedf=True)
-        self.run_and_get_df( treatment, savedf=True)
 
     def run_and_get_df(self, treatment, savedf=False):
         """
