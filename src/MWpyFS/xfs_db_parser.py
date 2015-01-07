@@ -5,7 +5,7 @@ import subprocess
 import dataframe
 import Queue
 
-
+# sample lines for debugging
 lines01="""
 u = (empty)
 """

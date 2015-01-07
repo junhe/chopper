@@ -1,3 +1,4 @@
+# This module parses btrfs debug tree to find the physical location of file data
 import os
 import subprocess
 import pprint

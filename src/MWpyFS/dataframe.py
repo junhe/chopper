@@ -1,4 +1,5 @@
-
+# data frame is a data structure behaves like a table.
+# it is named after the same thing in R. 
 
 class DataFrame:
     """
@@ -119,19 +120,3 @@ class DataFrame:
             for row in self.table:
                 row.extend(valuelist)
 
-#df = DataFrame(['h1', 'h2'], [[1,2],[3,4]])
-#df = DataFrame(['h1', 'h2'])
-
-#print df.toStr()
-
-#df.addRow( {'h1':1, 'h2':3} )
-#df.addRow( {'h1':1, 'h2':3} )
-#df.addRow( {'h1':1, 'h2':3} )
-#df.addRow( {'h1':1, 'h2':3} )
-
-#print df.toStr()
-
-#df.addColumn("newcol", 1000)
-
-#df.addRowByList([3,4,5])
-#print df.toStr()
