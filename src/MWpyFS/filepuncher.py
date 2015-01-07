@@ -1,3 +1,4 @@
+import chpConfig
 import random
 import os
 import math
@@ -172,13 +173,14 @@ def lognorm_probability_range(a, b, mu, sigma):
 
 def layoutnumber2mu_sigma(layoutnumber):
     #d = data.frame(meanlog=log(seq(2,21,length=5)), sdlog=seq(1,0.1,length=5))
-    dict = {
-        1 : ( 0.6931472 , 1 ),
-        2 : ( 1.9095425 , 0.775 ),
-        3 : ( 2.442347 , 0.55 ),
-        4 : ( 2.7880929 , 0.325 ),
-        5 : ( 3.0445224 , 0.1 )
-        }
+    dict = eval(chpConfig.parser.get('setup', 'layoutnumbers'))
+    #dict = {
+        #1 : ( 0.6931472 , 1 ),
+        #2 : ( 1.9095425 , 0.775 ),
+        #3 : ( 2.442347 , 0.55 ),
+        #4 : ( 2.7880929 , 0.325 ),
+        #5 : ( 3.0445224 , 0.1 )
+        #}
     mu,sigma = dict[layoutnumber]
 
     return (mu,sigma)
