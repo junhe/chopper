@@ -1,11 +1,13 @@
+# This module is an important part of generating workload
+
 import pprint
 import copy
 import producer
 import sys
 import os
 
-#sys.path.append("MWpyFS")
-lib_path = os.path.abspath('..')
+curdir = os.path.dirname( os.path.abspath( __file__ ) )
+lib_path = os.path.join(curdir, '..') 
 sys.path.append(lib_path)
 import MWpyFS
 
@@ -32,6 +34,7 @@ def get_empty_ChunkBox():
     return d
 
 def get_empty_ChunkBox2():
+    "the dictionary describes what we do to a chunk "
     d = {
       '!class':   'ChunkBox2',
       'opseq': [], # [{'opname':'open','close'..'chunk','mkdir' 
@@ -56,20 +59,20 @@ def get_empty_ChunkSeq():
 
 def get_empty_OpBitmap():
     """
-{'nchunks': 3,
- 'slotnames': ['(',
-               'C',
-               'F',
-               ')',
-               'S',
-               ...]
- 'values': [True,
-            'C',
-            False,
-            False,
-            False,
-            False,
-            ...]}
+        {'nchunks': 3,
+         'slotnames': ['(',
+                       'C',
+                       'F',
+                       ')',
+                       'S',
+                       ...]
+         'values': [True,
+                    'C',
+                    False,
+                    False,
+                    False,
+                    False,
+                    ...]}
     """
     d = {
             '!class'    :'OpBitmap',
