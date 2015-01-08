@@ -25,7 +25,6 @@ import make_disk_images
 
 
 walkmanlog = open('/tmp/walkman.log', 'a')
-feedback_dic = {}
 
 class Walkman:
     """

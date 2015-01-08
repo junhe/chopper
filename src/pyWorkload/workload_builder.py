@@ -14,7 +14,6 @@ import os
 
 def build_dir_tree_chkeq( depth, startlevel ):
     dirpaths = build_dir_tree_path( depth, startlevel)
-    #dirpaths = build_dir_ladder_path( depth )
 
     chkseq = pat_data_struct.get_empty_ChunkSeq() 
 
@@ -104,25 +103,6 @@ def get_ladder_dir_path( dirid ):
     ret = '/'.join(dirs)
     return ret
 
-def build_dir_ladder_path( depth ):
-    """
-    depth:
-    0:
-    /
-    1:
-    /dir.1/
-    2:
-    /dir.1/dir.2/
-    """
-    dirpaths = []
-    for dirid in range(1, depth):
-        #print 'dirid', dirid
-        path = get_ladder_dir_path(dirid)
-        #print path
-        dirpaths.append( path )
-
-    return dirpaths
-
 def build_conf ( treatment, confparser ):
     """
     This function build a confparser from the treatment. 
@@ -196,10 +176,6 @@ def build_conf ( treatment, confparser ):
     
     confparser.set('workload', 'files_chkseq', str(chkseq))
         
-def correctize_fileid (treatment):
-    for fileid, file_treatment in enumerate(treatment['files']):
-        file_treatment['fileid'] = fileid
-
 def build_file_chunkseq ( file_treatment ):
     """
     *********************************************

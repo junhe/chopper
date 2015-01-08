@@ -128,7 +128,6 @@ def runserver_locality(resultpath, jobtag, arg_usefinished):
         fresult.truncate()
         hasheader = False
         f_finished_job = open(finishedpath, 'w+')
-        exclude_finished_jobs = False
 
     joblist = get_joblist()
     print 'finished_joblist', finished_joblist

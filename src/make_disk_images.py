@@ -162,7 +162,6 @@ def release_image():
         print devname, "is not in use"
 
 def use_one_image(fstype, disksize, used_ratio, layoutnumber, mountopts):
-    #fsused = get_fsusedGB(disksize, used_ratio)
     imgpath = get_image_path(fstype, disksize, 
                              used_ratio, layoutnumber)
 
@@ -213,10 +212,6 @@ def get_image_path(fstype, disksize, used_ratio,
     path = os.path.join(dir, newimagename)
     print path
     return path
-
-def get_fsusedGB(disksize, used_ratio):
-    fsused = int((disksize/(2**20))*used_ratio)
-    return fsused
 
 def get_disk_free_bytes(diskpath):
     stats = os.statvfs(diskpath)
@@ -321,6 +316,7 @@ def make_one_image_solidfile(fstype, disksize,
         exit(1)
 
 def make_images():
+    "for testing"
     para_dict = {
             #'fstype': ['ext4', 'xfs', 'btrfs'],
             'fstype': ['btrfs'],

@@ -40,14 +40,6 @@ import FormatFS
 # 5. implement hole file -> place holder -> punching file
 
 
-def plothist(x):
-    try:
-        plt.hist(x, 1000, facecolor='g', alpha=0.75)
-        plt.show()
-    except:
-        print "Trivial operation skipped"
-
-
 def get_extent_distribution( mu, sigma ):
     # probability list of extent size 2^x *4096
     # pr_list[0]= Pr(0<x<1), 
@@ -92,33 +84,6 @@ def generate_lognormal_sizes_uniquebytes( mu, sigma,
         ret_sizes.extend( [ext_size] * ext_cnt )
     
     return ret_sizes
-
-def generate_lognormal_sizes( mu, sigma, 
-                             hard_maxbytes, seed=1 ):
-    """
-    size = 2^x, x follows lognorm distriution
-    sum(size) will eventually close to sum_target.
-    """
-    random.seed(seed)
-    # described in the unit of block(4096)
-    szlist = []
-    xlist = []
-    szsum = 4096 # overhead 
-
-    while True:
-        x = random.lognormvariate(mu, sigma)
-        sz = 4096 * int(2**x)
-        # 4096 is the overhead of makeing a hole
-        szsum += sz + 4096 
-        
-        if szsum > hard_maxbytes:
-            break
-
-        xlist.append( x )
-        szlist.append( sz )
-    
-    #print xlist
-    return szlist
 
 def make_holes ( szlist, specfilesize ):
     off = 0

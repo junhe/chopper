@@ -10,7 +10,6 @@ import random
 
 PORTNUM=8848
 AUTHKEY='11'
-IP='127.0.0.1'
 nodeinfo=None
 
 def experiment_worker(treatment):

@@ -207,7 +207,6 @@ def recipe_to_treatment(recipe, optsdict=None):
                           )
     #print dirlist
     nfiletreatment_list = []
-    filepos = 0
     for filei, dirid in zip(range(nfiles), dirlist):
         # dirid is the dirid of filei
         ftreat_list = copy.deepcopy( filetreatment_list )
