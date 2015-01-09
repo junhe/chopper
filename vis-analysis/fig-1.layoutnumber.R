@@ -1,6 +1,6 @@
-require(ggplot2)
-require(plyr)
-require(grid)
+library(ggplot2)
+library(plyr)
+library(grid)
 
 theme_paper <- function()
 {

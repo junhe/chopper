@@ -1,10 +1,10 @@
-require(grid)
-require(ggplot2)
-require(combinat)
-require(gridExtra)
-require(plyr)
-require(reshape2)
-require(R.utils)
+library(grid)
+library(ggplot2)
+library(combinat)
+library(gridExtra)
+library(plyr)
+library(reshape2)
+library(R.utils)
 
 randomness.interaction.heatmap.highlight <- function()
 {

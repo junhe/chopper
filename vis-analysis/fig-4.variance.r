@@ -1,4 +1,4 @@
-require(ggplot2)
+library(ggplot2)
 
 
 primer_sa <- function(d)
