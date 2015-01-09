@@ -6,10 +6,6 @@ require(plyr)
 require(reshape2)
 require(R.utils)
 
-setwd('/Users/junhe/workdir/chopper/vis-analysis/')
-source('./common.r')
-
-
 nosharedgoal_factormapping.highlight <- function()
 {
     nosharedgoal.do_factor_mapping_dspandiff_cut <- function(d)

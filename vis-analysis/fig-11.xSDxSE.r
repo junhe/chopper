@@ -6,8 +6,6 @@ require(plyr)
 require(reshape2)
 require(R.utils)
 
-setwd('/Users/junhe/workdir/chopper/vis-analysis/')
-source('./common.r')
 
 xSDxSE.interaction_heatmap.highlight <- function()
 {

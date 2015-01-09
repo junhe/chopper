@@ -1,9 +1,5 @@
 require(ggplot2)
 
-setwd('/Users/junhe/workdir/chopper/vis-analysis/')
-source('./common.r')
-
-
 
 primer_sa <- function(d)
 {

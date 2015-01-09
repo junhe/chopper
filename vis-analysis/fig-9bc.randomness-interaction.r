@@ -6,9 +6,6 @@ require(plyr)
 require(reshape2)
 require(R.utils)
 
-setwd('/Users/junhe/workdir/chopper/vis-analysis/')
-source('./common.r')
-
 randomness.interaction.heatmap.highlight <- function()
 {
     schedulerdependency.all_effect_heatmap_forpaper <- function(dw)

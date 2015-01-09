@@ -6,15 +6,6 @@ require(plyr)
 require(reshape2)
 require(R.utils)
 
-#  !cd ../; python utils/geturl.py metawalker/paper_plots.r
-
-
-setwd('/Users/junhe/workdir/chopper/vis-analysis/')
-source('./common.r')
-
-# you have to have this function in global space, 
-# otherwise, the pdf you save will be broken.
-print.fixed <- function(x) grid.draw(x)
 
 evaluation.factor.mapping.percentage.highlight.align <- function()
 {
