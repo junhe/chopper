@@ -9,6 +9,7 @@ require(devtools)
 
 if (USE.REMOTE.CHOPPER == TRUE) {
     source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/common.r')
+    #source('./common.r')
 } else {
     source('./common.r')
 }
