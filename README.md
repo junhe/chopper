@@ -1,4 +1,6 @@
-metawalker
+Chopper
 ==========
 
-MetaWalker walks around to find the tipping point.
+Chopper is a tool that diagnoses unexpected
+behaviors in FS block allocators. 
+

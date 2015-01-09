@@ -55,7 +55,6 @@ load_files_by_parameters <- function(files)
     for ( file in files ) {
         print(paste('working on', file))
         path = paste('', file, sep="")
-        #dd = read.table(path, header=T, colClasses='character')
         dd = read.table(path, header=T, colClasses=cclasses)
         if ( file == 'agga.fixedimg-3.5.0.txt' ) {
             dd$jobtag = 'v1'
