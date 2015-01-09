@@ -4,7 +4,9 @@ author: "Jun He"
 output: html_document
 ---
 
-In this document, we describe how to reproduce the figures in paper *Reducing File System Latencies with Chopper*. More importantly, the document provides some basic code that you can modifiy to analyze new results from Chopper. 
+In this document, we describe how to reproduce the figures in paper *Reducing File System Latencies with Chopper*. More importantly, the document provides some basic code that you can modifiy to analyze new results from Chopper.
+
+I try to make it easy for you to run the code. The minimum requirement is that you have R and several packages installed (describe in this page). Then you can simply copy and paste the code to R and you will see the figures. This may take some time as it has to download data files from GitHub. If you want it to be faster, you can also download Chopper at https://github.com/junhe/chopper and produce the figures locally (instructions are also available in this page). 
 
 ### Install R
 We wrote the analysis with R. You can download and install R from http://www.r-project.org/ .
@@ -21,6 +23,7 @@ install.packages(c("grid", "ggplot2", "combinat", "gridExtra", "plyr", "reshape2
 ```
 
 ### Produce Figures
+We now describe how to reproduce the figures in paper *Reducing File System Latencies with Chopper*.
 
 #### Figure 1
 You can copy and paste the following code to R to reproduce the figure without downloading the analysis code. 
@@ -79,12 +82,14 @@ source('./fig-4.variance.r')
 #### Figure 5
 Copy and paste the following code to R to reproduce the figure without local Chopper folder.
 
-```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide'}
+```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide', fig.width=20, fig.height=15}
 library(devtools)
 USE.REMOTE.CHOPPER = TRUE
 source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/common.r')
 source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/fig-5.tail-distribution.r')
 ```
+
+
 
 If you have downloaded Chopper to your local file system, you can also copy and paste the following code to R to get the figure. 
 ```r
@@ -97,7 +102,7 @@ source('./fig-5.tail-distribution.r')
 #### Figure 6
 Copy and paste the following code to R to reproduce the figure without local Chopper folder.
 
-```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide'}
+```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide', fig.width=10}
 library(devtools)
 USE.REMOTE.CHOPPER = TRUE
 source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/common.r')
@@ -134,7 +139,7 @@ source('./fig-7.vanilla-vs-final.r')
 #### Figure 8
 Copy and paste the following code to R to reproduce the figure without local Chopper folder.
 
-```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide'}
+```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide', fig.height=10}
 library(devtools)
 USE.REMOTE.CHOPPER = TRUE
 source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/common.r')
@@ -172,7 +177,7 @@ source('./fig-9a.randomness-cdf.r')
 #### Figure 9bc
 Copy and paste the following code to R to reproduce the figure without local Chopper folder.
 
-```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide'}
+```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide', fig.height=12}
 library(devtools)
 USE.REMOTE.CHOPPER = TRUE
 source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/common.r')
