@@ -5,9 +5,14 @@ require(gridExtra)
 require(plyr)
 require(reshape2)
 require(R.utils)
+require(devtools)
 
-setwd('/Users/junhe/workdir/chopper/vis-analysis/')
-source('./common.r')
+if (USE.REMOTE.CHOPPER == TRUE) {
+    source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/common.r')
+} else {
+    source('./common.r')
+}
+
 
 xfs.ecdf.forpaper <- function()
 {

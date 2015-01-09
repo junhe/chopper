@@ -1,3 +1,5 @@
+library(RCurl)
+
 load_files_by_parameters <- function(files)
 {
    cclasses = c('sync'='character', 
@@ -50,16 +52,17 @@ load_files_by_parameters <- function(files)
         return(d)
     }
 
-
     d = data.frame()
     for ( file in files ) {
-        print(paste('working on', file))
-        path = paste('', file, sep="")
-        dd = read.table(path, header=T, colClasses=cclasses)
-        if ( file == 'agga.fixedimg-3.5.0.txt' ) {
-            dd$jobtag = 'v1'
+        if (USE.REMOTE.CHOPPER == TRUE) {
+            path = paste('https://github.com/junhe/chopper/tree/master/vis-analysis/', 
+                         file, sep="")
+            datatext <- getURL(path)
+            dd = read.table(text=datatext, header=T, colClasses=cclasses)
+        } else {
+            path = file
+            dd = read.table(file=path, header=T, colClasses=cclasses)
         }
-
         d = rbind(d, dd)
     }
 
