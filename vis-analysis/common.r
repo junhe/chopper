@@ -55,12 +55,9 @@ load_files_by_parameters <- function(files)
     d = data.frame()
     for ( file in files ) {
         if (USE.REMOTE.CHOPPER == TRUE) {
-            path = paste('https://github.com/junhe/chopper/tree/master/vis-analysis/', 
+            path = paste('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/', 
                          file, sep="")
-            print(path)
-            stop()
             datatext <- getURL(path)
-            print(datatext)
             dd = read.table(text=datatext, header=T, colClasses=cclasses)
         } else {
             path = file
