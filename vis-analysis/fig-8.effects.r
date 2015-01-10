@@ -46,7 +46,6 @@ opening.comparison.versions.accumulated <- function()
              scale_color_grey(start=0) +       
              scale_y_continuous(breaks=breaks,
                                  labels=labs) +
-             #geom_bar(stat='identity') +
              coord_cartesian(ylim=c(log2(1*2^20), log2(64*2^30)))+
              theme_paper() +
              theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) +

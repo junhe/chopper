@@ -8,6 +8,24 @@ In this document, we describe how to reproduce the figures in paper *Reducing Fi
 
 I try to make it easy for you to run the code. The minimum requirement is that you have R and several packages installed (describe in this page). Then you can simply copy and paste the code to R and you will see the figures. This may take some time as it has to download data files from GitHub. If you want it to be faster, you can also download Chopper at https://github.com/junhe/chopper and produce the figures locally (instructions are also available in this page). 
 
+Please note that some factor names in source code are different to the paper. And I am too lazy to keep them consistent. But you should map them fairely easy. I provide a mapping table here.
+
+| Paper           | Code         |
+|-----------------|--------------|
+| DiskSize        | disk.size    |
+| UsedRatio       | disk.used    |
+| FreeSpaceLayout | layoutnumber |
+| CPUCount        | num.cores    |
+| FileSize        | file.size    |
+| ChunkCount      | num.chunk    |
+| InternalDensity | Fullness     |
+| ChunkOrder      | chunk.order  |
+| Fsync           | fsync        |
+| Sync            | sync         |
+| FileCount       | num.files    |
+| DirectorySpan   | dir.span     |
+
+
 ### Install R
 We wrote the analysis with R. You can download and install R from http://www.r-project.org/ .
 
@@ -41,7 +59,7 @@ source('fig-1.layoutnumber.R')
 
 
 #### Figure 2
-Figure 2 was drawn by Keynote... So not here. 
+Figure 2 is diagram showing components of Chopper. So not here. 
 
 #### Figure 3
 Copy and paste the following code to R to reproduce figure 3 without local Chopper folder.

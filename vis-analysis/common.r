@@ -19,34 +19,32 @@ load_files_by_parameters <- function(files)
                  'dspan'='numeric',
                  'layout_index'='numeric',
                  'kernel.release'='character',
-                 'jobtag'='character')
-    
+                 'jobtag'='character'
+                 )
 
-    # input must be char
-    split_column <- function(mycol, splitchar)
+    # each row in mycol is of the form '333|44'
+    # This function returns the max number of each row
+    get_max_element <- function(mycol)
     {
         mycol = as.character(mycol)
-        splitlist = strsplit(mycol, splitchar, fixed=T)
-        df = ldply(splitlist, as.vector)
-        return(df)
+        elemlist = strsplit(mycol, split = '|', fixed=T)
+        # convert to num
+        elemlist = lapply(elemlist, as.numeric)
+
+        maxs = lapply(elemlist, max, na.rm=TRUE)
+        # convert to vector
+        maxs = unlist(maxs)    
+        
+        return(maxs)
     }
 
     prepare_dataset <- function(d)
     {
-        # split dspan
-        df.dspan = split_column(d$datafiles_dspan, "|")
-        df.dspan = as.data.frame(apply(df.dspan, 2, as.numeric))
-        max.dspan = apply(df.dspan, 1, max, na.rm=T)
-        n = ncol(df.dspan)
-        names(df.dspan) = paste('dspan', 1:n, sep='.')
-        df.dspan$max.dspan = max.dspan
+        df.dspan = data.frame(max.dspan = 
+                              get_max_element(d$datafiles_dspan))
 
-        df.ext = split_column(d$num_extents, "|")
-        df.ext = as.data.frame(apply(df.ext, 2, as.numeric))
-        max.extcount = apply(df.ext, 1, max, na.rm=T)
-        n = ncol(df.ext)
-        names(df.ext) = paste('numext', 1:n, sep='.')
-        df.ext$max.extcount = max.extcount
+        df.ext = data.frame(max.extcount = 
+                            get_max_element(d$num_extents))
 
         d = cbind(d, df.dspan, df.ext)
         return(d)
@@ -54,7 +52,7 @@ load_files_by_parameters <- function(files)
 
     d = data.frame()
     for ( file in files ) {
-        if (USE.REMOTE.CHOPPER == TRUE) {
+        if (exists('USE.REMOTE.CHOPPER') && USE.REMOTE.CHOPPER == TRUE) {
             path = paste('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/', 
                          file, sep="")
             print(path)
