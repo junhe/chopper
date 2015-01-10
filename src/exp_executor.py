@@ -425,11 +425,14 @@ if __name__ == '__main__':
             help='if mode=batch, design.path in h0.conf will be used as the '
             'design file to run the experiments. if mode=reproduce, '
             'reproducer.path in h0.conf will be used to run the experiments.')
+    parser.add_argument('--resultpath', action='store') 
     args = parser.parse_args()
 
     if None in list(vars(args).values()):
         parser.print_help()
         exit(1)
+
+    chpConfig.parser.set('system', 'resulttablepath', args.resultpath)
 
     if args.mode == 'batch':
         path = chpConfig.parser.get('setup', 'design.path')
