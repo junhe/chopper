@@ -1066,13 +1066,13 @@ def extlist_block_to_byte(df_ext):
             row[hdr.index(col)] = x
     return df_ext
 
-def get_num_ext_from_extent_list(df_ext, filepath):
+def get_num_ext_from_extent_list(df_ext, filename):
     "Get number of extents"
     hdr = df_ext.header
 
     cnt = 0
     for row in df_ext.table:
-        if filepath in row[hdr.index('filepath')] and \
+        if filename == os.path.basename(row[hdr.index('filepath')]) and \
                 row[hdr.index('Level_index')] != '-1':
             cnt += 1
 
