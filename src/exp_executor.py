@@ -419,7 +419,8 @@ exp_exe = Executor()
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description="This script runs experiments sequentially. " \
-            'Example: python exp_executor.py --mode=batch' 
+            'Example: python exp_executor.py ' \
+            '--mode=batch --resultpath=myresult.txt' 
             )
     parser.add_argument('--mode', choices=('batch', 'reproduce'),
             help='if mode=batch, design.path in h0.conf will be used as the '
