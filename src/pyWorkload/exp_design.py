@@ -338,12 +338,15 @@ def read_rawtable(filepath):
 def reproducer_iter(rawtable_path):
     rtb = read_rawtable(rawtable_path)
     recipes = rawtable_to_recipe(rtb)
+
+    mountopts = chpConfig.parser.get('setup', 'mountopts')
+
     for recipe in recipes:
         opts = {'enable_setaffinity':False} # alway set this to disable 
                                             # an depreted function
         treatment = recipe_to_treatment(recipe, optsdict=opts)
         treatment['filesystem'] = recipe['file.system']
-        treatment['mountopts'] = ''
+        treatment['mountopts'] = mountopts
         yield treatment
         #pprint.pprint(treatment)
 
