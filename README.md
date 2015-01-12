@@ -1,10 +1,8 @@
-# How to Use Chopper
+# Chopper Tutorial
 
-@(Actions Pending)[]
+Chopper is a tool that explores the input space of file systems to find unexpected behaviors. Currently it focuses on block allocators. The input space and quality metrics are described in *Reducing File System Tail Latencies with Chopper* (http://research.cs.wisc.edu/adsl/Publications/). 
 
-Chopper is a tool that explores the input space of file systems to find unexpected behaviors. Currently it focuses on block allocators. The input space and quality metrics are described in *Reducing File System Tail Latencies with Chopper* [link not ready]. 
-
-This document describes how to run Chopper on your machine. There is another document showing how to analyze Chopper's output, which is done by showing how to reproduce all the figures in the Chopper paper.  
+This document describes how to run Chopper on your machine. There is another document (http://research.cs.wisc.edu/adsl/Software/chopper/visual.html) showing how to analyze Chopper's output, which is done by showing how to reproduce all the figures in the Chopper paper. 
 
 This document has the following sections:
 - Quick Start
@@ -49,7 +47,7 @@ After this, the binary files will be in `build/src/`. Keep them there. Later som
 
 #### Copy Configuration File
 At this stage, you can simply copy a template file to be the configuration.
-```
+```bash
 cd $CHOPPERDIR
 cd conf
 cp template.conf h0.conf
@@ -239,15 +237,15 @@ The contents to the right of `=` will be evaluated by `eval()` by Chopper. This 
 
 All factors are introduced in the Chopper paper. Here we give a little more details. 
 
-- disk.size: the unit is byte. You can include very large disk sizes. But that would be very slow. If you do want that, you can use *dloop*, which is a modified loop device driver implementing the idea in paper *Emulating Goliath Storage Systems with David* (http://research.cs.wisc.edu/adsl/Publications/david-fast11.pdf). dloop is available at https://github.com/junhe/dloop. It does not have any document at this moment. 
-- disk.used: it is implemented by fallocating a file. 
-- dir.span: The span cannot be larger than the number of directory nodes. The size of direcotry tree can be modified in `pyWorkload/exp_design.py` (look for `dir_depth`). 
-- file.size: don't use 0 byte.
-- fullness: Don'e use 0. I haven't tried it. Note that if both your file size and fullness are small, you have have some rounding problem (chunk size may be rounded to 0.)
-- num.cores: it should be between 1 and the max number of cores in your system. I use `/sys/devices/system/cpu/cpu{id}/online` to enable/disable cores. So you need to first check if you have those files. If your system does not have these files, you can disable setting CPU count by removing `_set_cpu()` in `exp_executor.py`.
-- num.files: Don't use 0. 
-- layoutnumber: use only numbers defined in `[setup]:layoutnumbers`. 
-- num.chunks: Currently, we only support fixed number of chunks. That means you can only have one element in the list for `num.chunks`. Allowing multiple chunks would complicate the experimental design. You may want to Google 'nested design' if you want to do that. Also, do not use large `num.chunks` at this moment. I tried `num.chunks=16` and got "out of memory". That's because Chopper naively stores the input space in memory. Having 16 chunks means have 16!=2.092279e+13 order strings and many other Sync and Fsync stored in memory. This can be improved by using a function to find the i-th item in space dynamically, instead of saving the whole space in a list.
+- **disk.size**: the unit is byte. You can include very large disk sizes. But that would be very slow. If you do want that, you can use *dloop*, which is a modified loop device driver implementing the idea in paper *Emulating Goliath Storage Systems with David* (http://research.cs.wisc.edu/adsl/Publications/david-fast11.pdf). dloop is available at https://github.com/junhe/dloop. It does not have any document at this moment. 
+- **disk.used**: it is implemented by fallocating a file. 
+- **dir.span**: The span cannot be larger than the number of directory nodes. The size of direcotry tree can be modified in `pyWorkload/exp_design.py` (look for `dir_depth`). 
+- **file.size**: don't use 0 byte.
+- **fullness**: Don'e use 0. I haven't tried it. Note that if both your file size and fullness are small, you have have some rounding problem (chunk size may be rounded to 0.)
+- **num.cores**: it should be between 1 and the max number of cores in your system. I use `/sys/devices/system/cpu/cpu{id}/online` to enable/disable cores. So you need to first check if you have those files. If your system does not have these files, you can disable setting CPU count by removing `_set_cpu()` in `exp_executor.py`.
+- **num.files**: Don't use 0. 
+- **layoutnumber**: use only numbers defined in `[setup]:layoutnumbers`. 
+- **num.chunks**: Currently, we only support fixed number of chunks. That means you can only have one element in the list for `num.chunks`. Allowing multiple chunks would complicate the experimental design. You may want to Google 'nested design' if you want to do that. Also, do not use large `num.chunks` at this moment. I tried `num.chunks=16` and got "out of memory". That's because Chopper naively stores the input space in memory. Having 16 chunks means have 16!=2.092279e+13 order strings and many other Sync and Fsync stored in memory. This can be improved by using a function to find the i-th item in space dynamically, instead of saving the whole space in a list.
 
 Note that the input space's distribution does not need to be uniform. It can be any distribution you want. For example, if you want to test small file sizes more, you can have `file.size=[4KB, 5KB, 6KB, 7KB, 8KB, 1MB, 2MB]`, or any other distributions that have higher density at small sizes. 
 
@@ -285,4 +283,5 @@ reproducer.path = ./designs/reproducer.sample
 ```
 sudo python exp_executor.py --mode=reproduce --resultpath=reproduce.result.txt
 ```
+
 
