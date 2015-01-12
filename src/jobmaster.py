@@ -54,7 +54,7 @@ def groupby_signature( joblist ):
     """
     jobbuckets = {} 
     for treatment in joblist:
-        signature = chpConfig.parser.get('setup', 'group_signature')
+        signature = eval( chpConfig.parser.get('setup', 'group_signature') )
         #signature = ( 
                 #treatment['filesystem'],
                 #treatment['disksize'],
