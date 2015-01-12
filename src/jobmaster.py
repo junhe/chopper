@@ -54,15 +54,16 @@ def groupby_signature( joblist ):
     """
     jobbuckets = {} 
     for treatment in joblist:
+        signature = chpConfig.parser.get('setup', 'group_signature')
         #signature = ( 
                 #treatment['filesystem'],
                 #treatment['disksize'],
                 #treatment['disk_used'],
                 #treatment['layoutnumber']
                 #)
-        signature = ( 
-                str(treatment)
-                )
+        #signature = ( 
+                #str(treatment)
+                #)
         if not jobbuckets.has_key(signature):
             jobbuckets[signature] = [ treatment ]
         else:
