@@ -1,0 +1,23 @@
+--- a/fs/ext4/mballoc.c	2014-04-02 01:16:00.000000000 -0400
++++ b/fs/ext4/mballoc.c	2014-08-08 12:09:02.000000000 -0400
+@@ -2099,13 +2099,13 @@
+ 	}
+ 
+ 	/* if stream allocation is enabled, use global goal */
+-	if (ac->ac_flags & EXT4_MB_STREAM_ALLOC) {
+-		/* TBD: may be hot point */
+-		spin_lock(&sbi->s_md_lock);
+-		ac->ac_g_ex.fe_group = sbi->s_mb_last_group;
+-		ac->ac_g_ex.fe_start = sbi->s_mb_last_start;
+-		spin_unlock(&sbi->s_md_lock);
+-	}
++	/*if (ac->ac_flags & EXT4_MB_STREAM_ALLOC) {*/
++		/*[> TBD: may be hot point <]*/
++		/*spin_lock(&sbi->s_md_lock);*/
++		/*ac->ac_g_ex.fe_group = sbi->s_mb_last_group;*/
++		/*ac->ac_g_ex.fe_start = sbi->s_mb_last_start;*/
++		/*spin_unlock(&sbi->s_md_lock);*/
++	/*}*/
+ 
+ 	/* Let's just scan groups to find more-less suitable blocks */
+ 	cr = ac->ac_2order ? 0 : 1;

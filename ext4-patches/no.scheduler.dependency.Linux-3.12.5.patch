@@ -1,0 +1,21 @@
+--- a/fs/ext4/mballoc.c 2013-12-12 01:38:07.000000000 -0500
++++ a/fs/ext4/mballoc.c 2014-08-11 22:50:51.000000000 -0400
+@@ -4049,6 +4049,7 @@
+ 	struct ext4_sb_info *sbi = EXT4_SB(ac->ac_sb);
+ 	int bsbits = ac->ac_sb->s_blocksize_bits;
+ 	loff_t size, isize;
++    int cpu_choice;
+ 
+ 	if (!(ac->ac_flags & EXT4_MB_HINT_DATA))
+ 		return;
+@@ -4085,7 +4086,9 @@
+ 	 * per cpu locality group is to reduce the contention between block
+ 	 * request from multiple CPUs.
+ 	 */
+-	ac->ac_lg = __this_cpu_ptr(sbi->s_locality_groups);
++	/*ac->ac_lg = __this_cpu_ptr(sbi->s_locality_groups);*/
++    cpu_choice = (ac->ac_inode->i_ino/10) % 2; /* 2 should be replace with available CPU count */
++    ac->ac_lg = per_cpu_ptr(sbi->s_locality_groups, cpu_choice);
+ 
+ 	/* we're going to use group allocation */
+ 	ac->ac_flags |= EXT4_MB_HINT_GROUP_ALLOC;

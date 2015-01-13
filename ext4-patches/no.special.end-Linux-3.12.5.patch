@@ -1,0 +1,21 @@
+--- linux-3.12.5/fs/ext4/mballoc.vanilla.c	2014-07-20 15:35:50.000000000 -0400
++++ linux-3.12.5/fs/ext4/mballoc.c	2014-07-20 15:36:29.000000000 -0400
+@@ -4060,12 +4060,12 @@
+ 	isize = (i_size_read(ac->ac_inode) + ac->ac_sb->s_blocksize - 1)
+ 		>> bsbits;
+ 
+-	if ((size == isize) &&
+-	    !ext4_fs_is_busy(sbi) &&
+-	    (atomic_read(&ac->ac_inode->i_writecount) == 0)) {
+-		ac->ac_flags |= EXT4_MB_HINT_NOPREALLOC;
+-		return;
+-	}
++	/*if ((size == isize) &&*/
++		/*!ext4_fs_is_busy(sbi) &&*/
++		/*(atomic_read(&ac->ac_inode->i_writecount) == 0)) {*/
++		/*ac->ac_flags |= EXT4_MB_HINT_NOPREALLOC;*/
++		/*return;*/
++	/*}*/
+ 
+ 	if (sbi->s_mb_group_prealloc <= 0) {
+ 		ac->ac_flags |= EXT4_MB_STREAM_ALLOC;

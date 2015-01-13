@@ -1,0 +1,22 @@
+--- a/fs/ext4/mballoc.c	2014-04-02 01:16:00.000000000 -0400
++++ b/fs/ext4/mballoc.c	2014-08-05 19:09:40.000000000 -0400
+@@ -3148,15 +3148,15 @@
+ 	if (ar->pright && (ar->lright == (start + size))) {
+ 		/* merge to the right */
+ 		ext4_get_group_no_and_offset(ac->ac_sb, ar->pright - size,
+-						&ac->ac_f_ex.fe_group,
+-						&ac->ac_f_ex.fe_start);
++						&ac->ac_g_ex.fe_group,
++						&ac->ac_g_ex.fe_start);
+ 		ac->ac_flags |= EXT4_MB_HINT_TRY_GOAL;
+ 	}
+ 	if (ar->pleft && (ar->lleft + 1 == start)) {
+ 		/* merge to the left */
+ 		ext4_get_group_no_and_offset(ac->ac_sb, ar->pleft + 1,
+-						&ac->ac_f_ex.fe_group,
+-						&ac->ac_f_ex.fe_start);
++						&ac->ac_g_ex.fe_group,
++						&ac->ac_g_ex.fe_start);
+ 		ac->ac_flags |= EXT4_MB_HINT_TRY_GOAL;
+ 	}
+ 
