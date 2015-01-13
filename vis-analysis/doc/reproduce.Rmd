@@ -1,5 +1,5 @@
 ---
-title: "Analyzing Chopper outputs"
+title: "Analyzing Chopper Outputs"
 author: "Jun He"
 output: html_document
 ---
