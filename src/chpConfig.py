@@ -22,8 +22,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from ConfigParser import SafeConfigParser
+import os
 
-confpath = "../conf/h0.conf"
+curdir = os.path.dirname( os.path.abspath( __file__ ) )
+confpath = os.path.join(curdir, "../conf/h0.conf")
 
 def get_configparser():
     confparser = SafeConfigParser()

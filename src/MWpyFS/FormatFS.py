@@ -171,12 +171,19 @@ def makeXFS(devname, blocksize=4096):
     return p.returncode
 
 
-def makeExt4(devname, blockscount=16777216, blocksize=4096):
-    cmd = ["mkfs.ext4", 
-           "-b", blocksize,
-           #"-O", "has_journal,extent,huge_file,flex_bg,^uninit_bg,dir_nlink,extra_isize",
-           "-O", "has_journal,extent,huge_file,flex_bg,uninit_bg,dir_nlink,extra_isize",
-           devname, blockscount]
+def makeExt4(devname, blockscount=16777216, blocksize=4096, makeopts=None):
+    
+    if makeopts == None:
+        cmd = ["mkfs.ext4", 
+               "-b", blocksize,
+               "-O", "has_journal,extent,huge_file,flex_bg,uninit_bg,dir_nlink,extra_isize",
+               devname, blockscount]
+    else:
+        cmd = ["mkfs.ext4", 
+               "-b", blocksize]
+        cmd.extend(makeopts)
+        cmd.extend([devname, blockscount])
+
     cmd = [str(x) for x in cmd]
     p = subprocess.Popen(cmd)
     p.wait()
@@ -279,7 +286,7 @@ def remakeXFS(partition, mountpoint, username, groupname,
 
 
 def remakeExt4(partition, mountpoint, username, groupname, 
-                blockscount=16777216, blocksize=4096):
+                blockscount=16777216, blocksize=4096, makeopts=None):
     "= format that partition"
     print "remaking ext4...."
     if isMounted(mountpoint):
@@ -293,7 +300,7 @@ def remakeExt4(partition, mountpoint, username, groupname,
     else:
         print mountpoint, "is NOT mounted."
 
-    ret = makeExt4(partition, blockscount, blocksize)
+    ret = makeExt4(partition, blockscount, blocksize, makeopts)
     if ret != 0:
         print "Error in makeExt4: this should not happen"
         exit(1)
