@@ -1,4 +1,5 @@
 import os, sys
+import itertools
 import random
 import subprocess
 
@@ -13,6 +14,24 @@ MOUNTPOINT = '/mnt/scratch/'
 WORKLOADPATH = '/tmp/_workload'
 PLAYERPATH = '../../build/src/player'
 CHUNKSIZE = 8192
+
+def ParameterCombinations(parameter_dict):
+    """
+    Get all the cominbation of the values from each key
+    http://tinyurl.com/nnglcs9
+    Input: parameter_dict={
+                    p0:[x, y, z, ..],
+                    p1:[a, b, c, ..],
+                    ...}
+    Output: [
+             {p0:x, p1:a, ..},
+             {..},
+             ...
+            ]
+    """
+    d = parameter_dict
+    return [dict(zip(d, v)) for v in itertools.product(*d.values())]
+
 
 def create_fs():
     if not os.path.exists(MOUNTPOINT):
@@ -184,7 +203,16 @@ def batch_experiments(nfiles, ncpus, repeat):
 
 
 def main():
-    batch_experiments(nfiles=200, ncpus=2, repeat=3):
+    paras = { 
+              'nfiles':[1, 50],
+              'ncpus'  :[2, 8]
+              #'nfiles':[1, 50, 100, 200],
+              #'ncpus'  :[2, 4, 8]
+            }
+    paralist = ParameterCombinations(paras)
+    for conf in paralist:
+        #print conf
+        batch_experiments(nfiles=conf['nfiles'], ncpus=conf['ncpus'], repeat=3)
 
 if __name__ == '__main__':
     main()
