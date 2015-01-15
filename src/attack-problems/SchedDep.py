@@ -13,7 +13,8 @@ import pyWorkload
 MOUNTPOINT = '/mnt/scratch/'
 WORKLOADPATH = '/tmp/_workload'
 PLAYERPATH = '../../build/src/player'
-CHUNKSIZE = 8192
+CHUNKSIZE = None 
+DEV = '/dev/sdc'
 
 def ParameterCombinations(parameter_dict):
     """
@@ -36,8 +37,8 @@ def ParameterCombinations(parameter_dict):
 def create_fs():
     if not os.path.exists(MOUNTPOINT):
         os.makedirs(MOUNTPOINT)
-    MWpyFS.FormatFS.remakeExt4("/dev/sdb", MOUNTPOINT, "jhe", "FSPerfAtScale", 
-                    blockscount=50*1024*1024, blocksize=4096, 
+    MWpyFS.FormatFS.remakeExt4(DEV, MOUNTPOINT, "jhe", "ScalableFS", 
+                    blockscount=698*1024*1024, blocksize=4096, 
                     makeopts= ["-O", "has_journal,extent,huge_file,^flex_bg,uninit_bg,dir_nlink,extra_isize"]
                     )
 
@@ -68,7 +69,7 @@ def create_speadfile(prod, cpuids, fileid):
     # create spreading files
     fpath = 'spreadfile.'+str(fileid)
     prod.addUniOp2(op='open', pid=0, path=fpath)
-    random.shuffle(cpuids)
+    #random.shuffle(cpuids)
     for cpuid in cpuids:
         prod.addSetaffinity(pid=0, cpuid=cpuid)
         prod.addReadOrWrite2(op='write', pid=0, path=fpath, off=CHUNKSIZE*cpuid, len=CHUNKSIZE)
@@ -97,7 +98,9 @@ def play_workload(descpath):
             if rank > max_rank:
                 max_rank = rank
 
-    cmd = ['mpirun', "-np", max_rank+1, PLAYERPATH, WORKLOADPATH]
+    cmd = ['mpirun', 
+           '-mca', 'btl',  '^openib',  
+            "-np", max_rank+1, PLAYERPATH, WORKLOADPATH]
     cmd = [str(x) for x in cmd]
 
     proc = subprocess.Popen(cmd) 
@@ -160,12 +163,8 @@ def run_exp(mode, mountpoint, filenames, size, info=None):
     subprocess.call(cmd)
 
 def batch_experiments(nfiles, ncpus, repeat):
-    nfiles = 200
-    ncpus = 2
-    repeat = 3
-
     create_fs()
-    create_dirs(MOUNTPOINT, 32)
+    create_dirs(MOUNTPOINT, 128)
 
     create_workload(range(ncpus), nfiles)
     ret = play_workload(WORKLOADPATH)
@@ -176,13 +175,13 @@ def batch_experiments(nfiles, ncpus, repeat):
     for i in range(repeat):
         filenames = ['spreadfile.'+str(i) for i in range(nfiles)]
         clean_all_cache(MOUNTPOINT)
-        run_exp('r', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'next':ncpus, 'nfiles':nfiles} )
+        run_exp('r', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'nextents':ncpus, 'ncpus':ncpus, 'nfiles':nfiles} )
 
     print '--------------- write 8 extents------------'
     for i in range(repeat):
         filenames = ['spreadfile.'+str(i) for i in range(nfiles)]
         clean_all_cache(MOUNTPOINT)
-        run_exp('w', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'next':ncpus, 'nfiles':nfiles} )
+        run_exp('w', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'nextents':ncpus, 'ncpus':ncpus, 'nfiles':nfiles} )
 
     print '--------------- delete ------------'
     filenames = ['spreadfile.'+str(i) for i in range(nfiles)]
@@ -193,21 +192,21 @@ def batch_experiments(nfiles, ncpus, repeat):
     for i in range(repeat):
         filenames = ['spreadfile.'+str(i) for i in range(nfiles)]
         clean_all_cache(MOUNTPOINT)
-        run_exp('w', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'next':1, 'nfiles':nfiles} )
+        run_exp('w', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'nextents':1, 'ncpus':ncpus, 'nfiles':nfiles} )
 
     print '--------------- read 1 extents------------'
     for i in range(repeat):
         filenames = ['spreadfile.'+str(i) for i in range(nfiles)]
         clean_all_cache(MOUNTPOINT)
-        run_exp('r', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'next':1, 'nfiles':nfiles})
+        run_exp('r', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'nextents':1, 'ncpus':ncpus, 'nfiles':nfiles})
 
 
 def main():
     paras = { 
-              'nfiles':[1, 50],
-              'ncpus'  :[2, 8]
-              #'nfiles':[1, 50, 100, 200],
-              #'ncpus'  :[2, 4, 8]
+              #'nfiles':[1, 50],
+              #'ncpus'  :[2, 64]
+              'nfiles':[1, 50, 100, 200],
+              'ncpus'  :[2, 4, 8, 16, 64]
             }
     paralist = ParameterCombinations(paras)
     for conf in paralist:
