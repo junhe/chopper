@@ -170,6 +170,7 @@ def batch_experiments(nfiles, ncpus, repeat):
     ret = play_workload(WORKLOADPATH)
     print 'ret', ret
     #return
+    print 'CHUNKSIZE', CHUNKSIZE
 
     print '--------------- read 8 extents------------'
     for i in range(repeat):
@@ -202,16 +203,21 @@ def batch_experiments(nfiles, ncpus, repeat):
 
 
 def main():
+    global CHUNKSIZE
     paras = { 
               #'nfiles':[1, 50],
               #'ncpus'  :[2, 64]
-              'nfiles':[1, 50, 100, 200],
+
+              'nfiles':[1, 10, 100],
               'ncpus'  :[2, 4, 8, 16, 64]
             }
     paralist = ParameterCombinations(paras)
+    paralist = paralist * 5
+    random.shuffle(paralist)
     for conf in paralist:
         #print conf
-        batch_experiments(nfiles=conf['nfiles'], ncpus=conf['ncpus'], repeat=3)
+        CHUNKSIZE = 64*1024/conf['ncpus']
+        batch_experiments(nfiles=conf['nfiles'], ncpus=conf['ncpus'], repeat=1)
 
 if __name__ == '__main__':
     main()
