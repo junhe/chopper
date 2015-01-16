@@ -1,4 +1,3 @@
-#!/bin/bash - 
 #===============================================================================
 #
 #          FILE: log2table.sh
@@ -19,6 +18,6 @@
 
 set -o nounset                              # Treat unset variables as an error
 logfile=$1
-grep HEADERROWMARKER $logfile |head -n2|tail -n1 > table
-grep DATAROWMARKER $logfile >> table 
+grep HEADERROWMARKER $logfile |head -n2|tail -n1 > $logfile.table
+grep DATAROWMARKER $logfile >> $logfile.table 
 

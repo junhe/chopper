@@ -118,6 +118,8 @@ def create_big_file():
     f.close()
 
 def clean_all_cache(mountpoint):
+    MWpyFS.FormatFS.remountFS(DEV, mountpoint)
+
     print 'cleanging caches...'
     subprocess.call(['sync'])
     cmd = "echo 3 > /proc/sys/vm/drop_caches"
@@ -168,9 +170,6 @@ def batch_experiments(nfiles, ncpus, repeat):
 
     create_workload(range(ncpus), nfiles)
     ret = play_workload(WORKLOADPATH)
-    print 'ret', ret
-    #return
-    print 'CHUNKSIZE', CHUNKSIZE
 
     print '--------------- read 8 extents------------'
     for i in range(repeat):
@@ -184,10 +183,13 @@ def batch_experiments(nfiles, ncpus, repeat):
         clean_all_cache(MOUNTPOINT)
         run_exp('w', MOUNTPOINT, filenames, ncpus*CHUNKSIZE, {'nextents':ncpus, 'ncpus':ncpus, 'nfiles':nfiles} )
 
-    print '--------------- delete ------------'
-    filenames = ['spreadfile.'+str(i) for i in range(nfiles)]
-    for filename in filenames:
-        os.remove(os.path.join(MOUNTPOINT, filename))
+    #print '--------------- delete ------------'
+    #filenames = ['spreadfile.'+str(i) for i in range(nfiles)]
+    #for filename in filenames:
+        #os.remove(os.path.join(MOUNTPOINT, filename))
+    #subprocess.call(['sync'])
+
+    create_fs()
 
     print '--------------- write 1 extents------------'
     for i in range(repeat):
