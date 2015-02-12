@@ -1,8 +1,8 @@
 # Chopper Tutorial
 
-Chopper is a tool that explores the input space of file systems to find unexpected behaviors. Currently it focuses on block allocators. The input space and quality metrics are described in *Reducing File System Tail Latencies with Chopper* (http://research.cs.wisc.edu/adsl/Publications/). 
+Chopper is a tool that explores the input space of file systems to find unexpected behaviors. Currently it focuses on block allocators. The input space and quality metrics are described in *Reducing File System Tail Latencies with Chopper* (http://research.cs.wisc.edu/adsl/Publications/chopper-fast15.pdf). 
 
-This document describes how to run Chopper on your machine. There is another document (http://research.cs.wisc.edu/adsl/Software/chopper/visual.html) showing how to analyze Chopper's output, which is done by showing how to reproduce all the figures in the Chopper paper. 
+This document describes how to run Chopper on your machine. There is another document (http://research.cs.wisc.edu/adsl/Software/chopper/reproduce.html) showing how to analyze Chopper's output, which is done by showing how to reproduce all the figures in the Chopper paper. 
 
 This document has the following sections:
 - Quick Start
