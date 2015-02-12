@@ -39,6 +39,10 @@ Run the following script in R to install necessary packages:
 ```r
 install.packages(c("grid", "ggplot2", "combinat", "gridExtra", "plyr", "reshape2", "R.utils", "devtools"), dependencies = TRUE)
 ```
+If the one above does not work, try the following. I almost ruined my environment when trying to verify the command. I am not gonna try it again... You get the idea - install these packages listed. 
+```r
+install.packages(c("grid", "ggplot2", "combinat", "gridExtra", "plyr", "reshape2", "R.utils", "devtools"))
+```
 
 ### Produce Figures
 We now describe how to reproduce the figures in paper *Reducing File System Latencies with Chopper*.
@@ -283,6 +287,41 @@ USE.REMOTE.CHOPPER = FALSE
 setwd('/Users/junhe/workdir/chopper/vis-analysis') # Replace the path with yours
 source('./common.r')
 source('./fig-12.xSDxSExSG.r')
+```
+
+#### Figure 13
+Copy and paste the following code to R to reproduce the figure without local Chopper folder.
+
+```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide'}
+library(devtools)
+USE.REMOTE.CHOPPER = TRUE
+source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/common.r')
+source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/fig-13.norm-bug.r')
+```
+
+If you have downloaded Chopper to your local file system, you can also copy and paste the following code to R to get the figure. 
+```r
+USE.REMOTE.CHOPPER = FALSE
+setwd('/Users/junhe/workdir/chopper/vis-analysis') # Replace the path with yours
+source('./common.r')
+source('./fig-13.norm-bug.r')
+```
+
+#### Figure 14
+Copy and paste the following code to R to reproduce the figure without local Chopper folder.
+
+```{r cache=TRUE, error=TRUE, warning=FALSE, message=FALSE, results='hide'}
+library(devtools)
+USE.REMOTE.CHOPPER = TRUE
+source_url('https://raw.githubusercontent.com/junhe/chopper/master/vis-analysis/fig-14.latency-reduction.r')
+```
+
+If you have downloaded Chopper to your local file system, you can also copy and paste the following code to R to get the figure. 
+```r
+USE.REMOTE.CHOPPER = FALSE
+setwd('/Users/junhe/workdir/chopper/vis-analysis') # Replace the path with yours
+source('./common.r')
+source('./fig-14.latency-reduction.r')
 ```
 
 
