@@ -15,14 +15,12 @@ analyze_randomized <- function()
     {
         return (  theme_bw() +
                   theme(axis.line    =element_line(color='black')) +
-                  #theme(panel.grid   =element_blank()) +
                   theme(panel.border =element_rect(color='black')) +
-                  theme(legend.position=c(0.5, 1.05), legend.justification = 'bottom') +
+                  theme(legend.position='top') +
                   theme(legend.direction = 'horizontal') +
                   theme(legend.key = element_blank()) +
-                  theme(plot.margin = unit(c(0.5,0,0,0), "cm")) +
-                  theme(legend.key.height = unit(0, 'cm')) +
-                  theme(legend.key.width = unit(0.5, 'cm')) +
+                  #theme(legend.key.height = unit(0, 'cm')) +
+                  #theme(legend.key.width = unit(0.5, 'cm')) +
                   theme(legend.margin = unit(0, 'cm')) +
                   theme(strip.background = element_rect(colour = "white", 
                                                         fill = "white",
@@ -60,7 +58,6 @@ analyze_randomized <- function()
 
     p = ggplot(d, aes(x=ncpus, y=duration, 
                       linetype=version, group=version))+
-                      #color=version, group=version))+
             geom_point() +
             geom_line() +
             facet_grid(mode~nfiles, scales='free_y', 
@@ -77,13 +74,11 @@ analyze_randomized <- function()
                             }
                         }
                        ) +
-            #scale_x_continuous(breaks=c(2, 4, 8, 16)) +
             scale_color_grey(start=0, end=0.5) +
             expand_limits(y=0) +
             scale_linetype('Version:') +
             xlab('Number of Creating Threads') +
             ylab('Access Time (ms)') +
-            #theme_bw()
             theme_paper()
 
     print(p)
