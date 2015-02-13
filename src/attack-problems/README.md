@@ -18,7 +18,7 @@ Files
 
 Workload
 -------------------------
-The workload uses setaffinity() to simulate that multiple threads write the same
+The creating workload uses setaffinity() to simulate that multiple threads write the same
 file. The thread migrates after writing some data of the file, which will make
 ext4 to use different locality group preallocations. To achieve this effect, you
 have to have multiple cores.
