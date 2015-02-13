@@ -12,6 +12,19 @@ This document has the following sections:
 - Create Experimental Design/Plan
 - Reproduce a Subset of Experiments
 
+Cite Chopper and this document by:
+
+```bibtex
+@InProceedings{HeEtAl15-Chopper,
+    title = "{Reducing File System Tail Latencies with Chopper}",
+   author = "Jun He and Duy Nguyen and Andrea C. Arpaci-Dusseau and Remzi H. Arpaci-Dusseau",
+booktitle = "Proceedings of the 13th USENIX Conference on File and Storage Technologies (FAST '15)",
+    month = "Feb",
+     year = "2015",
+  address = "Santa Clara, CA",
+}
+```
+
 ## Quick Start
 As a reference, my OS is Ubuntu 12.04 LTS with kernel 3.12.5. Chopper should work in most Linux systems. 
 
