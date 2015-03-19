@@ -5,29 +5,34 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-int main()
+int main(int argc, char **argv)
 {
     int fd;
     int hole, size, off;
     char buf[4096];
 
-    
-    hole = 1024*1024;
+    hole = 64*1024;
     size = 4096;
 
-
-    fd = open("/tmp/tmpfile", O_WRONLY);
+    fd = open(argv[1], O_WRONLY|O_CREAT);
+    if ( fd == -1 ) {
+        perror("opening file");
+        exit(1);
+    }
     
     off = 0;
-    pwrite(fd, buf, 1, off);
+    pwrite(fd, buf, size, off);
+    printf("wrote at %d, size %d bytes\n", off, size);
     fsync(fd);
 
-    off = size+hole;
-    pwrite(fd, buf, 1, off);
+    off = off + size + hole;
+    pwrite(fd, buf, size, off);
+    printf("wrote at %d, size %d bytes\n", off, size);
     fsync(fd);
 
-    off = size+hole;
-    pwrite(fd, buf, 1, off);
+    off = off + size + hole;
+    pwrite(fd, buf, size, off);
+    printf("wrote at %d, size %d bytes\n", off, size);
     fsync(fd);
 
     close(fd);
