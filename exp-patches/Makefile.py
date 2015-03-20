@@ -94,15 +94,15 @@ def table_to_file(table, filepath, adddic=None):
 ###########################################################
 ###########################################################
 def compile_linux():
-    with cd("/mnt/scratch-sda4/"):
-        shcmd("git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git")
+    #with cd("/mnt/scratch-sda4/"):
+        #shcmd("git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git")
 
     with cd("/mnt/scratch-sda4/linux"):
-        shcmd("cp -vi /boot/config-`uname -r` .config")
-        shcmd("yes ''| make oldconfig")
-        shcmd("sudo apt-get install -y git-core libncurses5 libncurses5-dev libelf-dev asciidoc binutils-dev linux-source qt3-dev-tools libqt3-mt-dev libncurses5 libncurses5-dev fakeroot build-essential crash kexec-tools makedumpfile kernel-wedge kernel-package")
-        shcmd("make menuconfig")
-        shcmd("make -j3")
+        #shcmd("cp -vi /boot/config-`uname -r` .config")
+        #shcmd("yes ''| make oldconfig")
+        #shcmd("sudo apt-get install -y git-core libncurses5 libncurses5-dev libelf-dev asciidoc binutils-dev linux-source qt3-dev-tools libqt3-mt-dev libncurses5 libncurses5-dev fakeroot build-essential crash kexec-tools makedumpfile kernel-wedge kernel-package")
+        #shcmd("make menuconfig")
+        #shcmd("make -j3")
         shcmd("sudo make INSTALL_MOD_PATH=/mnt/scratch-sda4/ modules_install")
         shcmd("sudo make install")
 
