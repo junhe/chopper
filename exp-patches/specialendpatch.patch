@@ -1,0 +1,61 @@
+diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
+index 8d1e602..4b276fc 100644
+--- a/fs/ext4/mballoc.c
++++ b/fs/ext4/mballoc.c
+@@ -3004,7 +3004,7 @@ ext4_mb_normalize_request(struct ext4_allocation_context *ac,
+ 	struct ext4_sb_info *sbi = EXT4_SB(ac->ac_sb);
+ 	int bsbits, max;
+ 	ext4_lblk_t end;
+-	loff_t size, start_off;
++	loff_t size, isize, start_off;
+ 	loff_t orig_size __maybe_unused;
+ 	ext4_lblk_t start;
+ 	struct ext4_inode_info *ei = EXT4_I(ac->ac_inode);
+@@ -3019,8 +3019,7 @@ ext4_mb_normalize_request(struct ext4_allocation_context *ac,
+ 	if (unlikely(ac->ac_flags & EXT4_MB_HINT_GOAL_ONLY))
+ 		return;
+ 
+-	/* caller may indicate that preallocation isn't
+-	 * required (it's a tail, for example) */
++	/* caller may indicate that preallocation isn't required */
+ 	if (ac->ac_flags & EXT4_MB_HINT_NOPREALLOC)
+ 		return;
+ 
+@@ -3029,11 +3028,21 @@ ext4_mb_normalize_request(struct ext4_allocation_context *ac,
+ 		return ;
+ 	}
+ 
+-	bsbits = ac->ac_sb->s_blocksize_bits;
+-
+ 	/* first, let's learn actual file size
+ 	 * given current request is allocated */
+ 	size = ac->ac_o_ex.fe_logical + EXT4_C2B(sbi, ac->ac_o_ex.fe_len);
++
++	bsbits = ac->ac_sb->s_blocksize_bits;
++	isize = (i_size_read(ac->ac_inode) + ac->ac_sb->s_blocksize - 1) 
++		>> bsbits;
++
++	/* don't normalize tail of large files */
++	if ((size == isize) &&
++		!ext4_fs_is_busy(sbi) &&
++		(atomic_read(&ac->ac_inode->i_writecount) == 0)) {
++		return;
++	}
++
+ 	size = size << bsbits;
+ 	if (size < i_size_read(ac->ac_inode))
+ 		size = i_size_read(ac->ac_inode);
+@@ -4107,13 +4116,6 @@ static void ext4_mb_group_or_file(struct ext4_allocation_context *ac)
+ 	isize = (i_size_read(ac->ac_inode) + ac->ac_sb->s_blocksize - 1)
+ 		>> bsbits;
+ 
+-	if ((size == isize) &&
+-	    !ext4_fs_is_busy(sbi) &&
+-	    (atomic_read(&ac->ac_inode->i_writecount) == 0)) {
+-		ac->ac_flags |= EXT4_MB_HINT_NOPREALLOC;
+-		return;
+-	}
+-
+ 	if (sbi->s_mb_group_prealloc <= 0) {
+ 		ac->ac_flags |= EXT4_MB_STREAM_ALLOC;
+ 		return;

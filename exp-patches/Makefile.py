@@ -281,15 +281,31 @@ def run_exp():
     shcmd("./alignment/a.out {path}".format(path=filepath))
     shcmd("filefrag -sv {path}".format(path=filepath))
 
+def run_exp_specialend():
+    filepath = "/mnt/ext4onloop/testfile"
+
+    enable_ext4_mballoc_debug()
+    shcmd("./specialend/a.out {path}".format(path=filepath))
+    shcmd("filefrag -sv {path}".format(path=filepath))
+
+def run_exp_backwards():
+    filepath = "/mnt/ext4onloop/testfile"
+
+    enable_ext4_mballoc_debug()
+    shcmd("./backwards/a.out {path}".format(path=filepath))
+    shcmd("filefrag -sv {path}".format(path=filepath))
+
 ###########################################################
 ###########################################################
 
 def main():
     #function you want to call
     #compile_linux()
-    #create_ext4_on_loop()
+    create_ext4_on_loop()
     #enable_ext4_mballoc_debug()
     run_exp()
+    #run_exp_specialend()
+    #run_exp_backwards()
     pass
 
 def _main():
