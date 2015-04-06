@@ -1,6 +1,7 @@
 # Chopper Tutorial
 
-[04/05/2015] Tested the Quick Start with Ubuntu 14.04 and fixed a few issues. Now you can follow Quick Start and run Chopper (probably) without any missing file or lib.
+[04/05/2015] 
+Tested the Quick Start with Ubuntu 14.04 and fixed a few issues. Now you can follow Quick Start and run Chopper (probably) without any missing file or lib.
 
 Chopper is a tool that explores the input space of file systems to find unexpected behaviors. Currently it focuses on block allocators. The input space and quality metrics are described in *Reducing File System Tail Latencies with Chopper* (http://research.cs.wisc.edu/adsl/Publications/chopper-fast15.pdf). 
 
