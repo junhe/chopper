@@ -1,5 +1,7 @@
 # Chopper Tutorial
 
+[04/05/2015] Tested the Quick Start with Ubuntu 14.04 and fixed a few issues. Now you can follow Quick Start and run Chopper (probably) without any missing file or lib.
+
 Chopper is a tool that explores the input space of file systems to find unexpected behaviors. Currently it focuses on block allocators. The input space and quality metrics are described in *Reducing File System Tail Latencies with Chopper* (http://research.cs.wisc.edu/adsl/Publications/chopper-fast15.pdf). 
 
 This document describes how to run Chopper on your machine. There is another document (http://research.cs.wisc.edu/adsl/Software/chopper/reproduce.html) showing how to analyze Chopper's output, which is done by showing how to reproduce all the figures in the Chopper paper. 
@@ -40,6 +42,11 @@ We use MPI to manage multiple processes, although we don't have many processes a
 
 ```bash
 sudo apt-get install -y openmpi1.5-bin openmpi1.5-doc libopenmpi1.5-dev
+```
+
+For Ubuntu 14.04
+```
+sudo apt-get install -y openmpi-bin libopenmpi-dev libopenmpi1.6 libopenmpi1.6-dbg
 ```
 
 #### Compile C++ utilities
