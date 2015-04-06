@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <sstream>
 #include <assert.h>
+#include <unistd.h>
 
 #include "Logger.h"
 using namespace std;
