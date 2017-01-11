@@ -328,18 +328,18 @@ void pad_file(char *filepath, char *confpath)
 
 int main(int argc, char **argv)
 {
+    logger = new Logger("/tmp/puncher.log");
     if (argc != 4) {
         printf("Usage: %s filepath confpath mode\n"
                "mode: 0: hole punching; 1: pad_file\n"
-               "padding is an experimental way of creating fragmentations."
-               " It keeps creating new files while writing an original one,"
+               "padding is an experimental way of creating fragmentations.\n"
+               " It keeps creating new files while writing an original one,\n"
                " hoping it will create fragment size as desired. It failed.\n",
                argv[0]);
         logger->write( "Wrong program arguments" );
         delete logger;
         exit(1);
     }
-    logger = new Logger("/tmp/puncher.log");
     char *filepath = argv[1];
     char *confpath = argv[2];
     int punchmode = atoi(argv[3]);
