@@ -331,7 +331,7 @@ int main(int argc, char **argv)
     logger = new Logger("/tmp/puncher.log");
     if (argc != 4) {
         printf("Usage: %s filepath confpath mode\n"
-               "mode: 0: hole punching; 1: pad_file\n"
+               "mode: 0=hole punching, 1=pad_file\n"
                "padding is an experimental way of creating fragmentations.\n"
                " It keeps creating new files while writing an original one,\n"
                " hoping it will create fragment size as desired. It failed.\n",
